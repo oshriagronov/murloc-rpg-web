@@ -94,8 +94,17 @@ version.
       "Ignore Raycast" layer out of mouse events, as Unity does. The player is
       on that layer, and without this it swallowed the hover whenever it stood
       behind a window. Sell value in tooltips is left for 1.3.)
-- [ ] **1.3 Merchants.** Open a shop, buy and sell, money updates, the merchant
+- [x] **1.3 Merchants.** Open a shop, buy and sell, money updates, the merchant
       portrait sits inside its round frame, the cursor changes over the shop.
+      (2026-10-10; Blacksmith Frazzak: with no money every row was marked too
+      expensive and nothing could be bought; with 1s 50c bought five items,
+      sold two back, and the money read 1s 43c → 1s 23c → 32c → 39c → 67c.
+      Tooltips show "Sells for 7 copper" / "1.00 silver" as the C# formats
+      them. Space, the X button and the character icon each close the shop
+      and free the player. The shop window was compared with the Unity build
+      and matches, portrait included. The pointer switches between the Buy
+      and Point images; what they look like on screen is left for 3.6. No
+      code changes needed.)
 - [ ] **1.4 Winning a fight.** Kill a wolf with a weapon equipped: experience,
       loot window, taking loot, and the fight ending cleanly.
 - [ ] **1.5 Battle menu.** Skills, Spells, Items and Flee each do what they
