@@ -523,7 +523,7 @@ export class Text extends Graphic {
     const world = matMul(ctx.toLayer, this.transform.worldMatrix);
     // Rasterise the text at the resolution it will appear at, in coarse steps so it is not redone constantly.
     const onScreen = Math.sqrt(Math.abs(world.a * world.d - world.b * world.c)) * ctx.pixelsPerUnit * Device.pixelDensity;
-    const resolution = Math.min(4, Math.max(1, Math.ceil(onScreen * 2) / 2));
+    const resolution = Math.min(4, Math.max(0.25, Math.ceil(onScreen * 4) / 4));
     const fill = colour && /^#?[0-9a-f]{6,8}$/i.test(colour) ? (colour.startsWith('#') ? colour : `#${colour}`).slice(0, 7) : '#ffffff';
     const sig = [text, this.font?.guid, this.fontSize, this.fontStyle, this.alignment, r.width.toFixed(1), r.height.toFixed(1), this.resizeTextForBestFit, this.horizontalOverflow, this.lineSpacing, resolution, fill].join('|');
 
@@ -535,13 +535,20 @@ export class Text extends Graphic {
       let size = this.fontSize;
       let style = this.buildStyle(size, r.width, fill);
       if (this.resizeTextForBestFit) {
-        // Largest size between the limits at which the text still fits its rectangle.
+        // Largest size between the limits at which the text still fits its rectangle. A direction
+        // that is allowed to overflow never constrains the size: wrapped text has to fit the width
+        // word by word, and the height only matters when the text is cut off vertically.
         size = Math.max(1, this.resizeTextMaxSize);
         const min = Math.max(1, Math.min(this.resizeTextMinSize || 1, size));
-        for (; size > min; size--) {
-          style = this.buildStyle(size, r.width, fill);
-          const m = CanvasTextMetrics.measureText(text, style);
-          if (m.height <= r.height + 1 && (this.wraps() ? m.maxLineWidth <= r.width + 1 : m.width <= r.width + 1)) break;
+        const limitHeight = this.verticalOverflow === 0;
+        if (limitHeight || this.wraps()) {
+          let lo = min, hi = size;
+          const fits = (n: number) => {
+            const m = CanvasTextMetrics.measureText(text, this.buildStyle(n, r.width, fill));
+            return (!limitHeight || m.height <= r.height + 1) && (!this.wraps() || m.maxLineWidth <= r.width + 1);
+          };
+          while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); if (fits(mid)) lo = mid; else hi = mid - 1; }
+          size = lo;
         }
         style = this.buildStyle(size, r.width, fill);
       }
