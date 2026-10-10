@@ -75,10 +75,14 @@ version.
 
 ### Phase 1 — Play the first world (`Test` scene)
 
-- [ ] **1.1 Opening quests.** Talk to Chief Brakil in his tent (entering and
+- [x] **1.1 Opening quests.** Talk to Chief Brakil in his tent (entering and
       leaving the tent is a trigger warp), take the first quests, receive the
       dagger. Done when the quest state advances and the way east out of the
-      camp opens.
+      camp opens. (2026-10-10; new Warrior played from Ketchin through the
+      guard and the Chief: every line shown in order, quests went
+      `0,0,0` → `3,3,1`, Worn Dagger landed in slot 0, the tent walls and exit
+      warp worked, and the player walked through the gate into Elwynn Forest.
+      No code changes needed, no console errors.)
 - [ ] **1.2 Items and equipment.** Pick up, equip and unequip an item; stats on
       the character sheet change; item tooltips appear on hover and show the
       right text and value.
