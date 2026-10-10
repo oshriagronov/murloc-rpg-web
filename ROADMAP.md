@@ -8,13 +8,11 @@ the date and how you verified it, and add anything new you find.
 
 *Last updated 2026-10-10.*
 
-The first world has been played from a new game to its ending portal, and the
-goblin teleporter to Stranglethorn Vale and back works. Every script is ported
-and all six scenes load and draw. In the first world the main quest chain, the
-shops, items, talents, all four classes, dying and every fight on the main
-route have been played; what is left there is side content (item 1.10). The
-other three areas and the ending have only been loaded, not played, so expect
-bugs there. Nothing is hosted yet.
+Phase 1 is finished: the first world has been played from a new game to its
+ending portal, side content included, and the goblin teleporter to
+Stranglethorn Vale and back works. Every script is ported and all six scenes
+load and draw. The other three areas and the ending have only been loaded, not
+played (Phase 2), so expect bugs there. Nothing is hosted yet.
 
 ## Done
 
@@ -174,7 +172,7 @@ version.
       walk on to the next screen. Death, the ghost screen and the healer's
       dialogue were compared with the Unity build and look the same. No code
       changes needed.)
-- [ ] **1.10 Rest of the first world.** Elwynn Forest wolves, the cave and
+- [x] **1.10 Rest of the first world.** Elwynn Forest wolves, the cave and
       Jasperdine Mine (kobolds), Darkmoon Faire, the western farm (crabs,
       crocolisks, the princess), the boss fights, the quest chain to its end.
       Partly done (2026-10-10): the main quest chain was played as a Mage from
@@ -199,11 +197,31 @@ version.
       watched for four to eight turns. The Unity build was not played this
       far, as it has no way to skip the grinding; behaviour was checked
       against the C# instead.
-      Left to do: Darkmoon Faire and Ringmaster Shin's boss fights
-      (`dmf_boss`), the chest in the mine that needs a second stick of
-      dynamite (Large Candlestick), Gottum and the ring (`found_ring`,
-      Stingy), Guzbo's own dialogue, Onyxia's Lair (level 20 and the Blood
-      Tailisman), the second spirit healer near Flik, and Flik's shop.
+      Finished (2026-10-10), again with no code changes. The side content,
+      each from a save at the right point in the story:
+      - Gottum: without the ring he says one of his three lines; with The 1
+        Ring (given from the console; it drops from the fourth crab) the
+        player can refuse, or hand it over and take 500 copper or the dagger
+        Stingy. Both rewards were taken in separate runs; he vanishes after.
+      - The chest at the end of the mine: with dynamite, "Leave it?" keeps the
+        dynamite and "Take it?" gives the Large Candlestick.
+      - Onyxia's Lair: at level 20 with the Blood Tailisman equipped (both
+        from the console) the portal in the mine appears and leads to the
+        lair. Onyxia (level 62) killed the character in one blow, and
+        releasing led back to the camp's spirit healer. A second visit with
+        health raised from the console showed her strike and fire breath for
+        ten turns; killing her set `ony_slain` and dropped the Ancient
+        Cornerstone Grimoire. The lair's exit leads back into the mine.
+      - Darkmoon Faire: loading the save made by the ending portal starts
+        there. Flik's shop sells; Ringmaster Shin's challenge ran all eight
+        fights in order (Wolf Cub, Young Forest Wolf, Feronius, King Crab,
+        Mother Crocolisk, Princess, Fangus, Sirath, who drops Sulfuras) and
+        then starts over. Dying there leads to the second spirit healer, with
+        Flik hidden and walls at both ends until the character is revived.
+      - Guzbo: his own script (`NPC9_Chat_Script`) cannot be reached in the
+        original either, because his dialogue number has no case in
+        `Npc_Dialouge.check_npc`; the teleporter beside him speaks for him
+        (see 1.11).
 - [x] **1.11 Leaving the first world.** The teleporter to Stranglethorn Vale
       carries the character, inventory and quests over. (2026-10-10; with the
       first world's quests finished, talked to Guzbo at the goblin camp: "Not
@@ -319,6 +337,14 @@ These exist in the original game and are reproduced, not fixed.
   (a level 8 crab shows 6400 and gives 800).
   `Battle_Control.update_battle_over_info` multiplies by the level a second
   time.
+- An answer picked in a dialogue is remembered for that character and never
+  cleared (`Npc_Dialouge.SELECTED_OPTION`). At a later question from the same
+  character, pressing Space repeats the earlier answer instead of waiting for
+  a click: Gottum's reward question takes the coins, Ringmaster Shin's next
+  challenge starts.
+- Opening the mine chest with a full bag loses the Large Candlestick:
+  `NPC16_Chat_Script` gives the item before it removes the dynamite, and the
+  chest counts as opened either way.
 - When a fight starts while the player stands next to a shopkeeper (Feronius
   beside Krakho), `Open_Merchant_UI.OnTriggerExit2D` logs an error: it looks
   up the `UI_ICONS` object, which is hidden during fights. Nothing else is
