@@ -145,6 +145,8 @@ dev.dialogue();                    // the same, without pressing anything
 dev.comp('Character_Quests');      // a component of the player, by class name
 dev.comp(someObject, 'Text');      // ... or of any object
 dev.toScreen(obj.transform.position); // world position -> game coordinates for click/move
+dev.battle();                      // the fight in progress: health, turn, which panels are up
+await dev.fight();                 // press Attack each turn until the fight ends; one line per turn
 dev.errorSummary();                // distinct console errors so far, with counts
 murloc.GameObject.Find('Murky');   // the player object
 ```

@@ -89,6 +89,46 @@ const dev = {
     await dev.key('Space', 80); await wait(700);
     return dev.dialogue();
   },
+  /** The text shown by the active object with this name, if it has a Text. */
+  text(name: string): string | undefined {
+    const go = GameObject.Find(name);
+    return go ? dev.comp(go, 'Text')?.text : undefined;
+  },
+  /** The state of the fight in progress: health, energy, turn, and which of the fight's panels are up. */
+  battle() {
+    const control = dev.comp('Battle_Control'), health = dev.comp('Battle_Health_Control');
+    const shown = (o: any) => !!(o?.gameObject ?? o)?.activeSelf;
+    return {
+      mob: `${dev.text('Mob_name') ?? ''} ${dev.comp(health.mob_health_text_object, 'Text').text}`.trim(),
+      health: dev.text('Health_text'), energy: dev.text('Energy_text'), turn: control.turn_number as number,
+      menu: shown(control.BattleUICanvas), won: shown(control.BattleOverCanvas), dead: shown(control.release_spirit),
+      says: shown(control.mob_attack_display) ? dev.comp(control.mob_attack_display.gameObject ?? control.mob_attack_display, 'Text').text as string : '',
+    };
+  },
+  /** Waits until the battle menu, the win box or the death box is up, then returns `battle()`. */
+  async turn(timeout = 15000) {
+    for (let waited = 0; waited < timeout; waited += 200) {
+      const b = dev.battle();
+      if (b.menu || b.won || b.dead) break;
+      await wait(200);
+    }
+    await wait(300);
+    return dev.battle();
+  },
+  /** Presses Attack every turn until the fight is won or lost; returns one line per turn. */
+  async fight(maxTurns = 40) {
+    const log: string[] = [];
+    for (let i = 0; i < maxTurns; i++) {
+      let b = await dev.turn();
+      if (b.won || b.dead || !b.menu) break;
+      await dev.click(89, 299);
+      await wait(900);
+      const said = dev.battle().says;
+      b = await dev.turn();
+      log.push(`${b.turn}: me ${b.health}, ${b.mob}${said || b.says ? ` "${said || b.says}"` : ''}${b.won ? ' WON' : ''}${b.dead ? ' DEAD' : ''}`);
+    }
+    return log;
+  },
   /** Where a world position is on screen, in the game coordinates `click` and `move` take. */
   toScreen(world: { x: number; y: number }) {
     const cam = GameObject.Find('Murky').components.find((c) => c.constructor.name === 'Character') as any;
