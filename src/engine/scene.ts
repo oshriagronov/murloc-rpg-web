@@ -1,7 +1,7 @@
 // Turning scene and prefab data into live objects, and the Unity APIs built
 // on that: Instantiate, SceneManager and Resources.
 
-import { AssetDb, AudioClip, Prefab, Sprite, TextAsset, Texture2D } from './assets';
+import { AssetDb, AudioClip, Sprite, TextAsset, Texture2D } from './assets';
 import { AsyncOperation, Behaviour, Component, Engine, GameObject, Transform, UObject, destroyAllObjects, withDataCreation } from './core';
 import { Quaternion, Vector3 } from './math';
 import { RectTransform } from './ui';
@@ -44,7 +44,7 @@ interface Built { roots: GameObject[]; byId: Map<string, any> }
  * wired together first; only then are the objects activated, so scripts wake
  * up into a complete scene.
  */
-export function buildObjects(objects: any[], parent: Transform | null = null, only?: Set<string>): Built {
+export function buildObjects(objects: any[], parent: Transform | null = null, only?: Set<string>, asTemplate = false): Built {
   const byId = new Map<string, any>();
   const docs = only ? objects.filter((o) => only.has(o.i)) : objects;
   const gos: [any, GameObject][] = [];
@@ -108,10 +108,32 @@ export function buildObjects(objects: any[], parent: Transform | null = null, on
     if (parent) { go.transform._setParentRaw(parent); parent.children.push(go.transform); }
   }
   Engine.epoch++;
+  if (asTemplate) {
+    // A prefab's own objects exist only to be read and copied: they never wake up and are not part of the scene.
+    for (const [, go] of gos) Engine.objects.delete(go);
+    return { roots: rootObjects, byId };
+  }
   for (const [, go] of gos) go._ready = true;
   for (const go of rootObjects) go._updateActive();
   return { roots: rootObjects, byId };
 }
+
+// In Unity a prefab is itself a GameObject: scripts read its components and compare
+// references to it before ever making a copy. Each prefab is therefore built once
+// as an inert template, and Instantiate copies from the data it was built from.
+const templates = new Map<string, Built>();
+function prefabTemplate(guid: string, fileId?: string): any {
+  let built = templates.get(guid);
+  if (!built) {
+    const prefab = AssetDb.prefabs.get(guid);
+    if (!prefab) return null;
+    built = buildObjects(prefab.objects, null, undefined, true);
+    templates.set(guid, built);
+  }
+  const named = fileId ? built.byId.get(fileId) : null;
+  return named ?? built.roots[0] ?? null;
+}
+AssetDb.prefabTemplate = prefabTemplate;
 
 /** The data ids of an object and everything under it, for cloning a live object. */
 function subtreeIds(objects: any[], rootId: string): Set<string> {
@@ -133,34 +155,27 @@ function subtreeIds(objects: any[], rootId: string): Set<string> {
 }
 
 /**
- * Unity's Object.Instantiate. `original` is a prefab, or a live object, which is
- * copied as it was when it was loaded. Accepts (original), (original, parent),
- * (original, position, rotation) and (original, position, rotation, parent).
+ * Unity's Object.Instantiate: a copy of an object and everything under it, made
+ * from the data the original was loaded from. Accepts (original), (original, parent),
+ * (original, position, rotation) and (original, position, rotation, parent). Given a
+ * component, it returns the same component on the copy.
  */
 export function Instantiate<T = GameObject>(original: any, a?: Transform | Vector3 | null, b?: Quaternion, c?: Transform | null): T {
   if (!original) throw new Error('Instantiate: the object to copy is null');
   const parent = a instanceof Transform ? a : c ?? null;
-  let built: Built, wanted: any = null, root: GameObject;
-  if (original instanceof Prefab) {
-    built = buildObjects(original.objects, parent);
-    root = built.roots[0];
-    wanted = original.fileId ? built.byId.get(original.fileId) : null;
-  } else {
-    const go: GameObject = original instanceof Component ? original.gameObject : original;
-    const src = (go as any)._source;
-    if (!src) throw new Error(`Instantiate: "${go.name}" was not created from scene data and cannot be copied`);
-    const ids = subtreeIds(src.objects, src.id);
-    // The copy's root must not keep the original's parent unless one is given.
-    built = buildObjects(src.objects.map((o: any) => (ids.has(o.i) && o.t.endsWith('Transform') && o.m_GameObject?.r === src.id ? { ...o, m_Father: null } : o)), parent, ids);
-    root = built.roots[0];
-    if (original instanceof Component) wanted = root.components[go.components.indexOf(original)];
-  }
+  const go: GameObject = original instanceof Component ? original.gameObject : original;
+  const src = (go as any)._source;
+  if (!src) throw new Error(`Instantiate: "${go.name}" was not created from scene data and cannot be copied`);
+  const ids = subtreeIds(src.objects, src.id);
+  // The copy's root does not keep the original's parent unless one is given.
+  const built = buildObjects(src.objects.map((o: any) => (ids.has(o.i) && o.t.endsWith('Transform') && o.m_GameObject?.r === src.id ? { ...o, m_Father: null } : o)), parent, ids);
+  const root = built.roots[0];
   root.name += '(Clone)';
   if (a instanceof Vector3) {
     root.transform.position = a;
     if (b) root.transform.rotation = b;
   }
-  if (wanted instanceof Component && !(wanted instanceof Transform && wanted === root.transform)) return wanted as T;
+  if (original instanceof Component) return root.components[go.components.indexOf(original)] as T;
   return root as unknown as T;
 }
 
@@ -247,7 +262,7 @@ export const Resources = {
         case 'sprite': return AssetDb.sprites.get(g) ?? null;
         case 'texture': return AssetDb.textures.get(g) ?? null;
         case 'audio': return AssetDb.audio.get(g) ?? null;
-        case 'prefab': { const p = AssetDb.prefabs.get(g); return p ? new Prefab(g, p.name, p.objects) : null; }
+        case 'prefab': return prefabTemplate(g);
         case 'text': return new TextAsset(path.replace(/^.*\//, ''), g);
       }
       return null;
@@ -268,7 +283,8 @@ export const Resources = {
     const req = new ResourceRequest();
     req.asset = Resources.Load(path, type);
     // Prefabs are ready at once; wait for the images they show so they do not pop in.
-    const textures = req.asset instanceof Prefab ? [...AssetDb.texturesUsedBy(req.asset.objects)] : req.asset instanceof Sprite && req.asset.texture ? [req.asset.texture] : [];
+    const source = req.asset instanceof GameObject ? (req.asset as any)._source : null;
+    const textures = source ? [...AssetDb.texturesUsedBy(source.objects)] : req.asset instanceof Sprite && req.asset.texture ? [req.asset.texture] : [];
     Promise.all(textures.map((t) => t.load())).finally(() => { req.progress = 1; req.isDone = true; });
     return req;
   },

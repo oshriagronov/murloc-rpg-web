@@ -89,14 +89,6 @@ export class Font extends UObject {
   }
 }
 
-/** A prefab: object data that Instantiate turns into live objects. */
-export class Prefab extends UObject {
-  constructor(public guid: string, name: string, public objects: any[], /** Sub-object a reference pointed at, if not the root. */ public fileId?: string) {
-    super();
-    this.name = name;
-  }
-}
-
 export class TextAsset extends UObject {
   constructor(name: string, public text: string) { super(); this.name = name; }
 }
@@ -140,6 +132,11 @@ export const AssetDb = {
   clips: new Map<string, AnimationClip>(),
   controllers: new Map<string, RuntimeAnimatorController>(),
   resources: { sprite: {}, prefab: {}, texture: {}, audio: {}, text: {} } as Record<string, Record<string, string>>,
+  /**
+   * Gives the object a prefab reference stands for: the prefab's root object, or the
+   * object or component inside it that the reference names. Installed by the scene loader.
+   */
+  prefabTemplate: ((_guid: string, _fileId?: string) => null) as (guid: string, fileId?: string) => any,
 
   async init() {
     const [a, anim, prefabs] = await Promise.all(
@@ -185,10 +182,7 @@ export const AssetDb = {
       case 'text': return this.texts.get(ref.g) ?? null;
       case 'anim': return this.clips.get(ref.g) ?? null;
       case 'controller': return this.controllers.get(ref.g) ?? null;
-      case 'prefab': {
-        const p = this.prefabs.get(ref.g);
-        return p ? new Prefab(ref.g, p.name, p.objects, ref.f) : null;
-      }
+      case 'prefab': return this.prefabs.has(ref.g) ? this.prefabTemplate(ref.g, ref.f) : null;
       default: return null;
     }
   },
