@@ -238,9 +238,11 @@ for (const [guid, a] of byKind('anim')) {
   }));
   if (floats.length) clip.float = floats;
   for (const [key, field] of [['pos', 'm_PositionCurves'], ['scale', 'm_ScaleCurves'], ['euler', 'm_EulerCurves']]) {
+    // Vector curves: [time, x, y, z, then the in-slopes and the out-slopes of x, y and z].
+    const xyz = (v) => [Number(v.x), Number(v.y), Number(v.z)];
     const curves = (c[field] || []).map((k) => ({
       path: k.path ?? '',
-      k: k.curve.m_Curve.map((p) => [Number(p.time), Number(p.value.x), Number(p.value.y), Number(p.value.z)]),
+      k: k.curve.m_Curve.map((p) => [Number(p.time), ...xyz(p.value), ...xyz(p.inSlope), ...xyz(p.outSlope)]),
     }));
     if (curves.length) clip[key] = curves;
   }

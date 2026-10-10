@@ -30,15 +30,31 @@ const PROPERTY: Record<string, string> = {
   m_LocalScale: 'localScale', m_LocalPosition: 'localPosition', m_FillAmount: 'fillAmount',
 };
 
+/**
+ * The curve between two keys: the cubic that leaves the first value with slope `m0` and arrives at
+ * the second with slope `m1`, as in Unity. Slopes of zero ease in and out; an infinite slope marks
+ * a stepped key, which holds its value until the next one.
+ */
+function hermite(t0: number, v0: number, m0: number, t1: number, v1: number, m1: number, t: number): number {
+  if (!Number.isFinite(m0) || !Number.isFinite(m1)) return v0;
+  const dt = t1 - t0, s = (t - t0) / dt, s2 = s * s, s3 = s2 * s;
+  return (2 * s3 - 3 * s2 + 1) * v0 + (s3 - 2 * s2 + s) * m0 * dt + (3 * s2 - 2 * s3) * v1 + (s3 - s2) * m1 * dt;
+}
+
+/** A float curve, whose keys are [time, value, inSlope, outSlope]. */
+function sampleFloat(keys: number[][], t: number): number {
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let i = 1; i < keys.length; i++) {
+    if (t < keys[i][0]) { const a = keys[i - 1], b = keys[i]; return hermite(a[0], a[1], a[3], b[0], b[1], b[2], t); }
+  }
+  return keys[keys.length - 1][1];
+}
+
+/** Component 1, 2 or 3 (x, y, z) of a vector curve, whose keys are [time, x, y, z, three in-slopes, three out-slopes]. */
 function sample(keys: number[][], t: number, index: number): number {
   if (t <= keys[0][0]) return keys[0][index];
   for (let i = 1; i < keys.length; i++) {
-    if (t < keys[i][0]) {
-      const a = keys[i - 1], b = keys[i];
-      // Infinite tangents mark a stepped key.
-      if (!Number.isFinite(a[a.length - 1]) || !Number.isFinite(b[b.length - 2])) return a[index];
-      return a[index] + ((b[index] - a[index]) * (t - a[0])) / (b[0] - a[0]);
-    }
+    if (t < keys[i][0]) { const a = keys[i - 1], b = keys[i]; return hermite(a[0], a[index], a[index + 6], b[0], b[index], b[index + 3], t); }
   }
   return keys[keys.length - 1][index];
 }
@@ -58,6 +74,14 @@ export class Animator extends Behaviour {
   private started = false;
   /** The scripts attached to states, made the first time their state is entered. */
   private behaviours = new Map<StateData, StateMachineBehaviour[]>();
+  /**
+   * "Write defaults": everything any clip of the controller animates, with a function that puts
+   * back the value it had when the animator started. A state whose clip leaves a property alone
+   * gets that value written every frame, as Unity does, so a property animated by one state
+   * does not keep that state's last value in the others.
+   */
+  private defaults: Map<string, () => void> | null = null;
+  private restores = new Map<StateData, (() => void)[]>();
 
   get runtimeAnimatorController() { return this.controller; }
   set runtimeAnimatorController(c: RuntimeAnimatorController | null) {
@@ -78,6 +102,8 @@ export class Animator extends Behaviour {
     this.pending = null;
     this.started = false;
     this.behaviours.clear();
+    this.defaults = null;
+    this.restores.clear();
     for (const [name, type, def] of this.controller?.data.params ?? []) { this.params.set(name, def); this.paramTypes.set(name, type); }
     const layer = this.controller?.data.layers[0];
     this.state = layer ? layer.states.find((s) => s.n === layer.def) ?? layer.states[0] ?? null : null;
@@ -214,9 +240,59 @@ export class Animator extends Behaviour {
     return t ?? null;
   }
 
+  /** Remembers the present value of every property the controller's clips animate. */
+  private captureDefaults() {
+    const defaults = this.defaults = new Map<string, () => void>();
+    for (const state of this.controller?.data.layers[0]?.states ?? []) {
+      const clip = this.clipOf(state);
+      if (!clip) continue;
+      for (const curve of clip.float ?? []) {
+        const key = `${curve.path}|${curve.cls}|${curve.script ?? ''}|${curve.attr}`;
+        if (defaults.has(key)) continue;
+        const target = this.target(curve.path);
+        const obj = target && CLASS_BY_ID[curve.cls]?.(target.gameObject, curve.script);
+        if (!obj) continue;
+        const [field, sub] = curve.attr.split('.');
+        const prop = PROPERTY[field] ?? field;
+        if (prop === 'active') { const v: boolean = obj.activeSelf; defaults.set(key, () => obj.SetActive(v)); }
+        else if (sub) {
+          const current = obj[prop];
+          if (!current || typeof current !== 'object') continue;
+          const v = current[sub];
+          defaults.set(key, () => { const now = obj[prop]; const next = now.clone ? now.clone() : { ...now }; next[sub] = v; obj[prop] = next; });
+        } else if (prop in obj) { const v = obj[prop]; defaults.set(key, () => { obj[prop] = v; }); }
+      }
+      for (const kind of ['pos', 'scale', 'euler'] as const) {
+        for (const curve of clip[kind] ?? []) {
+          const key = `${kind}|${curve.path}`, target = this.target(curve.path);
+          if (!target || defaults.has(key)) continue;
+          if (kind === 'pos' && target instanceof RectTransform) { const v = target.anchoredPosition; defaults.set(key, () => { target.anchoredPosition = v.clone(); }); }
+          else if (kind === 'pos') { const v = target.localPosition; defaults.set(key, () => { target.localPosition = v.clone(); }); }
+          else if (kind === 'scale') { const v = target.localScale; defaults.set(key, () => { target.localScale = v.clone(); }); }
+          else { const v = target.localRotation; defaults.set(key, () => { target.localRotation = v.clone(); }); }
+        }
+      }
+    }
+  }
+
+  /** The defaults to write while `state` plays: those of the properties its clip does not animate. */
+  private restoresFor(state: StateData, clip: ClipData | null): (() => void)[] {
+    let list = this.restores.get(state);
+    if (!list) {
+      const animated = new Set<string>();
+      for (const curve of clip?.float ?? []) animated.add(`${curve.path}|${curve.cls}|${curve.script ?? ''}|${curve.attr}`);
+      for (const kind of ['pos', 'scale', 'euler'] as const) for (const curve of clip?.[kind] ?? []) animated.add(`${kind}|${curve.path}`);
+      list = [...this.defaults!].filter(([key]) => !animated.has(key)).map(([, restore]) => restore);
+      this.restores.set(state, list);
+    }
+    return list;
+  }
+
   /** Writes the current frame of the current clip onto the objects it animates. */
   private apply() {
     const clip = this.clipOf(this.state);
+    if (!this.defaults) this.captureDefaults();
+    if (this.state) for (const restore of this.restoresFor(this.state, clip)) restore();
     if (!clip) return;
     const t = clip.len <= 0 ? 0 : clip.loop ? this.stateTime % clip.len : Math.min(this.stateTime, clip.len);
     for (const curve of clip.sprite ?? []) {
@@ -235,7 +311,7 @@ export class Animator extends Behaviour {
       if (!obj) continue;
       const [field, sub] = curve.attr.split('.');
       const prop = PROPERTY[field] ?? field;
-      const v = sample(curve.k, t, 1);
+      const v = sampleFloat(curve.k, t);
       if (sub) {
         const current = obj[prop];
         if (current && typeof current === 'object') { const next = current.clone ? current.clone() : { ...current }; next[sub] = v; obj[prop] = next; }

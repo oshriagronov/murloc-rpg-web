@@ -228,7 +228,9 @@ const dev = {
   /** Waits up to `ms` for the script given to `run`; returns its result, or `{ running: true }` if it needs longer. */
   async result(ms = 40000) {
     for (let t = 0; t < ms && background.running; t += 250) await wait(250);
-    return background.running ? { running: true, where: dev.where() } : background.value;
+    if (!background.running) return background.value;
+    // There is no player to describe on the start menu or during the credits.
+    return { running: true, where: GameObject.Find('Murky') ? dev.where() : SceneManager.GetActiveScene().name };
   },
   /** Where a world position is on screen, in the game coordinates `click` and `move` take. */
   toScreen(world: { x: number; y: number }) {

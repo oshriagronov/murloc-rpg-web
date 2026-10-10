@@ -6,14 +6,16 @@ the date and how you verified it, and add anything new you find.
 
 ## Status
 
-*Last updated 2026-10-10.*
+*Last updated 2026-10-11.*
 
 Phase 1 is finished: the first world has been played from a new game to its
 ending portal, side content included, and the goblin teleporter to
-Stranglethorn Vale and back works. Phase 2 is nearly done: Stranglethorn Vale
-(2.1), the Gurubashi Arena (2.2) and Zul'Gurub (2.3) have been played through.
-The ending (2.4) is left. Every script is ported and all six scenes load and
-draw. Nothing is hosted yet.
+Stranglethorn Vale and back works. Phase 2 is finished too: Stranglethorn Vale,
+the Gurubashi Arena, Zul'Gurub and the ending have been played through and
+compared with the Unity build, which can now be driven to any point of the
+story (`tools/unity-console.js`). The whole game is playable from a new game
+to the credits. What is left is appearance (Phase 3), memory, speed and
+devices (Phase 4) and the release. Nothing is hosted yet.
 
 ## Done
 
@@ -328,8 +330,42 @@ version.
       int now gives what C# gives (see the level 45 entry under "Original bugs
       kept on purpose"); the Unity build showed level 401 after one fight
       where this version did not.)
-- [ ] **2.4 Ending.** The end-game cut scene, the credits, return to the menu,
-      and a completed save.
+- [x] **2.4 Ending.** The end-game cut scene, the credits, return to the menu,
+      and a completed save. (2026-10-11; from the save that finished the first
+      world: Space at Lekon's portal shows the warning, Yes starts the
+      credits scene. It was photographed every one to three seconds for its
+      whole length: the story text on a background fading from black to
+      white, the two landscapes with the watching murloc and the portal, the
+      hooded figure seen from behind beside the blue glow, "To be Continued."
+      with his face, darkness, then the credits rolling up from second 37 to
+      second 90, and the start menu at second 92 without the intro video. The
+      slot the game was loaded from had been saved as complete. Loading it
+      from the menu starts at Darkmoon Faire in daylight, with Flik there.
+      Nothing follows Hakkar's death (see the bugs list), so this portal is
+      the game's only ending.
+      The Unity build was taken through the same steps from a patched save
+      and photographed the same way: the portal and its warning, each stage
+      of the cut scene, the position of the credits every three seconds, the
+      menu afterwards, the load menu's line for the completed save and the
+      arrival at Darkmoon Faire. Three differences were found and fixed, all
+      in how animations are played:
+      - Curves were followed in straight lines from key to key. Unity uses
+        each key's slopes, so a curve with flat ends eases in and out (the
+        credits start slowly and speed up) and a stepped key holds its value.
+        The converter now also keeps the slopes of position, scale and
+        rotation curves, which it used to drop: the weapon in the player's
+        hand now snaps from frame to frame with the arm, as in Unity, where
+        it used to glide.
+      - "Write defaults": while a state plays, Unity puts every property that
+        some other state of the same animator animates back to the value it
+        had at the start. This version left such properties at whatever the
+        last state had made them. In the cut scene it is why Murk cannot be
+        seen walking to the portal: his own animator resets his colour to the
+        transparent one the scene gives him (listed under the bugs kept on
+        purpose). Seven animators have such properties: the player's, the
+        cut scene's, both Felvas', Sheila's, the caged troll's and a running
+        murloc's. Checked again after the change: the player's sword swing
+        and Ambush, Felva's ambush in the arena, the troll leaving his cage.)
 
 ### Phase 3 — Match the original's look
 
@@ -347,6 +383,11 @@ Compare each with the Unity version side by side.
       nine-sliced version.
 - [ ] **3.3 Animation transitions.** State changes switch half-way through the
       blend time. Check attack, cast and death timings against the original.
+      Note (2026-10-11): curves and write defaults now follow Unity (see 2.4).
+      Still approximate: transitions do not blend, weighted tangents are read
+      as plain ones (none were seen to matter), and where a parent's animator
+      and a child's own both write one property the later-created animator
+      wins, which matched Unity in the one case found (the ending).
 - [ ] **3.4 Particles.** Torch glow and water rings against the original;
       noise and velocity limits are not implemented. Note (2026-10-10): under
       the night screen the water rings show as thin dark circle outlines.
@@ -479,6 +520,12 @@ These exist in the original game and are reproduced, not fixed.
   level x (level + 1) after levelling up, but 200 x 1.45^(level - 1) after a
   save is loaded or an area is entered. So the number changes whenever the
   character walks through a door.
+- Murk is invisible in the ending's cut scene. The scene fades him in and
+  walks him to the portal, but his own animator (the player's, which animates
+  colour for Ambush) writes his colour back to the scene's starting value,
+  which is transparent. Only the portal is seen. (Seen in the Unity build.)
+- The load menu describes a completed save by where the portal was ("Camp
+  Brakil"), though loading it starts at Darkmoon Faire.
 - From level 45 the second formula no longer fits in an int and C# turns it
   into the lowest int there is. The next experience gained then counts as
   hundreds of level-ups at once: a level 45 character that enters Zul'Gurub
