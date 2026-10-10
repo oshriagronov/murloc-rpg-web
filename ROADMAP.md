@@ -162,8 +162,17 @@ version.
       restores them. `Character.Load_Game` never calls `update_stats`; only
       opening a window or changing equipment does. Listed under "Original
       bugs kept on purpose". No code changes.)
-- [ ] **1.9 Spirit healer.** After dying, talk to the spirit healer and return
-      to life; the world goes back to normal colours.
+- [x] **1.9 Spirit healer.** After dying, talk to the spirit healer and return
+      to life; the world goes back to normal colours. (2026-10-10; let a wolf
+      kill a Mage: "You are dead" and Release Spirit appeared, and releasing
+      put the ghost at the start of the camp with full health under the blue
+      death screen, Ketchin hidden and the spirit healer in his place. Walls
+      at both edges of the screen kept the ghost there. Two presses of Space
+      on the healer gave her line and then brought the character back: normal
+      colours, healer gone, Ketchin back, walls off, and the player could
+      walk on to the next screen. Death, the ghost screen and the healer's
+      dialogue were compared with the Unity build and look the same. No code
+      changes needed.)
 - [ ] **1.10 Rest of the first world.** Elwynn Forest wolves, the cave and
       Jasperdine Mine (kobolds), Darkmoon Faire, the western farm (crabs,
       crocolisks, the princess), the boss fights, the quest chain to its end.
