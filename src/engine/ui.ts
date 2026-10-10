@@ -109,6 +109,13 @@ export class RectTransform extends Transform {
     return canvas ? canvas._rootMatrix() : super.worldMatrix;
   }
 
+  override get lossyScale(): Vector3 {
+    const canvas = this.drivingCanvas();
+    if (!canvas) return super.lossyScale;
+    const m = canvas._rootMatrix();
+    return new Vector3(m.a, m.d, m.a);
+  }
+
   /** The four corners in world space: bottom-left, top-left, top-right, bottom-right. */
   GetWorldCorners(out: Vector3[] = []) {
     const r = this.rect, m = this.worldMatrix;

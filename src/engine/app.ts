@@ -5,7 +5,8 @@ import { AssetDb } from './assets';
 import { RectTransform, Canvas, CanvasScaler, CanvasRenderer, CanvasGroup, GraphicRaycaster, AspectRatioFitter, Image, Text, TextMeshProUGUI, Shadow, Outline, Button, Toggle, Slider, Scrollbar, EventTrigger, LayoutElement, ContentSizeFitter, VerticalLayoutGroup, HorizontalLayoutGroup, ScrollRect, Mask, StandaloneInputModule } from './ui';
 import { Transform, stepFrame } from './core';
 import { EventSystem, drawFrame } from './draw';
-import { MeshFilter, MeshRenderer, ParticleSystem, ParticleSystemRenderer, UniversalAdditionalCameraData } from './extras';
+import { MeshFilter, MeshRenderer, UniversalAdditionalCameraData } from './extras';
+import { ParticleSystem, ParticleSystemRenderer } from './particles';
 import { Input } from './input';
 import { AudioListenerComponent, AudioSource, VideoPlayer } from './media';
 import { BoxCollider, BoxCollider2D, CircleCollider2D, Physics2D, Rigidbody2D, sendMouseEvents } from './physics';
@@ -42,7 +43,7 @@ export async function startGame(host: HTMLElement, firstScene: string) {
       Input.beginFrame();
       EventSystem.process();
       sendMouseEvents();
-      stepFrame(dt, { fixedUpdate: () => Physics2D.step(), beforeLateUpdate: () => Animator.tickAll() });
+      stepFrame(dt, { fixedUpdate: () => Physics2D.step(), beforeLateUpdate: () => { Animator.tickAll(); ParticleSystem.tickAll(); } });
       drawFrame();
     } catch (e) {
       // One bad frame should not freeze the game for good.

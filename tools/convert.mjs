@@ -309,6 +309,29 @@ for (const [guid, a] of byKind('prefab')) prefabs[guid] = { name: path.basename(
 sizes['prefabs.json'] = writeJson('prefabs.json', prefabs);
 console.log(`Scenes: ${scenes.length}, prefabs: ${Object.keys(prefabs).length}`);
 
+// ---------------------------------------------------------------- materials
+
+// Only particle effects use materials. What matters about one is its texture, its tint and
+// whether it adds light (Unity's additive particle shader) or blends normally.
+// guid -> { tex: texture guid | null, builtin: built-in texture id | null, additive, color: [r, g, b, a] }
+const materialInfo = {};
+for (const [guid, a] of byKind('material')) {
+  const m = parseUnityFile(a.path)[0].raw;
+  const props = m.m_SavedProperties ?? {};
+  // Depending on the Unity version these property lists are a list of one-entry maps or a single map.
+  const find = (list, name) => { for (const e of Array.isArray(list) ? list : [list ?? {}]) if (e && typeof e === 'object' && name in e) return e[name]; return undefined; };
+  const main = find(props.m_TexEnvs, '_MainTex')?.m_Texture ?? {};
+  const tint = find(props.m_Colors, '_TintColor') ?? find(props.m_Colors, '_Color') ?? { r: 1, g: 1, b: 1, a: 1 };
+  const builtinShader = BUILTIN_GUIDS.has(m.m_Shader?.guid) ? Number(m.m_Shader.fileID) : 0;
+  materialInfo[guid] = {
+    tex: main.guid && assets.get(main.guid)?.kind === 'texture' ? main.guid : null,
+    builtin: BUILTIN_GUIDS.has(main.guid) ? Number(main.fileID) : null,
+    additive: builtinShader === 200 || Number(find(props.m_Floats, '_DstBlend')) === 1,
+    // The additive shader doubles its tint.
+    color: [tint.r, tint.g, tint.b, tint.a].map(Number).map((v) => (builtinShader === 200 ? Math.min(1, v * 2) : v)),
+  };
+}
+
 // ---------------------------------------------------------------- sprites and textures
 
 // The original sprite sheets are mostly empty space around each frame. Each
@@ -322,6 +345,7 @@ console.log(`Scenes: ${scenes.length}, prefabs: ${Object.keys(prefabs).length}`)
 // textures: guid -> page                                images referenced whole (cursors and the like)
 
 const PAGE = 4096, PAD = 2;
+const usedMaterials = new Set();
 fs.mkdirSync(outDir, { recursive: true });
 const pages = [];
 const sprites = {};
@@ -329,11 +353,15 @@ const textures = {};
 const spritesByTexture = new Map();
 {
   // What the game can reach: anything a scene, prefab or animation refers to, plus everything under Resources.
-  const used = { sprite: new Set(), texture: new Set() };
+  const used = { sprite: new Set(), texture: new Set(), material: usedMaterials };
   const visit = (v) => {
     if (!v || typeof v !== 'object') return;
     if (Array.isArray(v)) { for (const x of v) visit(x); return; }
-    if (v.a && v.g) { used[v.a]?.add(v.g); return; }
+    if (v.a && v.g) {
+      used[v.a]?.add(v.g);
+      if (v.a === 'material' && materialInfo[v.g]?.tex) used.texture.add(materialInfo[v.g].tex);
+      return;
+    }
     for (const k in v) visit(v[k]);
   };
   for (const f of walk(path.join(outDir, 'scenes'))) visit(JSON.parse(read(f)));
@@ -439,7 +467,7 @@ const spritesByTexture = new Map();
         sprites[s.guid] = row;
       }
       // Images the game refers to as a whole are kept as they are, next to the packed sheet.
-      if (used.texture.has(texGuid) || file.startsWith(resRoot) && list.length === 0) {
+      if (used.texture.has(texGuid)) {
         after += W * H;
         textures[texGuid] = await addPage(`${base}.full.webp`, data, W, H);
       }
@@ -481,11 +509,18 @@ for (const [guid, a] of assets) {
 const tagManager = parseUnityFile(path.join(unityDir, 'ProjectSettings', 'TagManager.asset'))[0].raw;
 const sortingLayers = (tagManager.m_SortingLayers || []).map((l) => [l.name, Number(l.uniqueID)]);
 
+const materials = {};
+for (const g in materialInfo) {
+  const m = materialInfo[g];
+  if (!usedMaterials.has(g)) continue;
+  materials[g] = [m.tex ? textures[m.tex] : -1, m.builtin, m.additive ? 1 : 0, m.color];
+}
+
 // Text files the scenes refer to directly (the item lists).
 const texts = {};
 for (const [guid, a] of byKind('text')) if (/\.json$/i.test(a.path)) texts[guid] = [path.basename(a.path).replace(/\.[^.]+$/, ''), read(a.path)];
 
-sizes['assets.json'] = writeJson('assets.json', { scenes: scenes.map((s) => path.basename(s)), texts, pages, textures, sprites, audio, fonts, resources, sortingLayers });
+sizes['assets.json'] = writeJson('assets.json', { scenes: scenes.map((s) => path.basename(s)), texts, materials, pages, textures, sprites, audio, fonts, resources, sortingLayers });
 sizes['animations.json'] = writeJson('animations.json', { clips, controllers });
 
 const total = Object.values(sizes).reduce((a, b) => a + b, 0);

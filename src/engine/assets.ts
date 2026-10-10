@@ -3,7 +3,7 @@
 // images behind them are fetched when first needed.
 
 import { Assets as PixiAssets, Rectangle, Texture } from 'pixi.js';
-import { Rect, Vector2, Vector4 } from './math';
+import { Color, Rect, Vector2, Vector4 } from './math';
 import { UObject } from './core';
 
 const BASE = `${import.meta.env.BASE_URL}game/`;
@@ -89,6 +89,11 @@ export class Font extends UObject {
   }
 }
 
+/** What a particle effect is drawn with. */
+export class ParticleMaterial extends UObject {
+  constructor(public texture: Texture2D | null, public additive: boolean, public color: Color) { super(); }
+}
+
 export class TextAsset extends UObject {
   constructor(name: string, public text: string) { super(); this.name = name; }
 }
@@ -128,6 +133,7 @@ export const AssetDb = {
   audio: new Map<string, AudioClip>(),
   fonts: new Map<string, Font>(),
   texts: new Map<string, TextAsset>(),
+  materials: new Map<string, ParticleMaterial>(),
   prefabs: new Map<string, { name: string; objects: any[] }>(),
   clips: new Map<string, AnimationClip>(),
   controllers: new Map<string, RuntimeAnimatorController>(),
@@ -152,6 +158,7 @@ export const AssetDb = {
       const b = border ?? [0, 0, 0, 0];
       this.sprites.set(g, new Sprite(g, name, page >= 0 ? pages[page] : null, fx, fy, fw, fh, w, h, ox, oy, new Vector2(px, py), ppu, new Vector4(b[0], b[1], b[2], b[3])));
     }
+    for (const g in a.materials) { const [page, , additive, c] = a.materials[g]; this.materials.set(g, new ParticleMaterial(page >= 0 ? pages[page] : null, !!additive, new Color(c[0], c[1], c[2], c[3]))); }
     for (const g in a.audio) this.audio.set(g, new AudioClip(g, a.audio[g]));
     for (const g in a.texts) this.texts.set(g, new TextAsset(a.texts[g][0], a.texts[g][1]));
     const faces: Promise<unknown>[] = [];
@@ -180,6 +187,7 @@ export const AssetDb = {
       case 'audio': return this.audio.get(ref.g) ?? null;
       case 'font': return this.fonts.get(ref.g) ?? null;
       case 'text': return this.texts.get(ref.g) ?? null;
+      case 'material': return this.materials.get(ref.g) ?? null;
       case 'anim': return this.clips.get(ref.g) ?? null;
       case 'controller': return this.controllers.get(ref.g) ?? null;
       case 'prefab': return this.prefabs.has(ref.g) ? this.prefabTemplate(ref.g, ref.f) : null;

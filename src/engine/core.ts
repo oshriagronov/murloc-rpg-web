@@ -547,9 +547,10 @@ export class Transform extends Component {
   }
   get eulerAngles() { return this.rotation.eulerAngles; }
   set eulerAngles(v: Vector3) { this.rotation = Quaternion.Euler(v); }
+  /** World scale: the local scales multiplied down the hierarchy (objects turned in 3D keep theirs). */
   get lossyScale(): Vector3 {
-    const m = this.worldMatrix;
-    return new Vector3(Math.hypot(m.a, m.b), Math.hypot(m.c, m.d), 1);
+    const p = this._parent ? this._parent.lossyScale : null;
+    return p ? new Vector3(p.x * this._ls.x, p.y * this._ls.y, p.z * this._ls.z) : this._ls.clone();
   }
   get right() { const m = this.worldMatrix; return new Vector3(m.a, m.b, 0).normalized; }
   get up() { const m = this.worldMatrix; return new Vector3(m.c, m.d, 0).normalized; }

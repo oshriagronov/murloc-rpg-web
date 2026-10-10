@@ -12,6 +12,7 @@ export * from './physics';
 export * from './platform';
 export * from './scene';
 export * from './extras';
+export * from './particles';
 export * from './compat';
 export { EventSystem, drawFrame, graphicAt } from './draw';
 export { startGame } from './app';
