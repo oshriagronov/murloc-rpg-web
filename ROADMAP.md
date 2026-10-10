@@ -130,8 +130,18 @@ version.
       lines that do not fit, as Unity does ("Adrenaline Rush" shows as
       "Adrenaline", as in the original). Not covered: Ambush, which needs
       Felva's quest and a dagger; see 2.1.)
-- [ ] **1.6 Levelling and talents.** Level up, spend talent points in each of
+- [x] **1.6 Levelling and talents.** Level up, spend talent points in each of
       the four trees, talent tooltips, new abilities appear in battle.
+      (2026-10-10; two Wolf Cub kills took a Warrior to level 2: the bar ran
+      up and reset to 0/600, the badge and the win box showed level 2 and one
+      talent point, maximum health rose by 11. Spent it on Bloodrage; with
+      four more levels added from the console, took Cruelty, Pummel, Mark of
+      the Wild (armour 154 → 334) and Lash of Pain, one in each tree. Taking a
+      talent out of order or with no points left does nothing. Tooltips show
+      on hover and on the first click. In the next fight exactly the skills
+      and spells bought were lit, and Lash of Pain and Pummel worked. The
+      level-up box, the talent window and its tooltip were compared with the
+      Unity build. No code changes needed.)
 - [ ] **1.7 The other three classes.** Start a game as Rogue, Priest and Mage;
       each gets its stats and starting talent and can fight.
 - [ ] **1.8 Health after loading.** A loaded Warrior shows 85/85 health where a
@@ -187,6 +197,16 @@ Compare each with the Unity version side by side.
 - [ ] **3.5 Draw order.** Look for anything drawn in front of or behind the
       wrong thing, especially windows over the world and battle effects.
 - [ ] **3.6 Mouse cursors.** The hand and merchant cursors.
+- [ ] **3.7 Depth ignores scale.** An object's depth here is the sum of the
+      local z values above it; Unity multiplies each by the scale of its
+      parents. Everything under the UI canvas (scale about 0.4) therefore sits
+      at a different depth than in Unity: the talent slots and battle skill
+      icons are at -0.4 here and about 54 there. Two things depend on depth.
+      The mouse goes to the nearest collider, so where a window overlaps an
+      NPC's or a door's trigger (depth 0) Unity gives the hover to the NPC and
+      shows no tooltip, while this version shows it. And sprites that share a
+      sorting layer and order are drawn by depth. Give the world matrix a z
+      scale, then recheck draw order (3.5).
 
 ### Phase 4 — Memory, speed, devices
 
