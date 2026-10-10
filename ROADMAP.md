@@ -151,18 +151,17 @@ version.
       played the opening quests, equipped the dagger and beat a Wolf Cub; the
       Mage did it with Lash of Pain, the only lit entry in its Spells menu.
       No code changes needed.)
-- [ ] **1.8 Health after loading.** A loaded Warrior shows 85/85 health where a
+- [x] **1.8 Health after loading.** A loaded Warrior shows 85/85 health where a
       new one shows 95/95. In the Unity version the number corrected itself a
       moment after loading. Find out which behaviour is the original's and
-      match it.
-      Note (2026-10-10): the health text is only rewritten by the regeneration
-      tick in `Battle_Health_Control`, so it trails a change of stamina by up
-      to one tick. That is the likely cause; confirm against Unity.
-      Note 2 (2026-10-10): it is worse than the number. After loading a save,
-      `Character.STR`, `STM`, `INT`, `AGI` and `ARM` are all 0 until the
-      player changes equipment, so a loaded character hits for far less (a
-      Wolf Cub took seven swings instead of one). Something that calls
-      `update_stats` after a load in Unity does not run here.
+      match it. (2026-10-10; the low number is the original's. Saved a
+      level 2 Warrior with 106/106 in the Unity build, quit to the menu and
+      loaded it: 96/96, still 96/96 after 14 seconds, and 106/106 as soon as
+      the character sheet was opened. This version does the same: a saved
+      115/115 loads as 85/85 with all attributes at 0, and opening a window
+      restores them. `Character.Load_Game` never calls `update_stats`; only
+      opening a window or changing equipment does. Listed under "Original
+      bugs kept on purpose". No code changes.)
 - [ ] **1.9 Spirit healer.** After dying, talk to the spirit healer and return
       to life; the world goes back to normal colours.
 - [ ] **1.10 Rest of the first world.** Elwynn Forest wolves, the cave and
@@ -260,6 +259,12 @@ These exist in the original game and are reproduced, not fixed.
   (`MobLoader.load_zones`).
 - `Buff.take_shield_damage` tests `sheild_health != -1 || sheild_health != 0`,
   which is always true.
+- A character loaded from the start menu has strength, stamina, intellect,
+  agility and armour of 0, and so less health and far weaker attacks, until
+  the player opens the bag, character sheet or talent window, or changes
+  equipment. `Character.Load_Game` does not call `update_stats`. (The health
+  number was checked in the Unity build; the weaker attacks follow from the
+  same code and were seen here.)
 - Skill and spell tooltips do not show during a fight or inside the tent.
   `SpellHoverDetails.Display_Spell_Details` moves the tooltip down by 480 when
   the camera is below the world, which puts it off the screen. The Unity build
