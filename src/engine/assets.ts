@@ -34,9 +34,14 @@ export class Sprite extends UObject {
   constructor(
     public guid: string,
     name: string,
-    public texture: Texture2D,
-    /** Position of the sprite on its texture in pixels, measured from the top-left. */
-    public x: number, public y: number, public width: number, public height: number,
+    /** The packed image this sprite's pixels are on (null for a sprite with nothing to draw). */
+    public texture: Texture2D | null,
+    /** Where the sprite's used pixels are on that image, from the top-left. */
+    public frameX: number, public frameY: number, public frameWidth: number, public frameHeight: number,
+    /** The sprite's full size in pixels, including any empty margin that was trimmed away. */
+    public width: number, public height: number,
+    /** Where the used pixels sit inside the full sprite, from its top-left corner. */
+    public offsetX: number, public offsetY: number,
     public pivotFraction: Vector2,
     public pixelsPerUnit: number,
     /** Nine-slice borders: left, bottom, right, top. */
@@ -45,8 +50,8 @@ export class Sprite extends UObject {
     super();
     this.name = name;
   }
-  /** Unity's Sprite.rect: pixels from the bottom-left of the texture. */
-  get rect() { return new Rect(this.x, this.texture.height - this.y - this.height, this.width, this.height); }
+  /** Unity's Sprite.rect: the sprite's size in pixels. */
+  get rect() { return new Rect(0, 0, this.width, this.height); }
   /** Pivot in pixels from the sprite's bottom-left corner. */
   get pivot() { return new Vector2(this.pivotFraction.x * this.width, this.pivotFraction.y * this.height); }
   get bounds() {
@@ -54,15 +59,15 @@ export class Sprite extends UObject {
     const size = new Vector2(w, h);
     return { size, extents: size.div(2), min: new Vector2(-this.pivotFraction.x * w, -this.pivotFraction.y * h), max: new Vector2((1 - this.pivotFraction.x) * w, (1 - this.pivotFraction.y) * h) };
   }
+  /** False for a sprite that is entirely transparent. */
+  get hasPixels() { return !!this.texture && this.frameWidth > 0 && this.frameHeight > 0; }
   /** The drawable texture region, or null while the image is still loading. */
   get pixi(): Texture | null {
     if (this.frame) return this.frame;
-    const base = this.texture.pixi;
-    if (!base) { void this.texture.load(); return null; }
-    // Clamp to the image: rects can sit a fraction of a pixel outside after import scaling.
-    const x = Math.max(0, this.x), y = Math.max(0, this.y);
-    const w = Math.min(this.width, base.source.width - x), h = Math.min(this.height, base.source.height - y);
-    this.frame = new Texture({ source: base.source, frame: new Rectangle(x, y, w, h) });
+    if (!this.hasPixels) return null;
+    const base = this.texture!.pixi;
+    if (!base) { void this.texture!.load(); return null; }
+    this.frame = new Texture({ source: base.source, frame: new Rectangle(this.frameX, this.frameY, this.frameWidth, this.frameHeight) });
     return this.frame;
   }
 }
@@ -123,6 +128,9 @@ export const AssetDb = {
   pending: 0,
   scenes: [] as string[],
   sortingLayers: new Map<number, number>(),
+  /** Every image the game can load. */
+  pages: [] as Texture2D[],
+  /** Images that scene data refers to as a whole, by asset id. */
   textures: new Map<string, Texture2D>(),
   sprites: new Map<string, Sprite>(),
   audio: new Map<string, AudioClip>(),
@@ -138,11 +146,13 @@ export const AssetDb = {
     );
     this.scenes = a.scenes;
     a.sortingLayers.forEach(([, id]: [string, number], order: number) => this.sortingLayers.set(id >>> 0, order));
-    for (const g in a.textures) { const [file, w, h] = a.textures[g]; this.textures.set(g, new Texture2D(g, file, w, h)); }
+    const pages: Texture2D[] = a.pages.map(([file, w, h]: [string, number, number], i: number) => new Texture2D(`page${i}`, file, w, h));
+    this.pages = pages;
+    for (const g in a.textures) this.textures.set(g, pages[a.textures[g]]);
     for (const g in a.sprites) {
-      const [name, tex, x, y, w, h, px, py, ppu, border] = a.sprites[g];
+      const [name, page, fx, fy, fw, fh, w, h, ox, oy, px, py, ppu, border] = a.sprites[g];
       const b = border ?? [0, 0, 0, 0];
-      this.sprites.set(g, new Sprite(g, name, this.textures.get(tex)!, x, y, w, h, new Vector2(px, py), ppu, new Vector4(b[0], b[1], b[2], b[3])));
+      this.sprites.set(g, new Sprite(g, name, page >= 0 ? pages[page] : null, fx, fy, fw, fh, w, h, ox, oy, new Vector2(px, py), ppu, new Vector4(b[0], b[1], b[2], b[3])));
     }
     for (const g in a.audio) this.audio.set(g, new AudioClip(g, a.audio[g]));
     const faces: Promise<unknown>[] = [];
@@ -194,14 +204,14 @@ export const AssetDb = {
       if (!v || typeof v !== 'object') return;
       if (Array.isArray(v)) { for (const x of v) visit(x); return; }
       if ('a' in v && 'g' in v) {
-        if (v.a === 'sprite') { const s = this.sprites.get(v.g); if (s) out.add(s.texture); }
+        if (v.a === 'sprite') { const s = this.sprites.get(v.g); if (s?.texture) out.add(s.texture); }
         else if (v.a === 'texture') { const t = this.textures.get(v.g); if (t) out.add(t); }
         else if (v.a === 'controller') {
           const layer = this.controllers.get(v.g)?.data.layers[0];
           for (const st of layer?.states ?? []) {
             if (!deep && st.n !== layer!.def) continue;
             for (const curve of (st.clip && this.clips.get(st.clip)?.data.sprite) || []) for (const g of curve.s) {
-              const s = g && this.sprites.get(g); if (s) out.add(s.texture);
+              const s = g && this.sprites.get(g); if (s && s.texture) out.add(s.texture);
             }
           }
         } else if (v.a === 'prefab' && deep && !seenPrefabs.has(v.g)) {

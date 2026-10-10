@@ -5,6 +5,7 @@ import './game';
 // In development the engine is reachable from the browser console as `murloc`.
 if (import.meta.env.DEV) (window as any).murloc = engine;
 
+
 // The original game ran in a fixed 852x480 window; the stage keeps that shape
 // and grows to fill the browser window.
 const ASPECT = 852 / 480;

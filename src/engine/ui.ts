@@ -400,23 +400,31 @@ export class Image extends Graphic {
       else { const nh = w / ratio; y += (h - nh) * this.rectTransform.pivot.y; h = nh; }
     }
 
+    // The part of the full sprite to show, as fractions of its size measured from the top-left:
+    // the whole of it, or a slice from one edge for a filled bar. (Radial fills are drawn whole for now.)
+    let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
     if (s && this.type === ImageType.Filled && this._fillAmount < 1 && (this.fillMethod === 0 || this.fillMethod === 1)) {
-      // A bar: show a slice of the sprite from one edge. (Radial fills are drawn whole for now.)
       const f = this._fillAmount;
-      if (f <= 0) { if (this.view) this.view.visible = false; return false; }
-      const fr = tex.frame, key = `${s.guid}:${this.fillMethod}:${this.fillOrigin}:${f.toFixed(4)}`;
-      if (this.fillFrame?.key !== key) {
-        this.fillFrame?.texture.destroy();
-        const horizontal = this.fillMethod === 0;
-        const fromStart = horizontal ? this.fillOrigin === 0 : this.fillOrigin === 1; // left, or top in image rows
-        const frame = horizontal
-          ? new Rectangle(fromStart ? fr.x : fr.x + fr.width * (1 - f), fr.y, fr.width * f, fr.height)
-          : new Rectangle(fr.x, fromStart ? fr.y : fr.y + fr.height * (1 - f), fr.width, fr.height * f);
-        this.fillFrame = { key, texture: new Texture({ source: tex.source, frame }) };
+      if (this.fillMethod === 0) { if (this.fillOrigin === 0) u1 = f; else u0 = 1 - f; }
+      else if (this.fillOrigin === 0) v0 = 1 - f; else v1 = f; // origin 0 is the bottom
+    }
+    if (s) {
+      // Only the sprite's trimmed pixels exist on the texture: clip the visible part to them.
+      const t0 = s.offsetX / s.width, t1 = (s.offsetX + s.frameWidth) / s.width;
+      const w0 = s.offsetY / s.height, w1 = (s.offsetY + s.frameHeight) / s.height;
+      const cu0 = Math.max(u0, t0), cu1 = Math.min(u1, t1), cv0 = Math.max(v0, w0), cv1 = Math.min(v1, w1);
+      if (cu1 <= cu0 || cv1 <= cv0) { if (this.view) this.view.visible = false; return false; }
+      const whole = cu0 === t0 && cu1 === t1 && cv0 === w0 && cv1 === w1;
+      if (!whole) {
+        const key = `${s.guid}:${cu0.toFixed(5)}:${cu1.toFixed(5)}:${cv0.toFixed(5)}:${cv1.toFixed(5)}`;
+        if (this.fillFrame?.key !== key) {
+          this.fillFrame?.texture.destroy();
+          const frame = new Rectangle(s.frameX + (cu0 - t0) * s.width, s.frameY + (cv0 - w0) * s.height, (cu1 - cu0) * s.width, (cv1 - cv0) * s.height);
+          this.fillFrame = { key, texture: new Texture({ source: tex.source, frame }) };
+        }
+        tex = this.fillFrame.texture;
       }
-      if (this.fillMethod === 0) { if (this.fillOrigin !== 0) x += w * (1 - f); w *= f; }
-      else { if (this.fillOrigin !== 0) y += h * (1 - f); h *= f; }
-      tex = this.fillFrame.texture;
+      x += cu0 * w; y += (1 - cv1) * h; w *= cu1 - cu0; h *= cv1 - cv0;
     }
 
     const v = this.ensureView('sprite', () => new PixiSprite(tex), ctx.layer) as PixiSprite;

@@ -194,7 +194,8 @@ export class SpriteRenderer extends Renderer {
     if (!view) { view = this.view = new PixiSprite(Texture.EMPTY); layer.addChild(view); }
     const s = this.sprite!;
     if (view.texture !== tex) view.texture = tex;
-    view.anchor.set(s.pivotFraction.x, 1 - s.pivotFraction.y);
+    // The pivot is given on the full sprite; the texture holds only its trimmed pixels.
+    view.anchor.set((s.pivotFraction.x * s.width - s.offsetX) / s.frameWidth, ((1 - s.pivotFraction.y) * s.height - s.offsetY) / s.frameHeight);
     const k = 1 / s.pixelsPerUnit;
     // Sprite pixels to world units; the y flip turns image rows (down) into world y (up).
     setMatrix(view, matMul(this.transform.worldMatrix, { a: this.flipX ? -k : k, b: 0, c: 0, d: this.flipY ? k : -k, tx: 0, ty: 0, z: 0 }));

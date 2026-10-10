@@ -246,7 +246,7 @@ export const Resources = {
     for (const kind of order) {
       const a = tryKind(kind);
       if (a) {
-        if (a instanceof Sprite) void a.texture.load();
+        if (a instanceof Sprite) void a.texture?.load();
         return a as T;
       }
     }
@@ -257,7 +257,7 @@ export const Resources = {
     const req = new ResourceRequest();
     req.asset = Resources.Load(path, type);
     // Prefabs are ready at once; wait for the images they show so they do not pop in.
-    const textures = req.asset instanceof Prefab ? [...AssetDb.texturesUsedBy(req.asset.objects)] : req.asset instanceof Sprite ? [req.asset.texture] : [];
+    const textures = req.asset instanceof Prefab ? [...AssetDb.texturesUsedBy(req.asset.objects)] : req.asset instanceof Sprite && req.asset.texture ? [req.asset.texture] : [];
     Promise.all(textures.map((t) => t.load())).finally(() => { req.progress = 1; req.isDone = true; });
     return req;
   },

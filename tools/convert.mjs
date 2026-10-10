@@ -189,67 +189,6 @@ function convertObjects(file) {
   return out;
 }
 
-// ---------------------------------------------------------------- textures
-
-fs.mkdirSync(outDir, { recursive: true });
-const textures = {};
-{
-  const list = byKind('texture');
-  console.log(`Textures: ${list.length}${skipTextures ? ' (reusing existing files)' : ''}`);
-  let done = 0, bytes = 0;
-  const queue = [...list];
-  async function worker() {
-    for (let item; (item = queue.shift()); ) {
-      const [guid, a] = item;
-      const relOut = `tex/${rel(a.path).replace(/\.png$/i, '.webp')}`;
-      const dst = path.join(outDir, relOut);
-      const img = sharp(a.path, { limitInputPixels: false });
-      const { width, height } = await img.metadata();
-      if (!skipTextures && !(fs.existsSync(dst) && fs.statSync(dst).mtimeMs >= fs.statSync(a.path).mtimeMs)) {
-        fs.mkdirSync(path.dirname(dst), { recursive: true });
-        // Small images are mostly UI icons: keep them exact. Large sheets are lossy but high quality.
-        const small = width * height <= 256 * 256;
-        await img.webp(small ? { lossless: true, effort: 4 } : { quality: 90, alphaQuality: 100, effort: 4 }).toFile(dst);
-      }
-      if (fs.existsSync(dst)) bytes += fs.statSync(dst).size;
-      textures[guid] = [relOut, width, height];
-      if (++done % 100 === 0) console.log(`  ${done}/${list.length}`);
-    }
-  }
-  await Promise.all(Array.from({ length: 6 }, worker));
-  console.log(`  ${(bytes / 2 ** 20).toFixed(1)} MB of WebP`);
-}
-
-// ---------------------------------------------------------------- sprites
-
-// guid -> [name, textureGuid, x, yFromTop, width, height, pivotX, pivotY, pixelsPerUnit, border?]
-const sprites = {};
-const spritesByTexture = new Map();
-{
-  const num = '(-?[\\d.]+(?:[eE][-+]?\\d+)?)';
-  const rectRe = new RegExp(`m_Rect:\\n    serializedVersion: 2\\n    x: ${num}\\n    y: ${num}\\n    width: ${num}\\n    height: ${num}`);
-  const pivotRe = new RegExp(`m_Pivot: \\{x: ${num}, y: ${num}\\}`);
-  const borderRe = new RegExp(`m_Border: \\{x: ${num}, y: ${num}, z: ${num}, w: ${num}\\}`);
-  for (const [guid, a] of byKind('sprite')) {
-    const y = read(a.path);
-    let name = /^  m_Name: (.*)$/m.exec(y)[1];
-    if (/^["'].*["']$/.test(name)) name = name.slice(1, -1);
-    const tex = /texture: \{fileID: 2800000, guid: (\w+)/.exec(y)?.[1];
-    if (!tex || !textures[tex]) continue;
-    const [x, yBottom, w, h] = rectRe.exec(y).slice(1).map(Number);
-    const [px, py] = pivotRe.exec(y).slice(1).map(Number);
-    const ppu = Number(/m_PixelsToUnits: (.*)/.exec(y)[1]);
-    const border = borderRe.exec(y).slice(1).map(Number);
-    const texH = textures[tex][2];
-    const row = [name, tex, x, texH - yBottom - h, w, h, px, py, ppu];
-    if (border.some((b) => b !== 0)) row.push(border);
-    sprites[guid] = row;
-    if (!spritesByTexture.has(tex)) spritesByTexture.set(tex, []);
-    spritesByTexture.get(tex).push([name, guid]);
-  }
-  console.log(`Sprites: ${Object.keys(sprites).length}`);
-}
-
 // ---------------------------------------------------------------- media files
 
 function copyAll(kind, folder, keepName) {
@@ -370,6 +309,149 @@ for (const [guid, a] of byKind('prefab')) prefabs[guid] = { name: path.basename(
 sizes['prefabs.json'] = writeJson('prefabs.json', prefabs);
 console.log(`Scenes: ${scenes.length}, prefabs: ${Object.keys(prefabs).length}`);
 
+// ---------------------------------------------------------------- sprites and textures
+
+// The original sprite sheets are mostly empty space around each frame. Each
+// sheet is repacked so that it holds only the pixels its sprites use, which
+// cuts the memory the game needs several times over. A sprite remembers its
+// original size and where its trimmed pixels sit inside it, so it is drawn
+// exactly where it was.
+//
+// pages:   [file, width, height]                       an image the game loads
+// sprites: guid -> [name, page, frameX, frameY, frameW, frameH, width, height, offsetX, offsetY, pivotX, pivotY, pixelsPerUnit, border?]
+// textures: guid -> page                                images referenced whole (cursors and the like)
+
+const PAGE = 4096, PAD = 2;
+fs.mkdirSync(outDir, { recursive: true });
+const pages = [];
+const sprites = {};
+const textures = {};
+const spritesByTexture = new Map();
+{
+  // What the game can reach: anything a scene, prefab or animation refers to, plus everything under Resources.
+  const used = { sprite: new Set(), texture: new Set() };
+  const visit = (v) => {
+    if (!v || typeof v !== 'object') return;
+    if (Array.isArray(v)) { for (const x of v) visit(x); return; }
+    if (v.a && v.g) { used[v.a]?.add(v.g); return; }
+    for (const k in v) visit(v[k]);
+  };
+  for (const f of walk(path.join(outDir, 'scenes'))) visit(JSON.parse(read(f)));
+  visit(prefabs);
+  for (const c of Object.values(clips)) for (const curve of c.sprite ?? []) for (const g of curve.s) if (g) used.sprite.add(g);
+  const resRoot = path.join(assetsDir, 'Resources') + path.sep;
+
+  const num = '(-?[\\d.]+(?:[eE][-+]?\\d+)?)';
+  const rect4 = (label, indent) => new RegExp(`${label}:\\n${indent}serializedVersion: 2\\n${indent}x: ${num}\\n${indent}y: ${num}\\n${indent}width: ${num}\\n${indent}height: ${num}`);
+  const rectRe = rect4('m_Rect', '    '), trimRe = rect4('textureRect', '      ');
+  const pivotRe = new RegExp(`m_Pivot: \\{x: ${num}, y: ${num}\\}`);
+  const borderRe = new RegExp(`m_Border: \\{x: ${num}, y: ${num}, z: ${num}, w: ${num}\\}`);
+
+  /** texture guid -> sprites cut from it */
+  const byTexture = new Map();
+  let dropped = 0;
+  for (const [guid, a] of byKind('sprite')) {
+    const y = read(a.path);
+    let name = /^  m_Name: (.*)$/m.exec(y)[1];
+    if (/^["'].*["']$/.test(name)) name = name.slice(1, -1);
+    const tex = /texture: \{fileID: 2800000, guid: (\w+)/.exec(y)?.[1];
+    if (!tex || assets.get(tex)?.kind !== 'texture') continue;
+    if (!spritesByTexture.has(tex)) spritesByTexture.set(tex, []);
+    spritesByTexture.get(tex).push([name, guid]);
+    if (!used.sprite.has(guid) && !a.path.startsWith(resRoot) && !assets.get(tex).path.startsWith(resRoot)) { dropped++; continue; }
+    const rect = rectRe.exec(y).slice(1).map(Number), trim = trimRe.exec(y)?.slice(1).map(Number) ?? rect;
+    const [px, py] = pivotRe.exec(y).slice(1).map(Number);
+    const border = borderRe.exec(y).slice(1).map(Number);
+    if (!byTexture.has(tex)) byTexture.set(tex, []);
+    byTexture.get(tex).push({ guid, name, rect, trim, px, py, ppu: Number(/m_PixelsToUnits: (.*)/.exec(y)[1]), border: border.some((b) => b !== 0) ? border : null });
+  }
+  for (const g of used.texture) if (!byTexture.has(g) && assets.get(g)?.kind === 'texture') byTexture.set(g, []);
+
+  const addPage = async (relOut, data, width, height) => {
+    const dst = path.join(outDir, relOut);
+    fs.mkdirSync(path.dirname(dst), { recursive: true });
+    if (!skipTextures) {
+      // Small images are mostly UI icons: keep them exact. Large sheets are lossy but high quality.
+      const img = sharp(data, { raw: { width, height, channels: 4 }, limitInputPixels: false });
+      await img.webp(width * height <= 256 * 256 ? { lossless: true, effort: 4 } : { quality: 90, alphaQuality: 100, effort: 4 }).toFile(dst);
+    }
+    pages.push([relOut, width, height]);
+    return pages.length - 1;
+  };
+
+  let before = 0, after = 0, done = 0;
+  const queue = [...byTexture];
+  console.log(`Textures: ${queue.length} in use of ${byKind('texture').length}${skipTextures ? ' (not rewriting image files)' : ''}`);
+  async function worker() {
+    for (let item; (item = queue.shift()); ) {
+      const [texGuid, list] = item;
+      const file = assets.get(texGuid).path;
+      const base = `tex/${rel(file).replace(/\.png$/i, '')}`;
+      const { data, info } = await sharp(file, { limitInputPixels: false }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      const W = info.width, H = info.height;
+      before += W * H;
+
+      // Each sprite's used pixels, as a rectangle on the source image measured from the top-left.
+      const boxes = new Map();
+      for (const s of list) {
+        const [rx, ry, rw, rh] = s.rect;
+        const cell = { x: Math.round(rx), y: Math.round(H - ry - rh), w: Math.round(rw), h: Math.round(rh) };
+        const [tx, ty, tw, th] = s.border ? s.rect : s.trim;
+        let x0 = Math.floor(tx + 1e-3), x1 = Math.ceil(tx + tw - 1e-3), y0 = Math.floor(H - ty - th + 1e-3), y1 = Math.ceil(H - ty - 1e-3);
+        x0 = Math.max(x0, cell.x, 0); y0 = Math.max(y0, cell.y, 0); x1 = Math.min(x1, cell.x + cell.w, W); y1 = Math.min(y1, cell.y + cell.h, H);
+        s.cell = cell;
+        s.box = x1 > x0 && y1 > y0 ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : { x: cell.x, y: cell.y, w: 0, h: 0 };
+        if (s.box.w) boxes.set(`${s.box.x},${s.box.y},${s.box.w},${s.box.h}`, s.box);
+      }
+
+      // Shelf packing, tallest first, into pages of at most PAGE x PAGE.
+      const unique = [...boxes.values()].sort((a, b) => b.h - a.h || b.w - a.w);
+      const area = unique.reduce((n, b) => n + (b.w + PAD) * (b.h + PAD), 0);
+      const widest = unique.reduce((n, b) => Math.max(n, b.w), 0);
+      const pageW = Math.max(widest + PAD * 2, Math.min(PAGE, 2 ** Math.ceil(Math.log2(Math.sqrt(area * 1.15) || 1))));
+      const built = [];
+      let cur = null;
+      for (const b of unique) {
+        if (cur && cur.x + b.w + PAD > pageW) { cur.x = PAD; cur.y += cur.rowH + PAD; cur.rowH = 0; }
+        if (!cur || (cur.y + b.h + PAD > PAGE && cur.items.length)) { cur = { x: PAD, y: PAD, rowH: 0, items: [], h: 0 }; built.push(cur); }
+        b.page = built.length - 1; b.px = cur.x; b.py = cur.y;
+        cur.items.push(b);
+        cur.x += b.w + PAD; cur.rowH = Math.max(cur.rowH, b.h); cur.h = Math.max(cur.h, b.py + b.h + PAD);
+      }
+      const pageIds = [];
+      for (let i = 0; i < built.length; i++) {
+        const pw = pageW, ph = built[i].h;
+        const out = Buffer.alloc(pw * ph * 4);
+        for (const b of built[i].items) {
+          for (let row = 0; row < b.h; row++) {
+            const src = ((b.y + row) * W + b.x) * 4;
+            data.copy(out, ((b.py + row) * pw + b.px) * 4, src, src + b.w * 4);
+          }
+        }
+        after += pw * ph;
+        pageIds.push(await addPage(`${base}${i ? `.${i}` : ''}.webp`, out, pw, ph));
+      }
+      for (const s of list) {
+        const packed = s.box.w ? boxes.get(`${s.box.x},${s.box.y},${s.box.w},${s.box.h}`) : null;
+        const row = [s.name, packed ? pageIds[packed.page] : -1, packed ? packed.px : 0, packed ? packed.py : 0, s.box.w, s.box.h,
+          s.cell.w, s.cell.h, s.box.x - s.cell.x, s.box.y - s.cell.y, s.px, s.py, s.ppu];
+        if (s.border) row.push(s.border);
+        sprites[s.guid] = row;
+      }
+      // Images the game refers to as a whole are kept as they are, next to the packed sheet.
+      if (used.texture.has(texGuid) || file.startsWith(resRoot) && list.length === 0) {
+        after += W * H;
+        textures[texGuid] = await addPage(`${base}.full.webp`, data, W, H);
+      }
+      if (++done % 100 === 0) console.log(`  ${done}/${byTexture.size}`);
+    }
+  }
+  await Promise.all(Array.from({ length: 4 }, worker));
+  const mb = (px) => ((px * 4) / 2 ** 20).toFixed(0);
+  console.log(`Sprites: ${Object.keys(sprites).length} (${dropped} unreferenced ones left out)`);
+  console.log(`Image memory when everything is loaded: ${mb(before)} MB -> ${mb(after)} MB in ${pages.length} pages`);
+}
+
 // ---------------------------------------------------------------- Resources.Load index
 
 // Unity resolves Resources.Load("some/Path") case-insensitively and without the extension.
@@ -380,7 +462,7 @@ for (const [guid, a] of assets) {
   const key = path.relative(resDir, a.path).split(path.sep).join('/').replace(/\.[^.]+$/, '').toLowerCase();
   if (a.kind === 'prefab' || a.kind === 'audio') resources[a.kind][key] = guid;
   else if (a.kind === 'texture') {
-    resources.texture[key] = guid;
+    if (textures[guid] !== undefined) resources.texture[key] = guid;
     // Loading a Sprite by a texture's path gives the sprite cut from that texture
     // (the one with the same name if there are several, else the first).
     const list = (spritesByTexture.get(guid) ?? []).sort((x, y) => x[0].localeCompare(y[0], 'en', { numeric: true }));
@@ -399,7 +481,7 @@ for (const [guid, a] of assets) {
 const tagManager = parseUnityFile(path.join(unityDir, 'ProjectSettings', 'TagManager.asset'))[0].raw;
 const sortingLayers = (tagManager.m_SortingLayers || []).map((l) => [l.name, Number(l.uniqueID)]);
 
-sizes['assets.json'] = writeJson('assets.json', { scenes: scenes.map((s) => path.basename(s)), textures, sprites, audio, fonts, resources, sortingLayers });
+sizes['assets.json'] = writeJson('assets.json', { scenes: scenes.map((s) => path.basename(s)), pages, textures, sprites, audio, fonts, resources, sortingLayers });
 sizes['animations.json'] = writeJson('animations.json', { clips, controllers });
 
 const total = Object.values(sizes).reduce((a, b) => a + b, 0);

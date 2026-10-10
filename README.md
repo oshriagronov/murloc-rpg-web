@@ -70,7 +70,6 @@ references between objects are `{ "r": id }` and references to assets are
 - Not drawn yet: particle effects, 3D text (`TextMesh`), radial image fills,
   sliced/tiled sprite renderers, layout groups.
 - Not simulated yet: colliders and triggers, mouse events on world objects.
-- Memory: sprite sheets are loaded whole and uncompressed. The first zone
-  decodes about 1.4 GB of images. Packing the sheets down to the pixels that are
-  actually used is the planned fix.
+- Memory: the first zone decodes about 475 MB of images. Sprite sheets are packed
+  down to their used pixels, but they are still uncompressed in memory.
 - Rich text tags in UI text are stripped rather than applied.
