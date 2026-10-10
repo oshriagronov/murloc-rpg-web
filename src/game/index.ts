@@ -1,6 +1,6 @@
 // Registers the game's scripts under the names the scene data uses.
 
-import { registerComponents } from '../engine';
+import { registerComponents, registerStateBehaviours } from '../engine';
 import { AbilitiesBox } from './AbilitiesBox';
 import { ArchaicBattleActionClass } from './ArchaicBattleActionClass';
 import { ArlokkBattleActionClass } from './ArlokkBattleActionClass';
@@ -148,7 +148,6 @@ registerComponents({
   CrabBattleActionClass,
   CreditDelay,
   CrocBattleActionClass,
-  Destroy_On_Exit,
   DireWolfBattleActionClass,
   Drop_Table,
   End_Game_Cut_Scene,
@@ -257,3 +256,6 @@ registerComponents({
   press1,
   world_events,
 } as any);
+
+// Scripts attached to animator states rather than to objects.
+registerStateBehaviours({ Destroy_On_Exit });

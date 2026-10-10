@@ -248,6 +248,7 @@ for (const [guid, a] of byKind('anim')) {
 }
 
 const controllers = {};
+const nonEmpty = (list) => (list.length ? list : undefined);
 for (const [guid, a] of byKind('controller')) {
   const docs = parseUnityFile(a.path);
   const byId = new Map(docs.map((d) => [d.id, d]));
@@ -279,6 +280,8 @@ for (const [guid, a] of byKind('controller')) {
           speed: Number(s.m_Speed),
           clip: s.m_Motion?.guid && assets.get(s.m_Motion.guid)?.kind === 'anim' ? s.m_Motion.guid : null,
           tr: (s.m_Transitions || []).map((t) => transition(String(t.fileID))).filter(Boolean),
+          // Scripts attached to the state (Unity's StateMachineBehaviour), by class name.
+          beh: nonEmpty((s.m_StateMachineBehaviours || []).map((b) => scriptName(byId.get(String(b.fileID))?.raw.m_Script?.guid)).filter((n) => n && !n.startsWith('?'))),
         };
       });
       return {

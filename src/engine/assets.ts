@@ -107,7 +107,7 @@ export interface ClipData {
   euler?: { path: string; k: number[][] }[];
 }
 export interface TransitionData { to: string | null; exit?: boolean; cond: [number, string, number][]; hasExit: boolean; exitTime: number; dur: number; self?: boolean }
-export interface StateData { n: string; speed: number; clip: string | null; tr: TransitionData[] }
+export interface StateData { n: string; speed: number; clip: string | null; tr: TransitionData[]; beh?: string[] }
 export interface ControllerData { n: string; params: [string, number, number][]; layers: { n: string; def: string | null; any: TransitionData[]; states: StateData[] }[] }
 
 export class AnimationClip extends UObject {

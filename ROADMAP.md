@@ -114,8 +114,22 @@ version.
       fight and win screens were compared with the Unity build. Fixed on the
       way: text that ends in spaces keeps them when it is aligned, as in
       Unity, so the win box reads "Level: 1" and not "Level:1".)
-- [ ] **1.5 Battle menu.** Skills, Spells, Items and Flee each do what they
+- [x] **1.5 Battle menu.** Skills, Spells, Items and Flee each do what they
       should; buffs and debuffs show their icons and expire; energy is spent.
+      (2026-10-10; fought Wolf Cubs as a Warrior, first with only Heroic
+      Strike and then with every talent switched on from the console. Used
+      Heroic Strike, Cold Blood, Bloodrage, Pummel, Adrenaline Rush, Charge,
+      Execute, Renew, Heal, Power Word: Shield, Polymorph, Lash of Pain, Drain
+      Life, Frost Nova, Pyroblast, Magic Dust, Spiced Wolf Meat and Flee:
+      each cost the energy its tooltip names, did its damage, healing, stun
+      or shield, and its icon appeared under the right health bar and left
+      when the effect ran out. The skills menu was compared with the Unity
+      build. Fixed on the way: animator states now run the scripts attached
+      to them, so spell effects remove themselves when their animation ends
+      (they used to pile up on screen), and text set to truncate drops the
+      lines that do not fit, as Unity does ("Adrenaline Rush" shows as
+      "Adrenaline", as in the original). Not covered: Ambush, which needs
+      Felva's quest and a dagger; see 2.1.)
 - [ ] **1.6 Levelling and talents.** Level up, spend talent points in each of
       the four trees, talent tooltips, new abilities appear in battle.
 - [ ] **1.7 The other three classes.** Start a game as Rogue, Priest and Mage;
@@ -143,7 +157,9 @@ version.
 ### Phase 2 — The other areas
 
 - [ ] **2.1 Stranglethorn Vale (`STV`).** NPCs, quests, tigers and gorillas,
-      the routes to the arena and Zul'Gurub.
+      the routes to the arena and Zul'Gurub. Include Ambush (the skill given
+      by Felva's quest, usable with a dagger on the first turn), which 1.5 could
+      not reach.
 - [ ] **2.2 Gurubashi Arena (`Arena`).** The arena fights through to the
       champion.
 - [ ] **2.3 Zul'Gurub (`ZG`).** Each boss, through Hakkar.
@@ -203,6 +219,10 @@ Compare each with the Unity version side by side.
 - [ ] **6.2 A scripted smoke test** that starts a game and loads every scene,
       failing on console errors.
 - [ ] **6.3 Run typecheck and tests automatically** on every push.
+- [ ] **6.4 Stable converter output.** Running the converter twice numbers the
+      image pages in a different order (they are numbered as they finish), so
+      `assets.json` changes in over a thousand places although nothing really
+      did. Number them in a fixed order.
 
 ## Original bugs kept on purpose
 
@@ -213,6 +233,14 @@ These exist in the original game and are reproduced, not fixed.
   (`MobLoader.load_zones`).
 - `Buff.take_shield_damage` tests `sheild_health != -1 || sheild_health != 0`,
   which is always true.
+- Skill and spell tooltips do not show during a fight or inside the tent.
+  `SpellHoverDetails.Display_Spell_Details` moves the tooltip down by 480 when
+  the camera is below the world, which puts it off the screen. The Unity build
+  does the same.
+- The battle Items menu shows only the first word of an item's name ("Magic",
+  "Spiced"): the label is too narrow for both words and is set to cut off what
+  does not fit. (Worked out from the scene data; the Unity build was not
+  checked for this one.)
 
 ## Questions for the owner
 

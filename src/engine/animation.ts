@@ -56,6 +56,8 @@ export class Animator extends Behaviour {
   private pending: { state: StateData; time: number; switchIn: number } | null = null;
   private targets = new Map<string, Transform | null>();
   private started = false;
+  /** The scripts attached to states, made the first time their state is entered. */
+  private behaviours = new Map<StateData, StateMachineBehaviour[]>();
 
   get runtimeAnimatorController() { return this.controller; }
   set runtimeAnimatorController(c: RuntimeAnimatorController | null) {
@@ -75,6 +77,7 @@ export class Animator extends Behaviour {
     this.paramTypes.clear();
     this.pending = null;
     this.started = false;
+    this.behaviours.clear();
     for (const [name, type, def] of this.controller?.data.params ?? []) { this.params.set(name, def); this.paramTypes.set(name, type); }
     const layer = this.controller?.data.layers[0];
     this.state = layer ? layer.states.find((s) => s.n === layer.def) ?? layer.states[0] ?? null : null;
@@ -88,15 +91,53 @@ export class Animator extends Behaviour {
   }
   private clipOf(state: StateData | null): ClipData | null { return (state?.clip && AssetDb.clips.get(state.clip)?.data) || null; }
 
+  private infoOf(state: StateData | null, time: number) {
+    const clip = this.clipOf(state), len = clip?.len ?? 0;
+    return new AnimatorStateInfo(state?.n ?? '', len, len > 0 ? time / len : 0, state?.speed ?? 1, !!clip?.loop);
+  }
+
+  /** Tells the scripts attached to a state that it has been entered or left. */
+  private notify(state: StateData | null, message: 'OnStateEnter' | 'OnStateExit', time = 0) {
+    if (!state?.beh) return;
+    let list = this.behaviours.get(state);
+    if (!list) {
+      list = [];
+      for (const name of state.beh) {
+        const cls = stateBehaviours.get(name);
+        if (cls) list.push(new cls());
+        else console.warn(`No implementation for state behaviour "${name}" yet`);
+      }
+      this.behaviours.set(state, list);
+    }
+    const info = this.infoOf(state, time);
+    for (const b of list) b[message]?.(this, info, 0);
+  }
+
+  /** Makes `next` the current state, leaving the one before it. */
+  private enter(next: StateData, time: number, announce = true) {
+    const previous = this.state;
+    this.state = next;
+    this.stateTime = time;
+    this.lastNormalized = 0;
+    if (!this.started) return; // the first tick announces the state the animator starts in
+    if (previous) this.notify(previous, 'OnStateExit');
+    if (announce) this.notify(next, 'OnStateEnter', time);
+  }
+
   Play(stateName: string, _layer = -1, normalizedTime = 0) {
     const s = this.findState(stateName);
     if (!s) { console.warn(`Animator on "${this.gameObject.name}" has no state "${stateName}"`); return; }
-    this.state = s;
     this.pending = null;
     const len = this.clipOf(s)?.len ?? 0;
-    this.stateTime = Number.isFinite(normalizedTime) ? Math.max(0, normalizedTime) * len : 0;
-    this.lastNormalized = 0;
+    const wasStarted = this.started;
     this.started = true;
+    if (wasStarted) this.enter(s, Number.isFinite(normalizedTime) ? Math.max(0, normalizedTime) * len : 0);
+    else {
+      this.state = s;
+      this.stateTime = Number.isFinite(normalizedTime) ? Math.max(0, normalizedTime) * len : 0;
+      this.lastNormalized = 0;
+      this.notify(s, 'OnStateEnter', this.stateTime);
+    }
     this.apply();
   }
   SetBool(name: string, v: boolean) { this.params.set(name, v ? 1 : 0); }
@@ -108,10 +149,7 @@ export class Animator extends Behaviour {
   SetTrigger(name: string) { this.params.set(name, 1); }
   ResetTrigger(name: string) { this.params.set(name, 0); }
 
-  GetCurrentAnimatorStateInfo(_layer = 0) {
-    const clip = this.clipOf(this.state), len = clip?.len ?? 0;
-    return new AnimatorStateInfo(this.state?.n ?? '', len, len > 0 ? this.stateTime / len : 0, this.state?.speed ?? 1, !!clip?.loop);
-  }
+  GetCurrentAnimatorStateInfo(_layer = 0) { return this.infoOf(this.state, this.stateTime); }
   /** Unity's clip-info query: the clip that is currently playing. */
   GetCurrentAnimatorClipInfo(_layer = 0) {
     const clip = this.state?.clip ? AssetDb.clips.get(this.state.clip) : null;
@@ -136,7 +174,7 @@ export class Animator extends Behaviour {
 
   _tick(dt: number) {
     if (!this.state) return;
-    if (!this.started) { this.started = true; this.apply(); }
+    if (!this.started) { this.started = true; this.notify(this.state, 'OnStateEnter'); this.apply(); if (!this.state) return; }
     const step = dt * this.speed;
     const clip = this.clipOf(this.state), len = clip?.len ?? 0;
     this.stateTime += step * this.state.speed;
@@ -146,10 +184,9 @@ export class Animator extends Behaviour {
       this.pending.time += step * this.pending.state.speed;
       this.pending.switchIn -= step;
       if (this.pending.switchIn <= 0) {
-        this.state = this.pending.state;
-        this.stateTime = this.pending.time;
-        this.lastNormalized = 0;
+        const { state, time } = this.pending;
         this.pending = null;
+        this.enter(state, time, false); // it was announced when the blend began
       }
     } else {
       const layer = this.controller!.data.layers[0];
@@ -159,8 +196,8 @@ export class Animator extends Behaviour {
         const next = tr.to ? this.findState(tr.to) : layer.states.find((s) => s.n === layer.def) ?? null;
         if (!next) continue;
         for (const [, name] of tr.cond) if (this.paramTypes.get(name) === 9) this.params.set(name, 0); // triggers are used up
-        if (tr.dur > 0) this.pending = { state: next, time: 0, switchIn: tr.dur / 2 };
-        else { this.state = next; this.stateTime = 0; }
+        if (tr.dur > 0) { this.pending = { state: next, time: 0, switchIn: tr.dur / 2 }; this.notify(next, 'OnStateEnter'); }
+        else this.enter(next, 0);
         break;
       }
       this.lastNormalized = this.pending || this.stateTime === 0 ? 0 : normalized;
@@ -235,7 +272,19 @@ export class Animation extends Behaviour {
   Stop() {}
 }
 
-/** Base class for scripts attached to animator states. */
-export class StateMachineBehaviour {}
+/**
+ * Base class for scripts attached to animator states. A state's scripts are
+ * told when the animator enters the state and when it leaves it.
+ */
+export class StateMachineBehaviour {
+  OnStateEnter?(animator: Animator, stateInfo: AnimatorStateInfo, layerIndex: number): void;
+  OnStateExit?(animator: Animator, stateInfo: AnimatorStateInfo, layerIndex: number): void;
+}
+
+const stateBehaviours = new Map<string, new () => StateMachineBehaviour>();
+/** Makes state scripts available to animator data under their class names. */
+export function registerStateBehaviours(classes: Record<string, new () => StateMachineBehaviour>) {
+  for (const name in classes) stateBehaviours.set(name, classes[name]);
+}
 
 export { Color as _Color };

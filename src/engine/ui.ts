@@ -563,10 +563,20 @@ export class Text extends Graphic {
         }
         style = this.buildStyle(size, r.width, fill);
       }
+      let m = CanvasTextMetrics.measureText(text, style);
+      let shown = text;
+      if (this.verticalOverflow === 0 && r.height > 0) {
+        // Truncate: Unity leaves out the lines that do not fit the height of the rectangle.
+        // (It can leave out all of them; one is always kept here, as line heights differ a little.)
+        const fit = Math.max(1, Math.floor((r.height + 1) / m.lineHeight));
+        if (m.lines.length > fit) {
+          shown = m.lines.slice(0, fit).join('\n');
+          m = CanvasTextMetrics.measureText(shown, style);
+        }
+      }
       view.style = style;
-      view.text = text;
+      view.text = shown;
       view.resolution = resolution;
-      const m = CanvasTextMetrics.measureText(text, style);
       this.measured = { width: m.width, height: m.height };
     }
     const [col, row] = this.alignCell();
