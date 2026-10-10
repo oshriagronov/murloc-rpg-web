@@ -481,7 +481,11 @@ for (const [guid, a] of assets) {
 const tagManager = parseUnityFile(path.join(unityDir, 'ProjectSettings', 'TagManager.asset'))[0].raw;
 const sortingLayers = (tagManager.m_SortingLayers || []).map((l) => [l.name, Number(l.uniqueID)]);
 
-sizes['assets.json'] = writeJson('assets.json', { scenes: scenes.map((s) => path.basename(s)), pages, textures, sprites, audio, fonts, resources, sortingLayers });
+// Text files the scenes refer to directly (the item lists).
+const texts = {};
+for (const [guid, a] of byKind('text')) if (/\.json$/i.test(a.path)) texts[guid] = [path.basename(a.path).replace(/\.[^.]+$/, ''), read(a.path)];
+
+sizes['assets.json'] = writeJson('assets.json', { scenes: scenes.map((s) => path.basename(s)), texts, pages, textures, sprites, audio, fonts, resources, sortingLayers });
 sizes['animations.json'] = writeJson('animations.json', { clips, controllers });
 
 const total = Object.values(sizes).reduce((a, b) => a + b, 0);

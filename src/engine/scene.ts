@@ -17,6 +17,17 @@ export function registerComponents(classes: Record<string, ComponentCtor>) {
   for (const name in classes) registry.set(name, classes[name]);
 }
 
+/**
+ * A registered class looked up by name when it is needed. A few of the game's
+ * classes refer to each other in a circle; fetching one of them this way,
+ * instead of importing it, keeps the modules loadable in any order.
+ */
+export function lazyClass<T>(name: string): T {
+  const cls = registry.get(name);
+  if (!cls) throw new Error(`Class "${name}" is not registered`);
+  return cls as unknown as T;
+}
+
 /** Placeholder for a component the engine or game has not implemented; it keeps the data. */
 export class UnknownComponent extends Behaviour {
   typeName = '';

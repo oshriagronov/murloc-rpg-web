@@ -8,7 +8,7 @@ import { EventSystem, drawFrame } from './draw';
 import { MeshFilter, MeshRenderer, ParticleSystem, ParticleSystemRenderer, UniversalAdditionalCameraData } from './extras';
 import { Input } from './input';
 import { AudioListenerComponent, AudioSource, VideoPlayer } from './media';
-import { BoxCollider, BoxCollider2D, CircleCollider2D, Rigidbody2D } from './physics';
+import { BoxCollider, BoxCollider2D, CircleCollider2D, Physics2D, Rigidbody2D, sendMouseEvents } from './physics';
 import { Camera, Device, SpriteRenderer } from './render';
 import { SceneManager, registerComponents } from './scene';
 import { Animation } from './animation';
@@ -38,10 +38,11 @@ export async function startGame(host: HTMLElement, firstScene: string) {
     const dt = (now - last) / 1000;
     last = now;
     try {
-      SceneManager._activatePending();
+      if (SceneManager._activatePending()) Physics2D.reset();
       Input.beginFrame();
       EventSystem.process();
-      stepFrame(dt, { beforeLateUpdate: () => Animator.tickAll() });
+      sendMouseEvents();
+      stepFrame(dt, { fixedUpdate: () => Physics2D.step(), beforeLateUpdate: () => Animator.tickAll() });
       drawFrame();
     } catch (e) {
       // One bad frame should not freeze the game for good.

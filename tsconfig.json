@@ -3,14 +3,22 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "strict": true,
-    "noImplicitOverride": true,
+    "noImplicitOverride": false,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": []
+    "types": [],
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

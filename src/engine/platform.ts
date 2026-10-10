@@ -1,6 +1,7 @@
 // The parts of Unity's Application-level API the game touches.
 
 import { Texture2D, assetUrl } from './assets';
+import { construct } from './compat';
 import { Vector2 } from './math';
 import { Device } from './render';
 
@@ -39,7 +40,11 @@ export const PlayerPrefs = {
 };
 
 export const JsonUtility = {
-  FromJson: <T = any>(json: string): T => JSON.parse(json),
+  /** Parses JSON into an instance of `type`, or into plain data when no type is given. */
+  FromJson<T = any>(json: string, type?: unknown): T {
+    const data = JSON.parse(json);
+    return type ? construct<T>(type as any, data) : data;
+  },
   ToJson: (obj: unknown) => JSON.stringify(obj),
 };
 

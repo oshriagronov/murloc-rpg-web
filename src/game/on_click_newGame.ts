@@ -1,54 +1,57 @@
-import { AsyncOperation, Canvas, GameObject, Image, MonoBehaviour, Resources, Routine, SceneManager, Slider, Sprite } from '../engine';
+import { AsyncOperation, Canvas, GameObject, Image, MonoBehaviour, Resources, Routine, SceneManager, Slider, Sprite, alive } from '../engine';
 import { IntroVideoPlayer } from './IntroVideoPlayer';
 import { SaveData } from './SaveData';
 import { SoundManager } from './SoundManager';
 
-/** Loads a scene behind the loading screen. Used by the menu buttons and by zone exits. */
 export class on_click_newGame extends MonoBehaviour {
-  private screen_load_operation: AsyncOperation | null = null;
-  load_screen: GameObject = null!;
-  scene_name = '';
-  private background_two: Sprite | null = null;
-  private is_screen_loading = false;
+  private screen_load_operation: AsyncOperation = null;
+  load_screen: GameObject = null;
+  scene_name: string = '';
+  private background_two: Sprite = null;
+  private is_screen_loading: boolean = false;
 
-  Start() {
+  Start(): void {
     this.background_two = Resources.Load('loading_background_two', Sprite);
   }
 
-  LoadScene(scene: string) {
-    if (this.is_screen_loading) return;
+  LoadScene(scene: string): void {
+    if (this.is_screen_loading) {
+      return;
+    }
     this.is_screen_loading = true;
     this.scene_name = scene;
     this.load_screen.SetActive(true);
-    const obj = GameObject.Find('IntroVideo');
-    let world_number = 0;
-    if (obj != null) {
-      obj.GetComponent(IntroVideoPlayer).main_menu_canvas.SetActive(false);
-      obj.GetComponent(SoundManager).Play_EnterWorld();
+    let obj: GameObject = GameObject.Find('IntroVideo');
+    let world_number: number = 0;
+    if (alive(obj)) {
+      GameObject.Find('IntroVideo').GetComponent(IntroVideoPlayer).main_menu_canvas.SetActive(false);
+      GameObject.Find('IntroVideo').GetComponent(SoundManager).Play_EnterWorld();
       if (SaveData.load_game_slot !== -1) {
-        world_number = obj.GetComponent(IntroVideoPlayer).get_slot_save_data(SaveData.load_game_slot)!.world_number;
+        world_number = GameObject.Find('IntroVideo').GetComponent(IntroVideoPlayer).get_slot_save_data(SaveData.load_game_slot).world_number;
       }
     }
     this.UpdateProgressUI(0);
     this.StartCoroutine(this.BeginLoading(this.scene_name, world_number));
   }
 
-  new_new() {
+  new_new(): void {
     SaveData.load_game_slot = -1;
     this.LoadScene('Scenes/Test');
   }
 
-  load_game(slot: number) {
+  load_game(slot: number): void {
     if (slot > 0) {
       SaveData.load_game_slot = slot;
       this.LoadScene('Scenes/Test');
     }
   }
 
-  private *BeginLoading(scene_name: string, world_number = 0): Routine {
+  private *BeginLoading(scene_name: string, world_number: number = 0): Routine {
     this.screen_load_operation = SceneManager.LoadSceneAsync(scene_name);
     if (world_number === 1 || scene_name === 'Scenes/STV') {
-      if (this.background_two == null) this.background_two = Resources.Load('loading_background_two', Sprite);
+      if (!alive(this.background_two)) {
+        this.background_two = Resources.Load('loading_background_two', Sprite);
+      }
       this.load_screen.GetComponent(Image).sprite = this.background_two;
     }
     while (!this.screen_load_operation.isDone) {
@@ -62,7 +65,7 @@ export class on_click_newGame extends MonoBehaviour {
     this.is_screen_loading = false;
   }
 
-  private UpdateProgressUI(progress: number) {
+  private UpdateProgressUI(progress: number): void {
     GameObject.Find('Load_Slider').GetComponent(Slider).value = progress;
   }
 }

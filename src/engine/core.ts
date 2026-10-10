@@ -4,6 +4,7 @@
 // stays close to the original C#.
 
 import { IDENTITY, Mat, Quaternion, Vector3, matApply, matInvert, matMul } from './math';
+import { construct } from './compat';
 
 export type Ctor<T> = abstract new (...args: any[]) => T;
 type AnyFn = (...args: any[]) => any;
@@ -250,9 +251,12 @@ export class MonoBehaviour extends Behaviour {
   override _load(data: any, resolve: (ref: any) => any) {
     super._load(data, resolve);
     const self = this as any;
+    const dataClasses = (this.constructor as any).fieldTypes as Record<string, any> | undefined;
     for (const key in data) {
       if (key === 'i' || key === 't' || key === 's' || key.startsWith('m_')) continue;
-      self[key] = coerce(data[key], self[key], resolve);
+      const value = coerce(data[key], self[key], resolve);
+      const cls = dataClasses?.[key];
+      self[key] = cls && value ? (Array.isArray(value) ? value.map((v) => construct(cls, v)) : construct(cls, value)) : value;
     }
   }
 }

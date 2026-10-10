@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strictNullChecks": true,
+    "noImplicitOverride": true
+  },
+  "include": [
+    "src/engine",
+    "src/vite-env.d.ts"
+  ]
+}

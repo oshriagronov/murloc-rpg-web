@@ -1,0 +1,19 @@
+export class Item {
+  name: string = '';
+  quality: string = 'common';
+  stack_size: number = 0;
+  equip_slot: number = -1;
+  icon_name: string = '';
+  Armor: number = 0;
+  STR: number = 0;
+  STM: number = 0;
+  INT: number = 0;
+  AGI: number = 0;
+  LVL: number = 0;
+  MIN_DMG: number = 0;
+  MAX_DMG: number = 0;
+  IS_MONEY: boolean = false;
+  VALUE: number = 0;
+  DESC: string = '';
+  DROPABLE: boolean = true;
+}

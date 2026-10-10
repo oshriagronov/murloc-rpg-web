@@ -135,6 +135,7 @@ export const AssetDb = {
   sprites: new Map<string, Sprite>(),
   audio: new Map<string, AudioClip>(),
   fonts: new Map<string, Font>(),
+  texts: new Map<string, TextAsset>(),
   prefabs: new Map<string, { name: string; objects: any[] }>(),
   clips: new Map<string, AnimationClip>(),
   controllers: new Map<string, RuntimeAnimatorController>(),
@@ -155,6 +156,7 @@ export const AssetDb = {
       this.sprites.set(g, new Sprite(g, name, page >= 0 ? pages[page] : null, fx, fy, fw, fh, w, h, ox, oy, new Vector2(px, py), ppu, new Vector4(b[0], b[1], b[2], b[3])));
     }
     for (const g in a.audio) this.audio.set(g, new AudioClip(g, a.audio[g]));
+    for (const g in a.texts) this.texts.set(g, new TextAsset(a.texts[g][0], a.texts[g][1]));
     const faces: Promise<unknown>[] = [];
     for (const g in a.fonts) {
       const [name, file] = a.fonts[g];
@@ -180,6 +182,7 @@ export const AssetDb = {
       case 'texture': return this.textures.get(ref.g) ?? null;
       case 'audio': return this.audio.get(ref.g) ?? null;
       case 'font': return this.fonts.get(ref.g) ?? null;
+      case 'text': return this.texts.get(ref.g) ?? null;
       case 'anim': return this.clips.get(ref.g) ?? null;
       case 'controller': return this.controllers.get(ref.g) ?? null;
       case 'prefab': {

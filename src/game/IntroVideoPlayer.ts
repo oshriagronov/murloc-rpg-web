@@ -1,6 +1,6 @@
-import { Application, AudioSource, Debug, GameObject, MonoBehaviour, Routine, Text, Time, VideoPlayer, VideoSource } from '../engine';
+import { Application, AudioSource, Debug, GameObject, MonoBehaviour, Routine, Time, VideoPlayer, VideoSource } from '../engine';
 import { GameData } from './GameData';
-import { SaveData, SaveFiles } from './SaveData';
+import { SaveData } from './SaveData';
 import { SoundManager } from './SoundManager';
 
 /** Runs the start menu: plays the intro video once, then shows the menu and the save slots. */
@@ -67,19 +67,19 @@ export class IntroVideoPlayer extends MonoBehaviour {
   private check_save_files() {
     let flag = false;
     const slots = this.load_game_slots.transform.Find('Canvas');
-    const one = SaveFiles.Read(SaveData.slot_path(1)!);
+    const one = SaveData.LoadSlot(1);
     if (one) {
       flag = true;
       this.slot_one_data = one;
       IntroVideoPlayer.set_slot_data(slots.Find('MainLoadBackground_one').Find('Save_Data_One').gameObject, one);
     }
-    const two = SaveFiles.Read(SaveData.slot_path(2)!);
+    const two = SaveData.LoadSlot(2);
     if (two) {
       flag = true;
       this.slot_two_data = two;
       IntroVideoPlayer.set_slot_data(slots.Find('MainLoadBackground_two').Find('Save_Data_Two').gameObject, two);
     }
-    const three = SaveFiles.Read(SaveData.slot_path(3)!);
+    const three = SaveData.LoadSlot(3);
     if (three) {
       flag = true;
       this.slot_three_data = three;
@@ -107,18 +107,6 @@ export class IntroVideoPlayer extends MonoBehaviour {
   }
 
   private static set_slot_data(slot: GameObject, data: GameData) {
-    const text = (name: string) => slot.transform.Find(name).GetComponent(Text);
-    text('Name').enabled = true;
-    text('Level').enabled = true;
-    text('Level').text = `Level: ${data.player_level}`;
-    text('Location').enabled = true;
-    text('Location').text = SaveData.get_location(data.x_pos, data.y_pos, data.world_number);
-    text('Fury_Count').enabled = true;
-    text('Fury_Count').text = String(SaveData.get_fury_talent_count(data));
-    text('Fury_Lable').enabled = true;
-    text('Divider').enabled = true;
-    text('Magic_Count').enabled = true;
-    text('Magic_Count').text = String(SaveData.get_magic_talent_count(data));
-    text('Magic_Lable').enabled = true;
+    SaveData.show_slot(slot, data, SaveData.get_location(data.x_pos, data.y_pos, data.world_number));
   }
 }

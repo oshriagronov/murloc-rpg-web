@@ -88,6 +88,12 @@ export class Quaternion {
       this.w * q.w - this.x * q.x - this.y * q.y - this.z * q.z,
     );
   }
+  /** Rotates a vector by this rotation (C#'s `quaternion * vector`). */
+  rotate(v: Vector3) {
+    const { x, y, z, w } = this;
+    const tx = 2 * (y * v.z - z * v.y), ty = 2 * (z * v.x - x * v.z), tz = 2 * (x * v.y - y * v.x);
+    return new Vector3(v.x + w * tx + (y * tz - z * ty), v.y + w * ty + (z * tx - x * tz), v.z + w * tz + (x * ty - y * tx));
+  }
   static Lerp(a: Quaternion, b: Quaternion, t: number) {
     t = Mathf.Clamp01(t);
     const s = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w < 0 ? -1 : 1;
@@ -128,6 +134,7 @@ export class Rect {
   get yMax() { return this.y + this.height; }
   get size() { return new Vector2(this.width, this.height); }
   get center() { return new Vector2(this.x + this.width / 2, this.y + this.height / 2); }
+  clone() { return new Rect(this.x, this.y, this.width, this.height); }
   Contains(p: { x: number; y: number }) { return p.x >= this.x && p.x < this.xMax && p.y >= this.y && p.y < this.yMax; }
 }
 
