@@ -1,0 +1,218 @@
+// The asset database: everything tools/convert.mjs wrote to public/game.
+// Sprites, clips and prefabs are known up front (they are just data); the
+// images behind them are fetched when first needed.
+
+import { Assets as PixiAssets, Rectangle, Texture } from 'pixi.js';
+import { Rect, Vector2, Vector4 } from './math';
+import { UObject } from './core';
+
+const BASE = `${import.meta.env.BASE_URL}game/`;
+export const assetUrl = (rel: string) => BASE + rel.split('/').map(encodeURIComponent).join('/');
+
+export class Texture2D extends UObject {
+  pixi: Texture | null = null;
+  private loading: Promise<void> | null = null;
+  constructor(public guid: string, public file: string, public width: number, public height: number) {
+    super();
+    this.name = file.replace(/^.*\//, '').replace(/\.[^.]+$/, '');
+  }
+  /** Starts fetching the image if needed. Drawing code just skips textures that are not ready. */
+  load(): Promise<void> {
+    if (!this.loading) {
+      AssetDb.pending++;
+      this.loading = PixiAssets.load<Texture>(assetUrl(this.file))
+        .then((t) => { this.pixi = t; })
+        .catch((e) => console.warn(`Could not load texture ${this.file}`, e))
+        .finally(() => { AssetDb.pending--; });
+    }
+    return this.loading;
+  }
+}
+
+export class Sprite extends UObject {
+  private frame: Texture | null = null;
+  constructor(
+    public guid: string,
+    name: string,
+    public texture: Texture2D,
+    /** Position of the sprite on its texture in pixels, measured from the top-left. */
+    public x: number, public y: number, public width: number, public height: number,
+    public pivotFraction: Vector2,
+    public pixelsPerUnit: number,
+    /** Nine-slice borders: left, bottom, right, top. */
+    public border: Vector4,
+  ) {
+    super();
+    this.name = name;
+  }
+  /** Unity's Sprite.rect: pixels from the bottom-left of the texture. */
+  get rect() { return new Rect(this.x, this.texture.height - this.y - this.height, this.width, this.height); }
+  /** Pivot in pixels from the sprite's bottom-left corner. */
+  get pivot() { return new Vector2(this.pivotFraction.x * this.width, this.pivotFraction.y * this.height); }
+  get bounds() {
+    const w = this.width / this.pixelsPerUnit, h = this.height / this.pixelsPerUnit;
+    const size = new Vector2(w, h);
+    return { size, extents: size.div(2), min: new Vector2(-this.pivotFraction.x * w, -this.pivotFraction.y * h), max: new Vector2((1 - this.pivotFraction.x) * w, (1 - this.pivotFraction.y) * h) };
+  }
+  /** The drawable texture region, or null while the image is still loading. */
+  get pixi(): Texture | null {
+    if (this.frame) return this.frame;
+    const base = this.texture.pixi;
+    if (!base) { void this.texture.load(); return null; }
+    // Clamp to the image: rects can sit a fraction of a pixel outside after import scaling.
+    const x = Math.max(0, this.x), y = Math.max(0, this.y);
+    const w = Math.min(this.width, base.source.width - x), h = Math.min(this.height, base.source.height - y);
+    this.frame = new Texture({ source: base.source, frame: new Rectangle(x, y, w, h) });
+    return this.frame;
+  }
+}
+
+export class AudioClip extends UObject {
+  /** Seconds; known once the file's metadata has loaded. */
+  length = 0;
+  constructor(public guid: string, public file: string) {
+    super();
+    this.name = file.replace(/^.*\//, '').replace(/\.[^.]+$/, '');
+  }
+  get url() { return assetUrl(this.file); }
+}
+
+export class Font extends UObject {
+  constructor(public guid: string, name: string, public family: string, public file: string | null) {
+    super();
+    this.name = name;
+  }
+}
+
+/** A prefab: object data that Instantiate turns into live objects. */
+export class Prefab extends UObject {
+  constructor(public guid: string, name: string, public objects: any[], /** Sub-object a reference pointed at, if not the root. */ public fileId?: string) {
+    super();
+    this.name = name;
+  }
+}
+
+export class TextAsset extends UObject {
+  constructor(name: string, public text: string) { super(); this.name = name; }
+}
+
+export interface ClipData {
+  n: string; len: number; loop: boolean; rate: number;
+  sprite?: { path: string; t: number[]; s: (string | null)[] }[];
+  float?: { path: string; attr: string; cls: number; script?: string; k: number[][] }[];
+  pos?: { path: string; k: number[][] }[];
+  scale?: { path: string; k: number[][] }[];
+  euler?: { path: string; k: number[][] }[];
+}
+export interface TransitionData { to: string | null; exit?: boolean; cond: [number, string, number][]; hasExit: boolean; exitTime: number; dur: number; self?: boolean }
+export interface StateData { n: string; speed: number; clip: string | null; tr: TransitionData[] }
+export interface ControllerData { n: string; params: [string, number, number][]; layers: { n: string; def: string | null; any: TransitionData[]; states: StateData[] }[] }
+
+export class AnimationClip extends UObject {
+  constructor(public guid: string, public data: ClipData) { super(); this.name = data.n; }
+  get length() { return this.data.len; }
+}
+export class RuntimeAnimatorController extends UObject {
+  constructor(public guid: string, public data: ControllerData) { super(); this.name = data.n; }
+}
+
+const BUILTIN_FONT = new Font('builtin-arial', 'Arial', 'Arial, "Liberation Sans", Helvetica, sans-serif', null);
+
+export const AssetDb = {
+  /** Number of images still downloading. */
+  pending: 0,
+  scenes: [] as string[],
+  sortingLayers: new Map<number, number>(),
+  textures: new Map<string, Texture2D>(),
+  sprites: new Map<string, Sprite>(),
+  audio: new Map<string, AudioClip>(),
+  fonts: new Map<string, Font>(),
+  prefabs: new Map<string, { name: string; objects: any[] }>(),
+  clips: new Map<string, AnimationClip>(),
+  controllers: new Map<string, RuntimeAnimatorController>(),
+  resources: { sprite: {}, prefab: {}, texture: {}, audio: {}, text: {} } as Record<string, Record<string, string>>,
+
+  async init() {
+    const [a, anim, prefabs] = await Promise.all(
+      ['assets.json', 'animations.json', 'prefabs.json'].map((f) => fetch(BASE + f).then((r) => r.json())),
+    );
+    this.scenes = a.scenes;
+    a.sortingLayers.forEach(([, id]: [string, number], order: number) => this.sortingLayers.set(id >>> 0, order));
+    for (const g in a.textures) { const [file, w, h] = a.textures[g]; this.textures.set(g, new Texture2D(g, file, w, h)); }
+    for (const g in a.sprites) {
+      const [name, tex, x, y, w, h, px, py, ppu, border] = a.sprites[g];
+      const b = border ?? [0, 0, 0, 0];
+      this.sprites.set(g, new Sprite(g, name, this.textures.get(tex)!, x, y, w, h, new Vector2(px, py), ppu, new Vector4(b[0], b[1], b[2], b[3])));
+    }
+    for (const g in a.audio) this.audio.set(g, new AudioClip(g, a.audio[g]));
+    const faces: Promise<unknown>[] = [];
+    for (const g in a.fonts) {
+      const [name, file] = a.fonts[g];
+      const family = `murloc-${name.replace(/[^A-Za-z0-9]+/g, '-')}`;
+      this.fonts.set(g, new Font(g, name, `"${family}", Arial, sans-serif`, file));
+      const face = new FontFace(family, `url("${assetUrl(file)}")`);
+      document.fonts.add(face);
+      faces.push(face.load().catch((e) => console.warn(`Could not load font ${file}`, e)));
+    }
+    await Promise.all(faces);
+    for (const g in prefabs) this.prefabs.set(g, prefabs[g]);
+    for (const g in anim.clips) this.clips.set(g, new AnimationClip(g, anim.clips[g]));
+    for (const g in anim.controllers) this.controllers.set(g, new RuntimeAnimatorController(g, anim.controllers[g]));
+    this.resources = a.resources;
+  },
+
+  /** Turns an asset reference from scene data into the asset object. */
+  resolve(ref: any): any {
+    if (!ref) return null;
+    if ('b' in ref) return ref.b === 10102 ? BUILTIN_FONT : { builtin: ref.b };
+    switch (ref.a) {
+      case 'sprite': return this.sprites.get(ref.g) ?? null;
+      case 'texture': return this.textures.get(ref.g) ?? null;
+      case 'audio': return this.audio.get(ref.g) ?? null;
+      case 'font': return this.fonts.get(ref.g) ?? null;
+      case 'anim': return this.clips.get(ref.g) ?? null;
+      case 'controller': return this.controllers.get(ref.g) ?? null;
+      case 'prefab': {
+        const p = this.prefabs.get(ref.g);
+        return p ? new Prefab(ref.g, p.name, p.objects, ref.f) : null;
+      }
+      default: return null;
+    }
+  },
+
+  /**
+   * Textures a set of scene objects shows when it appears: sprites referenced
+   * directly, plus the first animation of each animator. Everything else (other
+   * animation states, prefabs spawned later) is fetched the first time it is
+   * drawn, which keeps memory use far below loading every sheet up front.
+   * With `deep`, all of it is included.
+   */
+  texturesUsedBy(objects: any[], deep = false): Set<Texture2D> {
+    const out = new Set<Texture2D>();
+    const seenPrefabs = new Set<string>();
+    const visit = (v: any) => {
+      if (!v || typeof v !== 'object') return;
+      if (Array.isArray(v)) { for (const x of v) visit(x); return; }
+      if ('a' in v && 'g' in v) {
+        if (v.a === 'sprite') { const s = this.sprites.get(v.g); if (s) out.add(s.texture); }
+        else if (v.a === 'texture') { const t = this.textures.get(v.g); if (t) out.add(t); }
+        else if (v.a === 'controller') {
+          const layer = this.controllers.get(v.g)?.data.layers[0];
+          for (const st of layer?.states ?? []) {
+            if (!deep && st.n !== layer!.def) continue;
+            for (const curve of (st.clip && this.clips.get(st.clip)?.data.sprite) || []) for (const g of curve.s) {
+              const s = g && this.sprites.get(g); if (s) out.add(s.texture);
+            }
+          }
+        } else if (v.a === 'prefab' && deep && !seenPrefabs.has(v.g)) {
+          seenPrefabs.add(v.g);
+          visit(this.prefabs.get(v.g)?.objects);
+        }
+        return;
+      }
+      for (const k in v) visit(v[k]);
+    };
+    visit(objects);
+    return out;
+  },
+};

@@ -1,0 +1,23 @@
+{
+  "name": "murloc-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Murloc RPG: Stranglethorn Fever, rebuilt for the web in TypeScript on PixiJS",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "convert": "node tools/convert.mjs"
+  },
+  "dependencies": {
+    "pixi.js": "^8.22.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "yaml": "^2.9.1"
+  }
+}
