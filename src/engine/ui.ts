@@ -495,6 +495,10 @@ export class Text extends Graphic {
       if (whole && !/<color/i.test(whole[2])) { colour = whole[1].replace(/["']/g, ''); text = whole[2]; }
       text = text.replace(/<\/?(b|i|size|color|material|quad)(=[^>]*)?>/gi, '');
     }
+    // Unity counts the spaces that end a line when it aligns the line, so a right-aligned
+    // "Level: " stops one space short of its edge. Pixi drops them when it wraps; no-break
+    // spaces are the same width and are kept.
+    text = text.replace(/ +$/gm, (spaces) => '\u00a0'.repeat(spaces.length));
     return { text, colour };
   }
 

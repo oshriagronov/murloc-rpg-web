@@ -105,8 +105,15 @@ version.
       and matches, portrait included. The pointer switches between the Buy
       and Point images; what they look like on screen is left for 3.6. No
       code changes needed.)
-- [ ] **1.4 Winning a fight.** Kill a wolf with a weapon equipped: experience,
-      loot window, taking loot, and the fight ending cleanly.
+- [x] **1.4 Winning a fight.** Kill a wolf with a weapon equipped: experience,
+      loot window, taking loot, and the fight ending cleanly. (2026-10-10;
+      killed Wolf Cubs with the Short Sword: the sword shows in the swing, the
+      win box gave 100 XP and the bar read 100/200, the corpse held Wolf Meat,
+      an item and coins, each click moved one into the bag or the purse, and
+      Continue put the player back in the forest with the wolf gone. The
+      fight and win screens were compared with the Unity build. Fixed on the
+      way: text that ends in spaces keeps them when it is aligned, as in
+      Unity, so the win box reads "Level: 1" and not "Level:1".)
 - [ ] **1.5 Battle menu.** Skills, Spells, Items and Flee each do what they
       should; buffs and debuffs show their icons and expire; energy is spent.
 - [ ] **1.6 Levelling and talents.** Level up, spend talent points in each of
@@ -120,6 +127,11 @@ version.
       Note (2026-10-10): the health text is only rewritten by the regeneration
       tick in `Battle_Health_Control`, so it trails a change of stamina by up
       to one tick. That is the likely cause; confirm against Unity.
+      Note 2 (2026-10-10): it is worse than the number. After loading a save,
+      `Character.STR`, `STM`, `INT`, `AGI` and `ARM` are all 0 until the
+      player changes equipment, so a loaded character hits for far less (a
+      Wolf Cub took seven swings instead of one). Something that calls
+      `update_stats` after a load in Unity does not run here.
 - [ ] **1.9 Spirit healer.** After dying, talk to the spirit healer and return
       to life; the world goes back to normal colours.
 - [ ] **1.10 Rest of the first world.** Elwynn Forest wolves, the cave and
@@ -144,6 +156,11 @@ Compare each with the Unity version side by side.
 
 - [ ] **3.1 Text.** Sizes, line breaks and vertical position of UI text,
       starting with the version label on the start menu (slightly too large).
+      Note (2026-10-10): text marked bold in the scene data (the battle menu,
+      the win box, shop item names) is drawn bold here but regular in the
+      Unity WebGL build. That build has no real Arial and seems not to
+      embolden its stand-in, so the Windows original most likely showed bold,
+      as here. Needs a look at the Windows game to settle.
 - [ ] **3.2 Built-in panel sprite.** Unity's rounded UI panel is drawn as a
       flat rectangle (save and load slots, some backgrounds). Draw the rounded,
       nine-sliced version.
