@@ -11,6 +11,9 @@
 //   u.send('Murky', 'LoadScene', 'Scenes/STV')    call a method of a script on an object
 //   await u.save()                    what save slot 1 holds
 //   await u.patch({ player_level: 30, quests: { 16: 3 } })   change it, then reload the page
+//   await u.film(4000, 300, 'cast')   keep a picture of the game every 0.3 s for 4 s
+//   u.sheet()                         lay the pictures out over the page (u.sheet(8, 1): from the ninth, full width)
+//   u.unsheet(); u.frames.length = 0  put the game back; forget the pictures
 //
 // Notes:
 // - The tab has to be the visible one, or the game runs at about a frame a second.
@@ -118,5 +121,47 @@ window.u = (() => {
     return decode(bytes);
   }
 
-  return { wait, click, key, send, boot, save, patch };
+  // ---- pictures
+
+  // The game's canvas can only be copied straight after Unity has drawn to it, so each
+  // picture is taken in an animation-frame callback registered after Unity's own.
+  const frames = [];
+  const grab = (label) => new Promise((resolve) => {
+    setTimeout(() => requestAnimationFrame(() => {
+      const from = canvas(), copy = document.createElement('canvas');
+      copy.width = from.width; copy.height = from.height;
+      copy.getContext('2d').drawImage(from, 0, 0);
+      frames.push({ label, canvas: copy });
+      resolve(frames.length);
+    }), 0);
+  });
+  async function film(ms, every = 250, label = '') {
+    const start = performance.now();
+    while (performance.now() - start < ms) {
+      await grab(`${label} +${((performance.now() - start) / 1000).toFixed(1)}s`);
+      await wait(every);
+    }
+    return frames.length;
+  }
+  function unsheet() { document.getElementById('u-sheet')?.remove(); }
+  function sheet(from = 0, columns = 2) {
+    unsheet();
+    const box = document.createElement('div'), width = Math.floor(window.innerWidth / columns);
+    box.id = 'u-sheet';
+    box.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;background:#111;z-index:99999;display:flex;flex-wrap:wrap;align-content:flex-start;overflow:hidden;font:10px/12px monospace;color:#fff';
+    for (const frame of frames.slice(from)) {
+      const cell = document.createElement('div'), picture = document.createElement('canvas'), caption = document.createElement('div');
+      cell.style.cssText = `width:${width}px;position:relative`;
+      picture.width = frame.canvas.width; picture.height = frame.canvas.height;
+      picture.getContext('2d').drawImage(frame.canvas, 0, 0);
+      picture.style.cssText = `width:${width}px;display:block`;
+      caption.textContent = frame.label;
+      caption.style.cssText = 'position:absolute;left:2px;bottom:1px;background:rgba(0,0,0,.65);padding:0 3px;white-space:nowrap';
+      cell.append(picture, caption); box.append(cell);
+    }
+    document.body.append(box);
+    return frames.length - from;
+  }
+
+  return { wait, click, key, send, boot, save, patch, frames, grab, film, sheet, unsheet };
 })();

@@ -212,6 +212,10 @@ browser's. Paste `tools/unity-console.js` into the console of the page that
   page, `u.boot(slot)`. This is how to get the Unity build to any point of the
   story without playing up to it.
 
+- `u.film(ms, every, label)` keeps a picture of the game every few hundred
+  milliseconds and `u.sheet()` lays them out over the page, which is the way
+  to see a spell effect that lasts half a second.
+
 It cannot read the game's state back, so compare by looking: take the same
 picture in both versions.
 

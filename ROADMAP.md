@@ -10,10 +10,10 @@ the date and how you verified it, and add anything new you find.
 
 Phase 1 is finished: the first world has been played from a new game to its
 ending portal, side content included, and the goblin teleporter to
-Stranglethorn Vale and back works. Phase 2 is under way: Stranglethorn Vale has
-been played (2.1). The arena, Zul'Gurub and the ending have only been loaded,
-not played, so expect bugs there. Every script is ported and all six scenes
-load and draw. Nothing is hosted yet.
+Stranglethorn Vale and back works. Phase 2 is under way: Stranglethorn Vale
+(2.1) and the Gurubashi Arena (2.2) have been played. Zul'Gurub and the ending
+have only been loaded, not played, so expect bugs there. Every script is ported
+and all six scenes load and draw. Nothing is hosted yet.
 
 ## Done
 
@@ -274,8 +274,33 @@ version.
         fill amount as a fraction of the whole sprite; Unity takes it of the
         sprite's trimmed pixels. Felva's portrait, which has a wide empty
         margin, showed only her head.)
-- [ ] **2.2 Gurubashi Arena (`Arena`).** The arena fights through to the
-      champion.
+- [x] **2.2 Gurubashi Arena (`Arena`).** The arena fights through to the
+      champion. (2026-10-10; with the character raised to level 25, and to 32
+      for the last two, from the console. Men'rok's armour shop; Short John
+      Mithril's first question, both answers; then all nine fights in order,
+      each started through his dialogue: Men'rok, Cathy, Beardon, Felva,
+      Archaic, Littlefoot, Azzima, Sheila, Helm. In each fight the monster was
+      healed and the player restored every turn until every one of its attacks
+      had been seen, with pictures taken as each landed: Cathy's Frostbolt and
+      Arcane Explosion, Beardon's Smite, Holy Fire and Flash Heal, Felva
+      vanishing and striking from behind, Archaic's Drain Life, Drain Energy
+      and Lash of Pain, Littlefoot's Lightning Bolt, Healing Wave and Fire
+      Nova with its totem, Azzima's bow, spear and wolf, Sheila's cat and bear
+      forms and her heal, Helm's Holy Shock and Holy Light. Damage and healing
+      follow the C# formulas. Each win raised `arena_boss` by one, dropped the
+      fighter's own item, and changed Short John's next speech and the mark
+      over his head. As champion he offers his shop: bought Grand Marshal's
+      Dirk for 10 gold, and a full bag refuses the sale. Lost to Helm on
+      purpose: Release Spirit loads Stranglethorn Vale with the ghost beside
+      the spirit healer, and she revives the character. Leaving by the door
+      and coming back in were covered in 2.1.
+      Compared with the Unity build: the arena screen, Short John's question,
+      Cathy's fight, Littlefoot's Fire Nova, and death in the arena with the
+      ghost screen that follows. Fixed on the way: giving an object a new
+      parent kept its position but not its rotation and size, which Unity
+      keeps too. Cathy's Arcane Explosion is attached to her after it is
+      created, so it was drawn at her scale, about 76 times too large: a
+      purple flash over the whole screen instead of a dome around her.)
 - [ ] **2.3 Zul'Gurub (`ZG`).** Each boss, through Hakkar.
 - [ ] **2.4 Ending.** The end-game cut scene, the credits, return to the menu,
       and a completed save.
@@ -409,6 +434,15 @@ These exist in the original game and are reproduced, not fixed.
   escape and second fight were seen in the Unity build.)
 - The troll brothers' sprites are given the colour (255, 255, 255, 255) where
   1 is already full. Unity draws them normally, and so does this version.
+- Monsters always hit for the top of their damage range. Every attack picks
+  between its low and high number with `Random.Range(0, 1) != 1`, and the
+  integer `Random.Range(0, 1)` can only give 0.
+- Beardon's Flash Heal heals him for a third of his health and also hits the
+  player for 44 times his level: `BeardonBattleActionClass.fourth_attack`
+  returns that number as damage. The other healers return 0.
+- Loot left on a corpse is lost when Continue is pressed, so with a full bag
+  an arena fighter's unique item cannot be picked up, and the fight cannot be
+  repeated.
 
 ## Questions for the owner
 

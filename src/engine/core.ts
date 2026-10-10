@@ -477,12 +477,18 @@ export class Transform extends Component {
 
   SetParent(p: Transform | null, worldPositionStays = true) {
     if (p === this._parent) return;
-    const world = worldPositionStays ? this.position : null;
+    // "World position stays" keeps the rotation and size in the world as well, as in Unity.
+    const world = worldPositionStays ? { position: this.position, rotation: this.rotation, scale: this.lossyScale } : null;
     this._detach();
     this._parent = p;
     if (p) p.children.push(this);
     Engine.epoch++;
-    if (world) this.position = world;
+    if (world) {
+      const by = p ? p.lossyScale : new Vector3(1, 1, 1), s = world.scale;
+      this.rotation = world.rotation;
+      this.localScale = new Vector3(by.x ? s.x / by.x : this._ls.x, by.y ? s.y / by.y : this._ls.y, by.z ? s.z / by.z : this._ls.z);
+      this.position = world.position;
+    }
     this.gameObject._updateActive();
   }
   _detach() {
