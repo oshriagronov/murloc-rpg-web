@@ -8,12 +8,13 @@ the date and how you verified it, and add anything new you find.
 
 *Last updated 2026-10-10.*
 
-The game is playable but not verified end to end. Every script is ported, all
-six scenes load and draw, and the start of the game has been played by hand:
-menu, class selection, walking, dialogue, the main windows, saving and loading,
-and one full fight including death and respawn. Everything after that (quests,
-shops, skills and spells, levelling, the later areas, the ending) is ported
-but has not been played, so expect bugs there. Nothing is hosted yet.
+The first world has been played from a new game to its ending portal, and the
+goblin teleporter to Stranglethorn Vale and back works. Every script is ported
+and all six scenes load and draw. In the first world the main quest chain, the
+shops, items, talents, all four classes, dying and every fight on the main
+route have been played; what is left there is side content (item 1.10). The
+other three areas and the ending have only been loaded, not played, so expect
+bugs there. Nothing is hosted yet.
 
 ## Done
 
@@ -176,8 +177,45 @@ version.
 - [ ] **1.10 Rest of the first world.** Elwynn Forest wolves, the cave and
       Jasperdine Mine (kobolds), Darkmoon Faire, the western farm (crabs,
       crocolisks, the princess), the boss fights, the quest chain to its end.
-- [ ] **1.11 Leaving the first world.** The teleporter to Stranglethorn Vale
-      carries the character, inventory and quests over.
+      Partly done (2026-10-10): the main quest chain was played as a Mage from
+      the wolf meat to the final portal, with no code changes needed. In
+      order: ten Wolf Meat to the Chief, the Sack of Meat to Ketchin, Krakho's
+      "Help!" and the fight with Feronius (his roar makes the player lose
+      turns), buying Mild Spices, Ketchin's shop opening, Kagle's ten crabs
+      and the Lucky Fishing Hat, Lekon's eight Bushy Tails from Dire Wolves,
+      the boat west with its yes/no choice, three Young Crocolisks and the
+      Mother Crocolisk, the Princess on the pumpkin farm, the boat back at
+      night, the stranger running through the camp, the Chief's death scene
+      with Lekon, Goblin Dynamite from Krakho (refused while the bag was
+      full), blasting the rock, Jasperdine Mine and its Kobold Miners, Fangus
+      (heal, slash, drain life, lightning bolt) and his Rune of Teleportation,
+      Lekon opening the portal, and the portal's warning: No closes it, Yes
+      starts the credits. Each step moved the quest numbers as the C# says.
+      How it was played: levels were added from the console (the fights are
+      not winnable otherwise without grinding), nine of the ten Wolf Meat,
+      seven of the eight tails and crabs two to nine were given or set from
+      the console, and for one fight with each kind of monster its health was
+      raised and the player healed every turn so that its attacks could be
+      watched for four to eight turns. The Unity build was not played this
+      far, as it has no way to skip the grinding; behaviour was checked
+      against the C# instead.
+      Left to do: Darkmoon Faire and Ringmaster Shin's boss fights
+      (`dmf_boss`), the chest in the mine that needs a second stick of
+      dynamite (Large Candlestick), Gottum and the ring (`found_ring`,
+      Stingy), Guzbo's own dialogue, Onyxia's Lair (level 20 and the Blood
+      Tailisman), the second spirit healer near Flik, and Flik's shop.
+- [x] **1.11 Leaving the first world.** The teleporter to Stranglethorn Vale
+      carries the character, inventory and quests over. (2026-10-10; with the
+      first world's quests finished, talked to Guzbo at the goblin camp: "Not
+      thanks" closes the dialogue, the other choice loads Stranglethorn Vale
+      beside Waxen's machine. Level, experience, money, all 16 bag slots,
+      equipment, the 22 quest numbers, talents and points, attributes, health
+      and energy were compared before and after and were identical. Walked
+      about there, then took Waxen's machine back: the first world loaded at
+      the goblin camp with the night screen and Lekon's portal still as the
+      quests left them, and everything carried back, except that attributes
+      read 0 until a window is opened, which is the original's loading bug.
+      No code changes needed.)
 
 ### Phase 2 — The other areas
 
@@ -208,7 +246,8 @@ Compare each with the Unity version side by side.
 - [ ] **3.3 Animation transitions.** State changes switch half-way through the
       blend time. Check attack, cast and death timings against the original.
 - [ ] **3.4 Particles.** Torch glow and water rings against the original;
-      noise and velocity limits are not implemented.
+      noise and velocity limits are not implemented. Note (2026-10-10): under
+      the night screen the water rings show as thin dark circle outlines.
 - [ ] **3.5 Draw order.** Look for anything drawn in front of or behind the
       wrong thing, especially windows over the world and battle effects.
 - [ ] **3.6 Mouse cursors.** The hand and merchant cursors.
@@ -273,7 +312,17 @@ These exist in the original game and are reproduced, not fixed.
   the player opens the bag, character sheet or talent window, or changes
   equipment. `Character.Load_Game` does not call `update_stats`. (The health
   number was checked in the Unity build; the weaker attacks follow from the
-  same code and were seen here.)
+  same code and were seen here.) The same happens on returning from
+  Stranglethorn Vale to the first world: that branch of
+  `Character.Resume_Game` does not call `update_stats` either.
+- The win box shows the experience gained multiplied by the monster's level
+  (a level 8 crab shows 6400 and gives 800).
+  `Battle_Control.update_battle_over_info` multiplies by the level a second
+  time.
+- When a fight starts while the player stands next to a shopkeeper (Feronius
+  beside Krakho), `Open_Merchant_UI.OnTriggerExit2D` logs an error: it looks
+  up the `UI_ICONS` object, which is hidden during fights. Nothing else is
+  affected.
 - Skill and spell tooltips do not show during a fight or inside the tent.
   `SpellHoverDetails.Display_Spell_Details` moves the tooltip down by 480 when
   the camera is below the world, which puts it off the screen. The Unity build
