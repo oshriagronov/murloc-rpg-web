@@ -26,6 +26,15 @@ export function formatNumber(v: number, format: string): string {
   }
 }
 
+/**
+ * A C# `(int)` cast of a float: the fraction is dropped, and a value too large for an int comes
+ * out as the lowest int, as it does in the original game. Small values only need `Math.trunc`.
+ */
+export function toInt(v: number): number {
+  const t = Math.trunc(v);
+  return t >= -2147483648 && t <= 2147483647 ? t : -2147483648;
+}
+
 /** Math.Round(value, digits) with .NET's round-half-to-even. */
 export function roundDigits(v: number, digits: number): number {
   const k = 10 ** digits, x = v * k, f = Math.floor(x), d = x - f;

@@ -104,7 +104,7 @@ const dev = {
     const shown = (o: any) => !!(o?.gameObject ?? o)?.activeSelf;
     return {
       mob: `${dev.text('Mob_name') ?? ''} ${dev.comp(health.mob_health_text_object, 'Text').text}`.trim(),
-      health: dev.text('Health_text'), energy: dev.text('Energy_text'), turn: control.turn_number as number,
+      health: dev.comp(health.health_text_object, 'Text').text as string, energy: dev.comp(health.energy_text_object, 'Text').text as string, turn: control.turn_number as number,
       menu: shown(control.BattleUICanvas), won: shown(control.BattleOverCanvas), dead: shown(control.release_spirit),
       says: shown(control.mob_attack_display) ? dev.comp(control.mob_attack_display.gameObject ?? control.mob_attack_display, 'Text').text as string : '',
     };
@@ -136,7 +136,7 @@ const dev = {
   /** Where the player is: position, screen number, level and health. */
   where() {
     const p = GameObject.Find('Murky').transform.position;
-    return `x ${Math.round(p.x)} y ${Math.round(p.y)} screen ${dev.comp('Character').Get_Zone_Number()} level ${dev.comp('XP_Handler').get_player_level()} health ${dev.text('Health_text')}`;
+    return `x ${Math.round(p.x)} y ${Math.round(p.y)} screen ${dev.comp('Character').Get_Zone_Number()} level ${dev.comp('XP_Handler').get_player_level()} health ${dev.comp(dev.comp('Battle_Health_Control').health_text_object, 'Text').text}`;
   },
   /** What is in the bag, slot by slot. */
   bag(): string[] { return dev.comp('Inventory').get_items().map((item: any) => item?.name ?? null); },

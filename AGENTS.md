@@ -105,7 +105,8 @@ any runtime dependency.
   return a copy, so `transform.position.x = 5` does nothing, exactly as in C#.
   When you store one that came from a variable or field, `.clone()` it.
 - **Integers.** C# `int / int` truncates. Use `Math.trunc(a / b)`. A cast
-  `(int)x` is `Math.trunc(x)`.
+  `(int)x` is `Math.trunc(x)`, or `toInt(x)` where the number can outgrow an
+  int (C# does not clamp it).
 - **Random.** `Random.RangeInt(min, max)` excludes `max` (C#'s integer
   overload); `Random.Range(min, max)` is the float one. Picking the wrong one
   changes drop rates and damage.

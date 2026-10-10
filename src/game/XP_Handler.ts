@@ -1,4 +1,4 @@
-import { GameObject, Image, Mathf, MonoBehaviour, Text, floatString, roundDigits } from '../engine';
+import { GameObject, Image, Mathf, MonoBehaviour, Text, floatString, roundDigits, toInt } from '../engine';
 import { Battle_Health_Control } from './Battle_Health_Control';
 import { Murloc_Sounds } from './Murloc_Sounds';
 import { Talent_Manager } from './Talent_Manager';
@@ -74,7 +74,7 @@ export class XP_Handler extends MonoBehaviour {
     this.player_level = level;
     this.ui_level_text.GetComponent(Text).text = String(this.player_level);
     if (level !== 1) {
-      this.xp_to_level = Math.trunc((200 * Mathf.Pow(1.45, level - 1)));
+      this.xp_to_level = toInt(200 * Mathf.Pow(1.45, level - 1));
     } else {
       this.xp_to_level = 200;
     }

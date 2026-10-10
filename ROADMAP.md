@@ -10,10 +10,10 @@ the date and how you verified it, and add anything new you find.
 
 Phase 1 is finished: the first world has been played from a new game to its
 ending portal, side content included, and the goblin teleporter to
-Stranglethorn Vale and back works. Phase 2 is under way: Stranglethorn Vale
-(2.1) and the Gurubashi Arena (2.2) have been played. Zul'Gurub and the ending
-have only been loaded, not played, so expect bugs there. Every script is ported
-and all six scenes load and draw. Nothing is hosted yet.
+Stranglethorn Vale and back works. Phase 2 is nearly done: Stranglethorn Vale
+(2.1), the Gurubashi Arena (2.2) and Zul'Gurub (2.3) have been played through.
+The ending (2.4) is left. Every script is ported and all six scenes load and
+draw. Nothing is hosted yet.
 
 ## Done
 
@@ -301,7 +301,33 @@ version.
       keeps too. Cathy's Arcane Explosion is attached to her after it is
       created, so it was drawn at her scale, about 76 times too large: a
       purple flash over the whole screen instead of a dome around her.)
-- [ ] **2.3 Zul'Gurub (`ZG`).** Each boss, through Hakkar.
+- [x] **2.3 Zul'Gurub (`ZG`).** Each boss, through Hakkar. (2026-10-11; the
+      arena champion from 2.2 walked in through the gate, at level 32 and
+      later 45 from the console. All twelve screens walked, to the wall at the
+      far end. The six bosses in order, each met by walking into it, with
+      every attack seen and pictured: Jeklik (scratch, heal), Venoxis (smite,
+      poison cloud), Mar'li (scratch), Thekal (scratch, claw), Arlokk
+      (scratch, execute) and Hakkar (cleave, Life Tap, Corrupt Blood). Each
+      win raised `zg_boss`, dropped the boss's own item, and the boss stayed
+      gone on later visits. Falthir's cage on the way: without dynamite the
+      player says he needs some; with Goblin Dynamite (given from the console;
+      Krakho sells it in the first world) the cage opens, Falthir thanks the
+      player and runs off, and the cage stays open and empty. The hydra
+      Gahz'ranka, which has a one in ten chance of appearing on the bridge
+      once Mar'li is dead (forced from the console): "What was that sound?",
+      the fight, Foror's Eyepatch. Thekal killed the level 32 character in one
+      blow: Release Spirit leads to the spirit healer in Stranglethorn Vale.
+      Back in the Vale afterwards, with nothing set by hand this time: Falthir
+      gives Hazza'rah's Charm of Magic once and then only thanks, Zunkil gives
+      his two lines and opens his shop.
+      Compared with the Unity build, played the same way from a patched save:
+      the entrance, Venoxis's fight with both attacks, Mar'li's and Arlokk's
+      screens, the whole cage scene picture by picture, Thekal's fight, and
+      Hakkar's with Life Tap and Corrupt Blood. No differences found.
+      Fixed on the way: a cast from float to int of a number too large for an
+      int now gives what C# gives (see the level 45 entry under "Original bugs
+      kept on purpose"); the Unity build showed level 401 after one fight
+      where this version did not.)
 - [ ] **2.4 Ending.** The end-game cut scene, the credits, return to the menu,
       and a completed save.
 
@@ -443,6 +469,22 @@ These exist in the original game and are reproduced, not fixed.
 - Loot left on a corpse is lost when Continue is pressed, so with a full bag
   an arena fighter's unique item cannot be picked up, and the fight cannot be
   repeated.
+- Mar'li never drains life and Hakkar's fourth move does not exist: the move
+  table in `Mob_battle_actions.calculate_move_total` has no entry for Mar'li
+  (so she only scratches) and rolls one to three for Hakkar.
+- Nothing happens when Hakkar dies beyond the loot and `zg_boss` = 6.
+  `End_Game_Cut_Scene` is an empty script. The game's ending is the portal in
+  the first world.
+- The experience needed for the next level is worked out two ways: 100 x
+  level x (level + 1) after levelling up, but 200 x 1.45^(level - 1) after a
+  save is loaded or an area is entered. So the number changes whenever the
+  character walks through a door.
+- From level 45 the second formula no longer fits in an int and C# turns it
+  into the lowest int there is. The next experience gained then counts as
+  hundreds of level-ups at once: a level 45 character that enters Zul'Gurub
+  and kills Venoxis is level 401. (Seen in the Unity build; reproduced here by
+  `toInt`.) Level 45 is far beyond what the game's monsters give without a
+  great deal of grinding.
 
 ## Questions for the owner
 
