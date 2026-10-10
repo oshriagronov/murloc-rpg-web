@@ -281,7 +281,9 @@ for (const [guid, a] of byKind('controller')) {
           clip: s.m_Motion?.guid && assets.get(s.m_Motion.guid)?.kind === 'anim' ? s.m_Motion.guid : null,
           tr: (s.m_Transitions || []).map((t) => transition(String(t.fileID))).filter(Boolean),
           // Scripts attached to the state (Unity's StateMachineBehaviour), by class name.
-          beh: nonEmpty((s.m_StateMachineBehaviours || []).map((b) => scriptName(byId.get(String(b.fileID))?.raw.m_Script?.guid)).filter((n) => n && !n.startsWith('?'))),
+          // One that is unticked in the editor gets no callbacks, so it is left out.
+          beh: nonEmpty((s.m_StateMachineBehaviours || []).map((b) => byId.get(String(b.fileID))?.raw).filter((b) => b && String(b.m_Enabled) !== '0')
+            .map((b) => scriptName(b.m_Script?.guid)).filter((n) => n && !n.startsWith('?'))),
         };
       });
       return {

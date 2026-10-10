@@ -407,19 +407,19 @@ export class Image extends Graphic {
       else { const nh = w / ratio; y += (h - nh) * this.rectTransform.pivot.y; h = nh; }
     }
 
-    // The part of the full sprite to show, as fractions of its size measured from the top-left:
-    // the whole of it, or a slice from one edge for a filled bar. (Radial fills are drawn whole for now.)
-    let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
-    if (s && this.type === ImageType.Filled && this._fillAmount < 1 && (this.fillMethod === 0 || this.fillMethod === 1)) {
-      const f = this._fillAmount;
-      if (this.fillMethod === 0) { if (this.fillOrigin === 0) u1 = f; else u0 = 1 - f; }
-      else if (this.fillOrigin === 0) v0 = 1 - f; else v1 = f; // origin 0 is the bottom
-    }
     if (s) {
-      // Only the sprite's trimmed pixels exist on the texture: clip the visible part to them.
+      // Only the sprite's trimmed pixels exist on the texture, and only they are drawn. These are
+      // their edges as fractions of the full sprite's size, measured from the top-left.
       const t0 = s.offsetX / s.width, t1 = (s.offsetX + s.frameWidth) / s.width;
       const w0 = s.offsetY / s.height, w1 = (s.offsetY + s.frameHeight) / s.height;
-      const cu0 = Math.max(u0, t0), cu1 = Math.min(u1, t1), cv0 = Math.max(v0, w0), cv1 = Math.min(v1, w1);
+      let cu0 = t0, cu1 = t1, cv0 = w0, cv1 = w1;
+      // A filled bar shows a slice from one edge. As in Unity, the fill amount is a fraction of the
+      // trimmed pixels, not of the full sprite. (Radial fills are drawn whole for now.)
+      if (this.type === ImageType.Filled && this._fillAmount < 1 && (this.fillMethod === 0 || this.fillMethod === 1)) {
+        const f = this._fillAmount;
+        if (this.fillMethod === 0) { if (this.fillOrigin === 0) cu1 = t0 + f * (t1 - t0); else cu0 = t1 - f * (t1 - t0); }
+        else if (this.fillOrigin === 0) cv0 = w1 - f * (w1 - w0); else cv1 = w0 + f * (w1 - w0); // origin 0 is the bottom
+      }
       if (cu1 <= cu0 || cv1 <= cv0) { if (this.view) this.view.visible = false; return false; }
       const whole = cu0 === t0 && cu1 === t1 && cv0 === w0 && cv1 === w1;
       if (!whole) {

@@ -10,9 +10,10 @@ the date and how you verified it, and add anything new you find.
 
 Phase 1 is finished: the first world has been played from a new game to its
 ending portal, side content included, and the goblin teleporter to
-Stranglethorn Vale and back works. Every script is ported and all six scenes
-load and draw. The other three areas and the ending have only been loaded, not
-played (Phase 2), so expect bugs there. Nothing is hosted yet.
+Stranglethorn Vale and back works. Phase 2 is under way: Stranglethorn Vale has
+been played (2.1). The arena, Zul'Gurub and the ending have only been loaded,
+not played, so expect bugs there. Every script is ported and all six scenes
+load and draw. Nothing is hosted yet.
 
 ## Done
 
@@ -237,10 +238,42 @@ version.
 
 ### Phase 2 — The other areas
 
-- [ ] **2.1 Stranglethorn Vale (`STV`).** NPCs, quests, tigers and gorillas,
+- [x] **2.1 Stranglethorn Vale (`STV`).** NPCs, quests, tigers and gorillas,
       the routes to the arena and Zul'Gurub. Include Ambush (the skill given
       by Felva's quest, usable with a dagger on the first turn), which 1.5 could
-      not reach.
+      not reach. (2026-10-10; played as the level 10 Mage that finished the
+      first world. Waxen's machine and its two answers, Jeklok's rumour, the
+      General Goods shop (bought Magic Dust), the arena door with its arrow
+      and label, the Zul'Gurub gate and the wall behind it. Fought Mistvale
+      Gorillas and Stranglethorn Tigers at the character's level, watched
+      their attacks for several turns, looted them and levelled up; a Harpy
+      (disguised as a tiger until the fight) escaped on its turn, and one
+      killed in a single turn dropped Benediction. Went into the arena and
+      Zul'Gurub and back out: the character arrives at the right door each
+      time with level, money, bag and quests unchanged. Died to a tiger,
+      released, talked to the spirit healer. Felva's quest from start to end,
+      with only the arena count (`arena_boss` = 3) set from the console: she
+      brushes past in the Vale, again inside Zul'Gurub, then stops to talk,
+      Jeklok gets his quest mark, a normal attack lets him escape, Ambush
+      kills him in one blow, his corpse holds Felvas Necklace, and Felva pays
+      10 gold. Ambush on an ordinary monster did 242 damage, which is the
+      formula's number. The troll brothers' screen (Falthir's thanks, Zunkil's
+      two lines and his shop) was checked with `troll_rescue` set from the
+      console; 2.3 should come back to it after the real rescue.
+      Compared with the Unity build, which can now be put into any quest state
+      (see `AGENTS.md`): the fights, the death and spirit healer screens,
+      Felva's dialogue and portrait, Jeklok's fight and skills menu, Ambush,
+      the trolls and Zunkil's shop all look the same.
+      Fixed on the way:
+      - The converter kept state scripts that are switched off in the Unity
+        editor. Felva's "destroy when the animation ends" script is one, so
+        she vanished five seconds after appearing, in the middle of her
+        dialogue, and left the player frozen with the text box open. The
+        Bloodrage effect's is the other.
+      - A filled image (a bar, or a portrait cut off at the text box) took its
+        fill amount as a fraction of the whole sprite; Unity takes it of the
+        sprite's trimmed pixels. Felva's portrait, which has a wide empty
+        margin, showed only her head.)
 - [ ] **2.2 Gurubashi Arena (`Arena`).** The arena fights through to the
       champion.
 - [ ] **2.3 Zul'Gurub (`ZG`).** Each boss, through Hakkar.
@@ -357,6 +390,25 @@ These exist in the original game and are reproduced, not fixed.
   "Spiced"): the label is too narrow for both words and is set to cut off what
   does not fit. (Worked out from the scene data; the Unity build was not
   checked for this one.)
+- Dying in Stranglethorn Vale leaves the camera on the battle spot. After
+  Release Spirit the ghost stands by Waxen's machine as intended, but the
+  screen shows empty scenery: no player, no spirit healer, no blue death
+  screen. The healer can still be reached blind (a few steps right, then Space
+  twice), and the camera stays wrong until the next scene change (the arena,
+  Zul'Gurub or the teleporter). `Character.warp_character_start` moves the
+  camera only in the first world. (Seen in the Unity build.) Dying in the
+  arena or Zul'Gurub reloads the scene, so it does not happen there.
+- A save made in Stranglethorn Vale, the arena or Zul'Gurub always loads at
+  that area's entrance, whatever the saved position says:
+  `Character.Load_World_Start_Zones` has no case for a game loaded from the
+  menu. (Seen in the Unity build for Stranglethorn Vale.)
+- After Jeklok escapes or dies he is invisible but still there: Space at his
+  spot starts the fight again while Felva's quest is at that step (which is
+  how a second attempt is possible), and afterwards he goes back to telling
+  his rumour. `W2_NPC1_Chat_Script` hides his sprite and nothing else. (The
+  escape and second fight were seen in the Unity build.)
+- The troll brothers' sprites are given the colour (255, 255, 255, 255) where
+  1 is already full. Unity draws them normally, and so does this version.
 
 ## Questions for the owner
 
