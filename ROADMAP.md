@@ -83,9 +83,17 @@ version.
       `0,0,0` → `3,3,1`, Worn Dagger landed in slot 0, the tent walls and exit
       warp worked, and the player walked through the gate into Elwynn Forest.
       No code changes needed, no console errors.)
-- [ ] **1.2 Items and equipment.** Pick up, equip and unequip an item; stats on
+- [x] **1.2 Items and equipment.** Pick up, equip and unequip an item; stats on
       the character sheet change; item tooltips appear on hover and show the
-      right text and value.
+      right text and value. (2026-10-10; equipped, swapped and unequipped the
+      Worn Dagger, Old Rag, Short Sword and Une's Cape: melee, armour and the
+      four attributes followed each change, Wolf Meat stacked to 3, a full bag
+      refused items with "Inventory Full". Tooltips checked on bag and
+      equipment slots and compared with the Unity build: same text, colour
+      and position. Fixed on the way: the engine now leaves objects on Unity's
+      "Ignore Raycast" layer out of mouse events, as Unity does. The player is
+      on that layer, and without this it swallowed the hover whenever it stood
+      behind a window. Sell value in tooltips is left for 1.3.)
 - [ ] **1.3 Merchants.** Open a shop, buy and sell, money updates, the merchant
       portrait sits inside its round frame, the cursor changes over the shop.
 - [ ] **1.4 Winning a fight.** Kill a wolf with a weapon equipped: experience,
@@ -100,6 +108,9 @@ version.
       new one shows 95/95. In the Unity version the number corrected itself a
       moment after loading. Find out which behaviour is the original's and
       match it.
+      Note (2026-10-10): the health text is only rewritten by the regeneration
+      tick in `Battle_Health_Control`, so it trails a change of stamina by up
+      to one tick. That is the likely cause; confirm against Unity.
 - [ ] **1.9 Spirit healer.** After dying, talk to the spirit healer and return
       to life; the world goes back to normal colours.
 - [ ] **1.10 Rest of the first world.** Elwynn Forest wolves, the cave and

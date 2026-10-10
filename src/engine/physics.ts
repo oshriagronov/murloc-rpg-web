@@ -159,11 +159,16 @@ export const Physics2D = {
     for (const [key, [a, b]] of before) if (!now.has(key) && !a.destroyed && !b.destroyed) notify('OnTriggerExit2D', a, b);
   },
 
-  /** The collider closest to the camera at a world point. */
-  OverlapPoint(point: Vector2 | Vector3): Collider2D {
+  /** Every layer, the default for queries. */
+  AllLayers: -1,
+  /** Every layer except "Ignore Raycast" (layer 2), which is what mouse events look at. */
+  DefaultRaycastLayers: ~(1 << 2),
+
+  /** The collider closest to the camera at a world point, among objects on the layers in `layerMask`. */
+  OverlapPoint(point: Vector2 | Vector3, layerMask = -1): Collider2D {
     let best: Collider2D | null = null, bestZ = Infinity;
     for (const c of colliders) {
-      if (!c.isActiveAndEnabled) continue;
+      if (!c.isActiveAndEnabled || !(layerMask & (1 << c.gameObject.layer))) continue;
       const z = c.transform.worldMatrix.z;
       if (z < bestZ && c.OverlapPoint(point)) { best = c; bestZ = z; }
     }
@@ -183,12 +188,15 @@ const tell = (go: GameObject | null, message: string) => { if (go && !go.destroy
 /**
  * Unity's OnMouse... messages: scripts on an object with a collider are told
  * when the pointer enters, stays over, presses, releases and leaves it.
+ * Objects on the "Ignore Raycast" layer are skipped, so they neither get the
+ * messages nor hide what is behind them. The game relies on this: the player
+ * is on that layer so that it does not cover the window slots.
  */
 export function sendMouseEvents() {
   const cam = Camera.main;
   let over: GameObject | null = null;
   if (cam && Input.pointerInside) {
-    const c = Physics2D.OverlapPoint(cam.ScreenToWorldPoint(Input.mousePosition));
+    const c = Physics2D.OverlapPoint(cam.ScreenToWorldPoint(Input.mousePosition), Physics2D.DefaultRaycastLayers);
     over = c ? c.gameObject : null;
   }
   if (Input.GetMouseButtonDown(0) && over) { pressed = over; tell(over, 'OnMouseDown'); }

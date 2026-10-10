@@ -54,6 +54,47 @@ const dev = {
     await wait(300);
     return SceneManager.GetActiveScene().name;
   },
+  /** The player object. */
+  player() { return GameObject.Find('Murky'); },
+  /** A component by class name, on an object or (given only a name) on the player. */
+  comp(go: GameObject | string, name?: string): any {
+    const target = typeof go === 'string' ? GameObject.Find('Murky') : go, wanted = typeof go === 'string' ? go : name;
+    return target.components.find((c) => c.constructor.name === wanted);
+  },
+  /** Walks the player to a world x and stops there, or where something blocks the way. */
+  async walkTo(x: number, timeout = 30000) {
+    const t = GameObject.Find('Murky').transform, code = x > t.position.x ? 'KeyD' : 'KeyA';
+    window.dispatchEvent(new KeyboardEvent('keydown', { code }));
+    let last = t.position.x, still = 0;
+    for (let waited = 0; waited < timeout; waited += 30) {
+      await wait(30);
+      const now = t.position.x;
+      if (code === 'KeyD' ? now >= x : now <= x) break;
+      still = Math.abs(now - last) < 0.01 ? still + 1 : 0;
+      if (still > 40) break;
+      last = now;
+    }
+    window.dispatchEvent(new KeyboardEvent('keyup', { code }));
+    await wait(100);
+    return Math.round(t.position.x);
+  },
+  /** What the dialogue box shows: whether it is open, who is speaking and the line. */
+  dialogue() {
+    const box = GameObject.Find('TextBox');
+    const text = (name: string) => { const t: any = dev.comp(box.transform.Find(name).gameObject, 'Text'); return t.enabled ? t.text as string : null; };
+    return { open: dev.comp(box, 'Canvas').enabled as boolean, speaker: text('NPC_NAME') ?? text('PLAYER_NAME'), text: text('NPC_TALK_TEXT') };
+  },
+  /** Presses Space (talk, or the next line) and returns what the dialogue box shows afterwards. */
+  async talk() {
+    await dev.key('Space', 80); await wait(700);
+    return dev.dialogue();
+  },
+  /** Where a world position is on screen, in the game coordinates `click` and `move` take. */
+  toScreen(world: { x: number; y: number }) {
+    const cam = GameObject.Find('Murky').components.find((c) => c.constructor.name === 'Character') as any;
+    const c = cam.player_camera.transform.position;
+    return { x: world.x - (c.x - Screen.width / 2), y: Screen.height - (world.y - (c.y - Screen.height / 2)) };
+  },
   /** Active objects whose name contains `text`. */
   find(text: string) { return [...Engine.objects].filter((o) => o.activeInHierarchy && o.name.includes(text)); },
   screen: Screen,

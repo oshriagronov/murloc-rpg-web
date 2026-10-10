@@ -139,6 +139,12 @@ await dev.click(248, 197);         // click at a game position (852x480, from th
 await dev.key('KeyD', 2000);       // hold a key (KeyboardEvent.code) for 2 s
 await dev.scene('Test');           // wait until a scene is active
 dev.find('wolf');                  // active objects whose name contains the text
+await dev.walkTo(1170);            // walk to a world x (stops early if blocked)
+await dev.talk();                  // press Space; returns { open, speaker, text }
+dev.dialogue();                    // the same, without pressing anything
+dev.comp('Character_Quests');      // a component of the player, by class name
+dev.comp(someObject, 'Text');      // ... or of any object
+dev.toScreen(obj.transform.position); // world position -> game coordinates for click/move
 dev.errorSummary();                // distinct console errors so far, with counts
 murloc.GameObject.Find('Murky');   // the player object
 ```
