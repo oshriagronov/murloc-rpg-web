@@ -8,9 +8,10 @@ Unity the game was written for.
 **Status: playable, not yet verified end to end.** All of the game's scripts
 are ported and all six scenes load. Checked by hand so far: the start menu,
 class selection, walking between zones, NPC dialogue, the character sheet,
-inventory and settings windows, saving and loading, and a full fight including
-dying and respawning. Later quests, shops, talents, the other three areas and
-sound have not been played through yet.
+inventory and settings windows, saving and loading, sound, and a full fight
+including dying and respawning. Later quests, shops, talents and the other three
+areas have not been played through yet. `ROADMAP.md` has the full list of what
+is done and what is left; `AGENTS.md` explains how to work on it.
 
 ## Running it
 
