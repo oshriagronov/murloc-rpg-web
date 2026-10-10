@@ -3,6 +3,8 @@
 
 import * as engine from './engine';
 import { Device, Engine, GameObject, SceneManager, Screen } from './engine';
+import { GameData } from './game/GameData';
+import { SaveData } from './game/SaveData';
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const errors: string[] = [];
@@ -11,6 +13,8 @@ console.error = (...args: unknown[]) => {
   errors.push(args.map((a) => (a instanceof Error ? `${a.message} @ ${(a.stack ?? '').split('\n')[1]?.trim().replace(/https?:\/\/[^/]+\/src\//, '').replace(/\?t=\d+/, '')}` : String(a))).join(' ').slice(0, 300));
   original(...args);
 };
+
+let background: { running: boolean; value: unknown } = { running: false, value: undefined };
 
 function pointer(type: string, x: number, y: number) {
   const canvas = Device.app.canvas, r = canvas.getBoundingClientRect();
@@ -128,6 +132,103 @@ const dev = {
       log.push(`${b.turn}: me ${b.health}, ${b.mob}${said || b.says ? ` "${said || b.says}"` : ''}${b.won ? ' WON' : ''}${b.dead ? ' DEAD' : ''}`);
     }
     return log;
+  },
+  /** Where the player is: position, screen number, level and health. */
+  where() {
+    const p = GameObject.Find('Murky').transform.position;
+    return `x ${Math.round(p.x)} y ${Math.round(p.y)} screen ${dev.comp('Character').Get_Zone_Number()} level ${dev.comp('XP_Handler').get_player_level()} health ${dev.text('Health_text')}`;
+  },
+  /** What is in the bag, slot by slot. */
+  bag(): string[] { return dev.comp('Inventory').get_items().map((item: any) => item?.name ?? null); },
+  /** The monsters that exist right now: name, position, level and type. */
+  mobs() {
+    return [...Engine.objects].filter((o) => dev.comp(o, 'Mob_Meta_Data')).map((o) => {
+      const m = dev.comp(o, 'Mob_Meta_Data'), p = o.transform.position;
+      return `${o.name} at ${Math.round(p.x)},${Math.round(p.y)}: ${m.mob_name}, type ${m.mob_type}, level ${m.mob_level}${m.is_mob_scaleable ? ' (scales)' : ''}${m.is_boss ? ', boss' : ''}`;
+    });
+  },
+  /** Walks towards the named object until its dialogue or shop trigger has the player in range. */
+  async near(name: string, component = 'Npc_Dialouge') {
+    const all = [...Engine.objects].filter((o) => o.name === name);
+    const target = all.find((o) => o.activeInHierarchy) ?? all[0], trigger = dev.comp(target, component);
+    const to = target.transform.position.x, player = GameObject.Find('Murky').transform;
+    const step = to > player.position.x ? 15 : -15;
+    for (let i = 0; i < 400 && !trigger.player_in_range; i++) {
+      const before = player.position.x, now = await dev.walkTo(before + step, 3000);
+      if (Math.abs(now - before) < 1 && i > 3) break;
+      if (step > 0 ? now > to + 150 : now < to - 150) break;
+    }
+    return { x: Math.round(player.position.x), inRange: trigger.player_in_range as boolean };
+  },
+  /** Presses Space through a dialogue and returns its lines. Stops at a question (see `options`) or when a fight starts. */
+  async say(max = 30) {
+    const lines: string[] = [];
+    for (let i = 0; i < max; i++) {
+      const t = await dev.talk();
+      if (!t.open) break;
+      if (dev.options().length) { lines.push('[question]'); break; }
+      const line = `${t.speaker ?? '?'}: ${t.text ?? ''}`;
+      if (lines[lines.length - 1] !== line) lines.push(line);
+      if (dev.comp('Battle_Control').BattleUICanvas.gameObject.activeSelf) { lines.push('[fight starts]'); break; }
+    }
+    return lines;
+  },
+  /** The answers a dialogue is offering, with where to click each. */
+  options() {
+    return [...Engine.objects].filter((o) => o.activeInHierarchy && dev.comp(o, 'TextOptionController')).map((o) => {
+      const p = dev.toScreen(o.transform.position);
+      let text: string | undefined;
+      for (let i = 0; i < o.transform.childCount && text === undefined; i++) text = dev.comp(o.transform.GetChild(i).gameObject, 'Text')?.text;
+      return { name: o.name, text, x: Math.round(p.x), y: Math.round(p.y) };
+    }).sort((a, b) => a.y - b.y);
+  },
+  /** Clicks the first, second, ... answer of the question on screen. */
+  async choose(n: number) {
+    const o = dev.options()[n - 1];
+    if (!o) return 'no such answer';
+    await dev.click(o.x, o.y); await wait(900);
+    return o.text;
+  },
+  /** After a win: takes everything from the corpse, presses Continue and returns what was there. */
+  async loot() {
+    const corpse = dev.comp('CorpseInventory');
+    const found: string[] = corpse.get_items().filter(Boolean).map((item: any) => item.name);
+    for (let i = 0; i < 4; i++) {
+      if (!corpse.get_items()[i]) continue;
+      const p = dev.toScreen(corpse.inventory_canvas.transform.Find('Slot_' + i).position);
+      await dev.click(p.x, p.y); await wait(250);
+    }
+    await dev.click(125, 417); await wait(1300);
+    return found;
+  },
+  /** Goes to another area the way its doors do, taking the character along: 0 the first world, 1 Stranglethorn Vale, 2 the arena, 3 Zul'Gurub. */
+  async area(zone: number) {
+    const name = ['Test', 'STV', 'Arena', 'ZG'][zone];
+    SaveData.last_loaded_game_zone = SaveData.loaded_game_zone;
+    SaveData.loaded_game_zone = zone;
+    SaveData.saved_game_data = new GameData(GameObject.Find('Murky'));
+    dev.comp('on_click_newGame').LoadScene('Scenes/' + name);
+    await wait(600);
+    for (let t = 0; t < 20000 && !(SceneManager.GetActiveScene().name === name && GameObject.Find('Murky') && dev.comp('Character')?.can_move); t += 100) await wait(100);
+    await wait(1500);
+    return dev.where();
+  },
+  /** Saves the game to slot 1, 2 or 3 without going through the menus. */
+  save(slot: number) { SaveData.ForceSave(GameObject.Find('Murky'), slot); },
+  /**
+   * Starts a long script without waiting for it, for consoles that give up after a while:
+   * `dev.run(async () => ...)`, then `await dev.result()` as often as it takes.
+   */
+  run(script: () => unknown) {
+    background = { running: true, value: undefined };
+    const mine = background;
+    Promise.resolve().then(script).then((value) => { mine.value = value; mine.running = false; }, (e) => { mine.value = `ERROR ${e?.stack ?? e}`; mine.running = false; });
+    return 'started';
+  },
+  /** Waits up to `ms` for the script given to `run`; returns its result, or `{ running: true }` if it needs longer. */
+  async result(ms = 40000) {
+    for (let t = 0; t < ms && background.running; t += 250) await wait(250);
+    return background.running ? { running: true, where: dev.where() } : background.value;
   },
   /** Where a world position is on screen, in the game coordinates `click` and `move` take. */
   toScreen(world: { x: number; y: number }) {

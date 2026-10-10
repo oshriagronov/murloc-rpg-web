@@ -147,6 +147,18 @@ dev.comp(someObject, 'Text');      // ... or of any object
 dev.toScreen(obj.transform.position); // world position -> game coordinates for click/move
 dev.battle();                      // the fight in progress: health, turn, which panels are up
 await dev.fight();                 // press Attack each turn until the fight ends; one line per turn
+await dev.loot();                  // after a win: take everything, press Continue
+await dev.near('npc_0');           // walk up to an object until its dialogue trigger has the player
+await dev.say();                   // press Space through a dialogue; returns the lines
+dev.options();                     // the answers on offer at a question
+await dev.choose(2);               // click the second one
+dev.where();                       // position, screen number, level, health
+dev.bag();                         // what is in the bag
+dev.mobs();                        // the monsters that exist right now
+await dev.area(1);                 // go to another area as its doors do: 0 first world, 1 STV, 2 arena, 3 ZG
+dev.save(1);                       // save to a slot without the menus
+dev.run(async () => { ... });      // start a long script without waiting for it
+await dev.result();                // ... and collect its result (or { running: true })
 dev.errorSummary();                // distinct console errors so far, with counts
 murloc.GameObject.Find('Murky');   // the player object
 ```
@@ -187,6 +199,30 @@ repository:
 When the two disagree and you cannot tell which is right, the Unity version is.
 If the Unity project is not available, say so in your report instead of
 guessing.
+
+The Unity build has no console of its own, but it can be driven from the
+browser's. Paste `tools/unity-console.js` into the console of the page that
+`serve.py` serves; the comment at its top lists what it offers. In short:
+
+- `u.click`, `u.key` play the game with the mouse and keyboard.
+- `u.send(object, method, argument)` calls any method of any script (Unity's
+  `SendMessage`): give an item, deal damage, add experience, load a scene.
+- `u.save()` and `u.patch({...})` read and rewrite a save slot: level, money,
+  the quest numbers, talents, which area. Save in the game, patch, reload the
+  page, `u.boot(slot)`. This is how to get the Unity build to any point of the
+  story without playing up to it.
+
+It cannot read the game's state back, so compare by looking: take the same
+picture in both versions.
+
+Two things to remember when a difference turns up:
+
+- Read the original asset, not only the script. A script that looks as if it
+  must misbehave may be switched off in the scene or animator it sits in (the
+  `m_Enabled: 0` of a state's script is how Felva survives her own
+  "destroy when the animation ends").
+- Something that looks broken may be broken in the original too. Check before
+  fixing, and list it under "Original bugs kept on purpose".
 
 ## Assets and licensing
 
