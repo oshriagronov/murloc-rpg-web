@@ -142,8 +142,15 @@ version.
       and spells bought were lit, and Lash of Pain and Pummel worked. The
       level-up box, the talent window and its tooltip were compared with the
       Unity build. No code changes needed.)
-- [ ] **1.7 The other three classes.** Start a game as Rogue, Priest and Mage;
-      each gets its stats and starting talent and can fight.
+- [x] **1.7 The other three classes.** Start a game as Rogue, Priest and Mage;
+      each gets its stats and starting talent and can fight. (2026-10-10; a
+      new game as each. Hovering showed the class text, attributes and
+      starting talent; after choosing, the character had them: Rogue
+      10/9/9/12 with Cruelty and 106 energy, Priest 9/12/10/9 with Mark of the
+      Wild, 31 armour and 115 health, Mage 9/9/12/10 with Lash of Pain. Each
+      played the opening quests, equipped the dagger and beat a Wolf Cub; the
+      Mage did it with Lash of Pain, the only lit entry in its Spells menu.
+      No code changes needed.)
 - [ ] **1.8 Health after loading.** A loaded Warrior shows 85/85 health where a
       new one shows 95/95. In the Unity version the number corrected itself a
       moment after loading. Find out which behaviour is the original's and
