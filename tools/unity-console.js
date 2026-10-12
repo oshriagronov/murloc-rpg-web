@@ -14,6 +14,7 @@
 //   await u.film(4000, 300, 'cast')   keep a picture of the game every 0.3 s for 4 s
 //   u.sheet()                         lay the pictures out over the page (u.sheet(8, 1): from the ninth, full width)
 //   u.unsheet(); u.frames.length = 0  put the game back; forget the pictures
+//   await u.shot('menu')              send a picture to tools/compare.py (see its first lines)
 //
 // Notes:
 // - The tab has to be the visible one, or the game runs at about a frame a second.
@@ -163,5 +164,14 @@ window.u = (() => {
     return frames.length - from;
   }
 
-  return { wait, click, key, send, boot, save, patch, frames, grab, film, sheet, unsheet };
+  // Sends a picture to `python3 tools/compare.py serve`, which saves it as u_<name>.png.
+  async function shot(name) {
+    await grab(name);
+    const picture = frames.pop().canvas;
+    const blob = await new Promise((resolve) => picture.toBlob(resolve));
+    await fetch(`http://127.0.0.1:8799/u_${name}`, { method: 'POST', body: blob });
+    return `${picture.width}x${picture.height}`;
+  }
+
+  return { wait, click, key, send, boot, save, patch, frames, grab, film, sheet, unsheet, shot };
 })();

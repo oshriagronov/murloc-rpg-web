@@ -6,7 +6,7 @@ the date and how you verified it, and add anything new you find.
 
 ## Status
 
-*Last updated 2026-10-11.*
+*Last updated 2026-10-12.*
 
 Phase 1 is finished: the first world has been played from a new game to its
 ending portal, side content included, and the goblin teleporter to
@@ -14,8 +14,9 @@ Stranglethorn Vale and back works. Phase 2 is finished too: Stranglethorn Vale,
 the Gurubashi Arena, Zul'Gurub and the ending have been played through and
 compared with the Unity build, which can now be driven to any point of the
 story (`tools/unity-console.js`). The whole game is playable from a new game
-to the credits. What is left is appearance (Phase 3), memory, speed and
-devices (Phase 4) and the release. Nothing is hosted yet.
+to the credits. What is left is appearance (Phase 3, begun: text is laid out
+as Unity lays it out, see 3.1), memory, speed and devices (Phase 4) and the
+release. Nothing is hosted yet.
 
 ## Done
 
@@ -378,6 +379,50 @@ Compare each with the Unity version side by side.
       Unity WebGL build. That build has no real Arial and seems not to
       embolden its stand-in, so the Windows original most likely showed bold,
       as here. Needs a look at the Windows game to settle.
+      Partly done (2026-10-12): text is now laid out the way Unity does it,
+      and every screen below was photographed in both versions at 1704x960
+      and the same rectangles put side by side (`tools/compare.py`): start
+      menu and version label, class selection, the health and name plates,
+      character sheet, inventory, talents, settings, a dialogue, the load
+      menu, and a fight in Stranglethorn Vale (menu, skills, spells, battle
+      text, damage numbers, win box, experience bar). What changed in the
+      engine:
+      - Line height and baseline come from the font file's own measures
+        (`hhea`), not from the shapes of the letters, which is what Pixi
+        measures.
+      - Unity draws letters at whole screen-pixel sizes and rounds the line
+        height to a pixel, so the size that "best fit" picks depends on the
+        window size. The energy numbers are size 25 at 1704 pixels wide where
+        exact arithmetic gives 26. This version now does the same sums.
+      - Line spacing applies between lines only. The character sheet's
+        numbers (spacing 0.7) were drawn at size 72 where Unity uses 50.
+      - Spaces at the end of a line do not count when the size is chosen or
+        the text is wrapped ("MELEE " is as large as "ARMOR"), only when the
+        line is aligned.
+      - The version label's TextMeshPro margins are honoured; it was partly
+        off the right edge.
+      - Text is rasterised twice as fine as the screen. Drawn at screen size
+        the browser makes small letters heavier than Unity's.
+      Result: text in the game's own fonts (Friz Quadrata, Lucida Console,
+      Times) has the same size and line breaks as in the Unity build and sits
+      within a pixel of it.
+      Left, all of it about the built-in Arial (battle menu, skills, win box,
+      talents, save slots, settings buttons), which the WebGL build has no
+      real copy of:
+      - That build draws most bold Arial text regular (but not "Continue" or
+        the experience bar). Bold letters are wider, so where the width
+        decides the size the text comes out smaller here ("Stranglethorn
+        Vale" in a save slot).
+      - Its upper-aligned Arial text sits about a fifth of the font size
+        higher than Arial's measures give: 3 pixels for the settings buttons
+        and the load menu's title and names, at 852 pixels wide. Middle-
+        aligned text agrees to within a pixel.
+      Both look like properties of the stand-in font and not of the original
+      game, so they were left alone. Pictures of the Windows game would
+      settle it (see "Questions for the owner").
+      Not done: Unity also rounds each letter's advance to a whole pixel
+      (`shouldRoundAdvanceValue`); here advances are exact, which can move a
+      line break by a word in long wrapped text. None was seen to differ.
 - [ ] **3.2 Built-in panel sprite.** Unity's rounded UI panel is drawn as a
       flat rectangle (save and load slots, some backgrounds). Draw the rounded,
       nine-sliced version.
@@ -540,3 +585,7 @@ These exist in the original game and are reproduced, not fixed.
 - Should bugs in the original game be fixed, or kept as they are (the current
   rule)?
 - How much does phone support matter?
+- Can you take a few pictures of the original Windows game? The load menu,
+  the settings window, the battle skills menu and the win box after a fight
+  would show how Arial text really looked (bold or not, and how high it
+  sits); the WebGL build cannot (see 3.1).

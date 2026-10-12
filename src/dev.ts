@@ -238,6 +238,19 @@ const dev = {
     const c = cam.player_camera.transform.position;
     return { x: world.x - (c.x - Screen.width / 2), y: Screen.height - (world.y - (c.y - Screen.height / 2)) };
   },
+  /**
+   * Sends a picture of the game as it is on screen to `python3 tools/compare.py serve`, which
+   * saves it as t_<name>.png. `u.shot` does the same in the Unity build.
+   */
+  shot(name: string) {
+    // The canvas can only be copied straight after the frame is drawn, so wait for the next one.
+    return new Promise<string>((resolve) => setTimeout(() => requestAnimationFrame(() => {
+      const from = document.querySelector('canvas')!, copy = document.createElement('canvas');
+      copy.width = from.width; copy.height = from.height;
+      copy.getContext('2d')!.drawImage(from, 0, 0);
+      copy.toBlob(async (blob) => { await fetch(`http://127.0.0.1:8799/t_${name}`, { method: 'POST', body: blob }); resolve(`${copy.width}x${copy.height}`); });
+    }), 0));
+  },
   /** Active objects whose name contains `text`. */
   find(text: string) { return [...Engine.objects].filter((o) => o.activeInHierarchy && o.name.includes(text)); },
   screen: Screen,

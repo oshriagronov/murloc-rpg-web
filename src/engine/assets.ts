@@ -83,9 +83,32 @@ export class AudioClip extends UObject {
 }
 
 export class Font extends UObject {
+  /**
+   * Vertical measures as fractions of the font size: baseline up to the top of a line, baseline
+   * down to its bottom, and the distance from one baseline to the next. Unity lays text out with
+   * the font's own numbers (its `hhea` table), so they are read from the file.
+   */
+  ascent = 0.9;
+  descent = 0.2;
+  lineHeight = 1.15;
   constructor(public guid: string, name: string, public family: string, public file: string | null) {
     super();
     this.name = name;
+  }
+  /** Reads the measures from a TrueType or OpenType file. */
+  _readMetrics(file: ArrayBuffer) {
+    const d = new DataView(file), tables = new Map<string, number>();
+    for (let i = 0, n = d.getUint16(4); i < n; i++) {
+      const at = 12 + i * 16;
+      tables.set(String.fromCharCode(d.getUint8(at), d.getUint8(at + 1), d.getUint8(at + 2), d.getUint8(at + 3)), d.getUint32(at + 8));
+    }
+    const head = tables.get('head'), hhea = tables.get('hhea');
+    if (head === undefined || hhea === undefined) return;
+    const em = d.getUint16(head + 18), up = d.getInt16(hhea + 4), down = -d.getInt16(hhea + 6), gap = d.getInt16(hhea + 8);
+    if (!em || up + down <= 0) return;
+    this.ascent = up / em;
+    this.descent = down / em;
+    this.lineHeight = (up + down + gap) / em;
   }
 }
 
@@ -118,7 +141,11 @@ export class RuntimeAnimatorController extends UObject {
   constructor(public guid: string, public data: ControllerData) { super(); this.name = data.n; }
 }
 
+// Unity's built-in Arial. Its measures are Arial's own (and Liberation Sans's, which stands in for it).
 const BUILTIN_FONT = new Font('builtin-arial', 'Arial', 'Arial, "Liberation Sans", Helvetica, sans-serif', null);
+BUILTIN_FONT.ascent = 1854 / 2048;
+BUILTIN_FONT.descent = 434 / 2048;
+BUILTIN_FONT.lineHeight = (1854 + 434 + 67) / 2048;
 
 export const AssetDb = {
   /** Number of images still downloading. */
@@ -165,10 +192,14 @@ export const AssetDb = {
     for (const g in a.fonts) {
       const [name, file] = a.fonts[g];
       const family = `murloc-${name.replace(/[^A-Za-z0-9]+/g, '-')}`;
-      this.fonts.set(g, new Font(g, name, `"${family}", Arial, sans-serif`, file));
-      const face = new FontFace(family, `url("${assetUrl(file)}")`);
-      document.fonts.add(face);
-      faces.push(face.load().catch((e) => console.warn(`Could not load font ${file}`, e)));
+      const font = new Font(g, name, `"${family}", Arial, sans-serif`, file);
+      this.fonts.set(g, font);
+      faces.push(fetch(assetUrl(file)).then((r) => r.arrayBuffer()).then((data) => {
+        font._readMetrics(data);
+        const face = new FontFace(family, data);
+        document.fonts.add(face);
+        return face.load();
+      }).catch((e) => console.warn(`Could not load font ${file}`, e)));
     }
     await Promise.all(faces);
     for (const g in prefabs) this.prefabs.set(g, prefabs[g]);

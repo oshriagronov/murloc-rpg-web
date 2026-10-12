@@ -160,6 +160,7 @@ await dev.area(1);                 // go to another area as its doors do: 0 firs
 dev.save(1);                       // save to a slot without the menus
 dev.run(async () => { ... });      // start a long script without waiting for it
 await dev.result();                // ... and collect its result (or { running: true })
+await dev.shot('menu');            // send a picture to tools/compare.py (see "Checking against the original")
 dev.errorSummary();                // distinct console errors so far, with counts
 murloc.GameObject.Find('Murky');   // the player object
 ```
@@ -219,6 +220,15 @@ browser's. Paste `tools/unity-console.js` into the console of the page that
 
 It cannot read the game's state back, so compare by looking: take the same
 picture in both versions.
+
+For looks, compare the pixels and not an impression. Run
+`python3 tools/compare.py serve`, give both tabs the same window size, call
+`dev.shot('name')` here and `u.shot('name')` in the Unity build, then
+`python3 tools/compare.py sheet out name:x,y,w,h` cuts the same rectangle out
+of both and puts them side by side, enlarged. The size has to be the same
+because Unity draws text at whole pixel sizes: which font size fits a label,
+and where its lines break, changes with the size of the window, and this
+version follows it.
 
 Two things to remember when a difference turns up:
 

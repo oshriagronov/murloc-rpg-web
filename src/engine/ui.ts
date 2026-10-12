@@ -449,6 +449,9 @@ export class Image extends Graphic {
 
 export enum TextAnchor { UpperLeft, UpperCenter, UpperRight, MiddleLeft, MiddleCenter, MiddleRight, LowerLeft, LowerCenter, LowerRight }
 
+/** How far text may stick out of its rectangle and still count as fitting, to absorb rounding. */
+const FIT_SLACK = 0.01;
+
 export class Text extends Graphic {
   text = '';
   font: Font | null = null;
@@ -463,7 +466,8 @@ export class Text extends Graphic {
   lineSpacing = 1;
   supportRichText = true;
   private signature = '';
-  private measured = { width: 0, height: 0 };
+  /** Size of the laid-out text, and how far the drawn text has to move up for its baseline to sit where Unity puts it. */
+  private measured = { width: 0, height: 0, lift: 0 };
 
   override _load(data: any, resolve: (ref: any) => any) {
     super._load(data, resolve);
@@ -495,18 +499,61 @@ export class Text extends Graphic {
       if (whole && !/<color/i.test(whole[2])) { colour = whole[1].replace(/["']/g, ''); text = whole[2]; }
       text = text.replace(/<\/?(b|i|size|color|material|quad)(=[^>]*)?>/gi, '');
     }
-    // Unity counts the spaces that end a line when it aligns the line, so a right-aligned
-    // "Level: " stops one space short of its edge. Pixi drops them when it wraps; no-break
-    // spaces are the same width and are kept.
-    text = text.replace(/ +$/gm, (spaces) => '\u00a0'.repeat(spaces.length));
-    return { text, colour };
+    return { text: text.replace(/\r\n?/g, '\n'), colour };
   }
 
-  private buildStyle(fontSize: number, width: number, fill: string) {
+  /** The rectangle the text is laid out in. */
+  protected textRect(): Rect { return this.rectTransform.rect; }
+  private get face(): Font { return this.font ?? AssetDb.resolve({ b: 10102 }); }
+
+  /**
+   * Screen pixels per canvas unit. Unity draws letters at whole pixel sizes and measures lines in
+   * whole pixels, so which font size fits a rectangle, and where its lines break, depends on how
+   * large the window is. (A canvas in the world is not tied to the screen: one pixel per unit.)
+   */
+  protected get pixelsPerUnit() {
+    const root = this.canvas?.rootCanvas;
+    if (!root || root.effectiveRenderMode === RenderMode.WorldSpace) return 1;
+    return Math.max(0.01, root.scaleFactor * Device.pixelDensity);
+  }
+
+  /**
+   * What Unity draws a font size with, in canvas units: the size the letters really have, the
+   * height of a line and the height of the baseline in it. They come from the font's own measures
+   * (as FreeType reports them: line height rounded to a pixel, ascent rounded up), not from the
+   * shapes of the letters.
+   */
+  private measures(fontSize: number, ppu: number) {
+    const face = this.face, pixels = Math.max(1, Math.round(fontSize * ppu));
+    return { size: pixels / ppu, line: Math.max(1, Math.round(face.lineHeight * pixels)) / ppu, ascent: Math.ceil(face.ascent * pixels - 1e-6) / ppu };
+  }
+
+  /**
+   * Breaks the text into lines with a style. Spaces that end a line do not count towards its
+   * width when Unity wraps the text or looks for the size that fits ("MELEE " is as large as
+   * "ARMOR" in the same space), but they do when it aligns the line: a right-aligned "Level: "
+   * stops one space short of its edge. They come back here as no-break spaces, which are as wide
+   * and which Pixi keeps.
+   */
+  private breakLines(text: string, style: TextStyle) {
+    const lines: string[] = [];
+    let width = 0;
+    for (const paragraph of text.split('\n')) {
+      const body = paragraph.replace(/ +$/, '');
+      const m = CanvasTextMetrics.measureText(body, style);
+      width = Math.max(width, m.maxLineWidth);
+      lines.push(...m.lines);
+      lines[lines.length - 1] += ' '.repeat(paragraph.length - body.length);
+    }
+    return { lines, width };
+  }
+
+  /** The style for letters of a size, lines a step apart. A width of 0 leaves the lines as they are. */
+  private buildStyle(size: number, step: number, width: number, fill: string) {
     const [col] = this.alignCell();
     const style = new TextStyle({
-      fontFamily: (this.font ?? AssetDb.resolve({ b: 10102 })).family,
-      fontSize,
+      fontFamily: this.face.family,
+      fontSize: size,
       fontWeight: this.fontStyle === 1 || this.fontStyle === 3 ? 'bold' : 'normal',
       fontStyle: this.fontStyle >= 2 ? 'italic' : 'normal',
       fill,
@@ -514,9 +561,9 @@ export class Text extends Graphic {
       wordWrap: this.wraps() && width > 0,
       wordWrapWidth: Math.max(1, width),
       breakWords: false,
-      padding: Math.ceil(fontSize * 0.25),
+      lineHeight: Math.max(0.01, step),
+      padding: Math.ceil(size * 0.25),
     });
-    if (this.lineSpacing !== 1) style.lineHeight = fontSize * 1.15 * this.lineSpacing;
     const shadow = this.gameObject.GetComponent(Shadow);
     const outline = this.gameObject.GetComponent(Outline);
     if (outline && outline.enabled) style.stroke = { color: outline.effectColor.css, width: Math.max(1, Math.abs(outline.effectDistance.x) * 2), join: 'round' };
@@ -530,21 +577,31 @@ export class Text extends Graphic {
   override _draw(ctx: DrawContext): boolean {
     const { text, colour } = this.plainText();
     if (!text) { if (this.view) this.view.visible = false; return false; }
-    const r = this.rectTransform.rect;
+    const r = this.textRect();
     const world = matMul(ctx.toLayer, this.transform.worldMatrix);
-    // Rasterise the text at the resolution it will appear at, in coarse steps so it is not redone constantly.
+    // Rasterise the text at the resolution it will appear at, in coarse steps so it is not redone
+    // constantly, and twice as fine as the screen: letters drawn small come out heavier than their
+    // outlines, and Unity's do not.
     const onScreen = Math.sqrt(Math.abs(world.a * world.d - world.b * world.c)) * ctx.pixelsPerUnit * Device.pixelDensity;
-    const resolution = Math.min(4, Math.max(0.25, Math.ceil(onScreen * 4) / 4));
+    const resolution = Math.min(6, Math.max(0.5, Math.ceil(onScreen * 2 * 4) / 4));
+    const ppu = this.pixelsPerUnit;
     const fill = colour && /^#?[0-9a-f]{6,8}$/i.test(colour) ? (colour.startsWith('#') ? colour : `#${colour}`).slice(0, 7) : '#ffffff';
-    const sig = [text, this.font?.guid, this.fontSize, this.fontStyle, this.alignment, r.width.toFixed(1), r.height.toFixed(1), this.resizeTextForBestFit, this.horizontalOverflow, this.lineSpacing, resolution, fill].join('|');
+    const sig = [text, this.font?.guid, this.fontSize, this.fontStyle, this.alignment, r.width.toFixed(1), r.height.toFixed(1), this.resizeTextForBestFit, this.resizeTextMinSize, this.resizeTextMaxSize, this.horizontalOverflow, this.verticalOverflow, this.lineSpacing, resolution, ppu.toFixed(4), fill].join('|');
 
     let view = this.view as PixiText | null;
     if (!view) { view = this.view = new PixiText({ text: '' }); }
     if (view.parent !== ctx.layer) ctx.layer.addChild(view);
     if (sig !== this.signature) {
       this.signature = sig;
+      // Line spacing stretches the step from one line to the next, not the height of a line: a
+      // single line is as tall with spacing 0.7 as with 1.
+      const spacing = this.lineSpacing;
+      const breakAt = (fontSize: number) => {
+        const u = this.measures(fontSize, ppu);
+        const broken = this.breakLines(text, this.buildStyle(u.size, u.line * spacing, r.width, fill));
+        return { ...u, ...broken, height: u.line * (1 + (broken.lines.length - 1) * spacing) };
+      };
       let size = this.fontSize;
-      let style = this.buildStyle(size, r.width, fill);
       if (this.resizeTextForBestFit) {
         // Largest size between the limits at which the text still fits its rectangle. A direction
         // that is allowed to overflow never constrains the size: wrapped text has to fit the width
@@ -555,34 +612,39 @@ export class Text extends Graphic {
         if (limitHeight || this.wraps()) {
           let lo = min, hi = size;
           const fits = (n: number) => {
-            const m = CanvasTextMetrics.measureText(text, this.buildStyle(n, r.width, fill));
-            return (!limitHeight || m.height <= r.height + 1) && (!this.wraps() || m.maxLineWidth <= r.width + 1);
+            const b = breakAt(n);
+            return (!limitHeight || b.height <= r.height + FIT_SLACK) && (!this.wraps() || b.width <= r.width + FIT_SLACK);
           };
           while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); if (fits(mid)) lo = mid; else hi = mid - 1; }
           size = lo;
         }
-        style = this.buildStyle(size, r.width, fill);
       }
-      let m = CanvasTextMetrics.measureText(text, style);
-      let shown = text;
+      const laid = breakAt(size);
+      let lines = laid.lines, step = laid.line * spacing;
       if (this.verticalOverflow === 0 && r.height > 0) {
         // Truncate: Unity leaves out the lines that do not fit the height of the rectangle.
-        // (It can leave out all of them; one is always kept here, as line heights differ a little.)
-        const fit = Math.max(1, Math.floor((r.height + 1) / m.lineHeight));
-        if (m.lines.length > fit) {
-          shown = m.lines.slice(0, fit).join('\n');
-          m = CanvasTextMetrics.measureText(shown, style);
-        }
+        // (It can leave out all of them; one is always kept here.)
+        lines = lines.slice(0, Math.max(1, 1 + Math.floor((r.height + FIT_SLACK - laid.line) / Math.max(step, 0.001))));
       }
+      // The spacing of a single line changes nothing; leaving it out keeps the picture of the text small.
+      if (lines.length === 1) step = laid.line;
+      const style = this.buildStyle(laid.size, step, 0, fill);
+      const shown = lines.join('\n');
+      const m = CanvasTextMetrics.measureText(shown, style);
       view.style = style;
       view.text = shown;
       view.resolution = resolution;
-      this.measured = { width: m.width, height: m.height };
+      // Unity stacks the lines and puts each baseline the font's ascent below the top of its line.
+      // Pixi measures the drawn letters instead and centres them in the line, so work out where it
+      // will put the first baseline and shift the whole text to Unity's.
+      const p = m.fontProperties;
+      const pixiBaseline = (style._stroke?.width ?? 0) / 2 + p.ascent + Math.max(0, (style.lineHeight - p.fontSize) / 2);
+      this.measured = { width: m.width, height: laid.line + (lines.length - 1) * step, lift: pixiBaseline - laid.ascent };
     }
     const [col, row] = this.alignCell();
     const tw = this.measured.width, th = this.measured.height;
     const x = col === 0 ? r.x : col === 1 ? r.x + (r.width - tw) / 2 : r.xMax - tw;
-    const top = row === 0 ? r.yMax : row === 1 ? r.y + (r.height + th) / 2 : r.y + th;
+    const top = (row === 0 ? r.yMax : row === 1 ? r.y + (r.height + th) / 2 : r.y + th) + this.measured.lift;
     setMatrix(view, matMul(world, { a: 1, b: 0, c: 0, d: -1, tx: x, ty: top, z: 0 }));
     const c = this.finalColor(ctx);
     view.tint = colour ? 0xffffff : c.hex;
@@ -597,8 +659,16 @@ export class Text extends Graphic {
 
 /** TextMeshPro text. The game has a single one (the version label), so this maps it onto plain text. */
 export class TextMeshProUGUI extends Text {
+  /** Space kept free inside the rectangle: left, top, right, bottom. */
+  margin = [0, 0, 0, 0];
   override _load(data: any, resolve: (ref: any) => any) {
     super._load(data, resolve);
+    const g = data.m_margin ?? {};
+    this.margin = [Number(g.x ?? 0), Number(g.y ?? 0), Number(g.z ?? 0), Number(g.w ?? 0)];
+    this.resizeTextForBestFit = Number(data.m_enableAutoSizing ?? 0) !== 0;
+    this.resizeTextMinSize = Number(data.m_fontSizeMin ?? 18);
+    this.resizeTextMaxSize = Number(data.m_fontSizeMax ?? 72);
+    this.verticalOverflow = 1;
     this.text = String(data.m_text ?? '');
     this.fontSize = Number(data.m_fontSize ?? 36);
     this.color = color(data.m_fontColor);
@@ -607,6 +677,12 @@ export class TextMeshProUGUI extends Text {
     const col = a & 2 ? 1 : a & 4 ? 2 : 0, row = a & 512 ? 1 : a & 1024 ? 2 : 0;
     this.alignment = row * 3 + col;
     this.font = [...AssetDb.fonts.values()].find((f) => f.name === 'LiberationSans') ?? null;
+  }
+  /** TextMeshPro scales letter shapes freely; nothing snaps to pixels. */
+  protected override get pixelsPerUnit() { return 1000; }
+  protected override textRect() {
+    const r = this.rectTransform.rect, [left, top, right, bottom] = this.margin;
+    return new Rect(r.x + left, r.y + bottom, r.width - left - right, r.height - top - bottom);
   }
 }
 
