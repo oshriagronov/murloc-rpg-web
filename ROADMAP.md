@@ -494,7 +494,17 @@ Compare each with the Unity version side by side.
       rings' velocity limit does nothing (their speed is 0).
 - [ ] **3.5 Draw order.** Look for anything drawn in front of or behind the
       wrong thing, especially windows over the world and battle effects.
-- [ ] **3.6 Mouse cursors.** The hand and merchant cursors.
+- [x] **3.6 Mouse cursors.** The hand and merchant cursors. (2026-10-12;
+      checked as far as it can be. Opening a shop gives the page's canvas the
+      32x32 `Buy` image as its pointer and closing it the `Point` hand, both
+      with the hot spot at the top-left corner as the scene data says, and
+      both images load. Before the first shop the pointer is the system's
+      arrow, as in the original, whose player settings name no default
+      cursor. There is nothing to compare with: the Unity WebGL build never
+      changes the pointer (its canvas stayed on `default` through the same
+      steps), so this version is ahead of the reference here and matches the
+      scripts instead. Not seen with eyes: a picture of the page does not
+      include the mouse pointer. No code changes.)
 - [ ] **3.7 Depth ignores scale.** An object's depth here is the sum of the
       local z values above it; Unity multiplies each by the scale of its
       parents. Everything under the UI canvas (scale about 0.4) therefore sits
