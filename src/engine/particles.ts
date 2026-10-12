@@ -1,9 +1,10 @@
 // Particle effects. The game has three kinds, all ambient: two torch glows and
 // a water ring. This implements the parts of Unity's particle system they use:
-// steady emission from a cone, speed, gravity, and size and colour over a
-// particle's lifetime.
+// steady emission from a cone, speed, gravity, size and colour over a
+// particle's lifetime, the system's own (uneven) scale, and particles that
+// face the camera or lie in the system's plane. Noise is not implemented.
 
-import { Container, Sprite as PixiSprite, Texture } from 'pixi.js';
+import { Container, Matrix, Sprite as PixiSprite, Texture } from 'pixi.js';
 import { AssetDb, ParticleMaterial } from './assets';
 import { Behaviour, Component, Engine, Time } from './core';
 import { Color, Quaternion, Vector3 } from './math';
@@ -64,7 +65,8 @@ class Gradient {
   }
 }
 
-interface Particle { x: number; y: number; vx: number; vy: number; age: number; life: number; size: number; rotation: number; color: Color; r: number }
+/** Position and velocity are in the system's own space, before its scale: Unity simulates there and scales the result. */
+interface Particle { x: number; y: number; z: number; vx: number; vy: number; vz: number; age: number; life: number; size: number; rotation: number; color: Color; r: number }
 
 export class ParticleSystem extends Behaviour {
   static all = new Set<ParticleSystem>();
@@ -75,6 +77,8 @@ export class ParticleSystem extends Behaviour {
   private startColor = Color.white; private gravity = new Curve(null, 0); private rate = new Curve(null, 10);
   private coneAngle = 25; private coneRadius = 1; private shapeOn = true;
   private sizeOverLife: Curve | null = null; private colorOverLife: Gradient | null = null;
+  /** Noise module: how hard a drifting field pushes particles about, and how fine its swirls are. */
+  private noiseStrength = 0; private noiseFrequency = 0.5;
   private time = 0; private toEmit = 0;
   private scalingMode = 1;
 
@@ -102,6 +106,7 @@ export class ParticleSystem extends Behaviour {
     this.coneRadius = Number(typeof shape.radius === 'object' ? shape.radius.value : shape.radius ?? 1);
     if (Number(d.SizeModule?.enabled) === 1) this.sizeOverLife = new Curve(d.SizeModule.curve, 1);
     if (Number(d.ColorModule?.enabled) === 1) this.colorOverLife = new Gradient(d.ColorModule.gradient?.maxGradient);
+    if (Number(d.NoiseModule?.enabled) === 1) { this.noiseStrength = Number(d.NoiseModule.strength?.scalar ?? 1); this.noiseFrequency = Number(d.NoiseModule.frequency ?? 0.5); }
   }
 
   Play() { this.isPlaying = true; }
@@ -111,12 +116,23 @@ export class ParticleSystem extends Behaviour {
   OnEnable() { if (this.playOnAwake) this.isPlaying = true; }
   OnDisable() { this.particles = []; this.time = 0; }
 
-  /** Size a particle is drawn at right now, in the system's units. */
+  /** Size a particle is drawn at right now, before the system's scale. */
   sizeOf(p: Particle) { return p.size * (this.sizeOverLife ? this.sizeOverLife.at(p.age / p.life, p.r) : 1); }
   colorOf(p: Particle) { return this.colorOverLife ? p.color.mul(this.colorOverLife.at(p.age / p.life)) : p.color; }
-  get followsTransform() { return !this.worldSpace; }
+  /**
+   * The scale the system applies, axis by axis. Unity's default mode uses only the system's own
+   * scale, not its parents'. It stretches distances and the particles themselves: a system
+   * scaled (4, 2, 3) draws particles twice as wide as they are tall.
+   */
+  get scale(): Vector3 { return this.scalingMode === 0 ? this.transform.lossyScale : this.transform.localScale; }
+  /** Where a particle is in the world. */
+  worldOf(p: Particle, origin: Vector3, rotation: Quaternion, scale: Vector3): Vector3 {
+    if (this.worldSpace) return new Vector3(p.x, p.y, p.z);
+    const at = rotation.rotate(new Vector3(p.x * scale.x, p.y * scale.y, p.z * scale.z));
+    return new Vector3(origin.x + at.x, origin.y + at.y, origin.z + at.z);
+  }
 
-  private emit(rotation: Quaternion, scale: number, origin: Vector3) {
+  private emit(rotation: Quaternion, scale: Vector3, origin: Vector3) {
     const r = Math.random(), t = this.duration > 0 ? (this.time % this.duration) / this.duration : 0;
     // A point on the cone's base circle, and a direction that leans outward the further from the centre it is.
     let px = 0, py = 0, dir = new Vector3(0, 0, 1);
@@ -125,22 +141,42 @@ export class ParticleSystem extends Behaviour {
       px = Math.cos(a) * rho * this.coneRadius; py = Math.sin(a) * rho * this.coneRadius;
       dir = new Vector3(Math.cos(a) * Math.sin(lean), Math.sin(a) * Math.sin(lean), Math.cos(lean));
     }
-    const pos = rotation.rotate(new Vector3(px, py, 0)), vel = rotation.rotate(dir).mul(this.startSpeed.at(t, Math.random()) * scale);
+    const speed = this.startSpeed.at(t, Math.random());
+    let pos = new Vector3(px, py, 0), vel = dir.mul(speed);
+    if (this.worldSpace) {
+      // Particles left behind in the world take the system's place and scale as they are born.
+      const at = rotation.rotate(new Vector3(pos.x * scale.x, pos.y * scale.y, 0));
+      pos = new Vector3(origin.x + at.x, origin.y + at.y, origin.z + at.z);
+      vel = rotation.rotate(new Vector3(vel.x * scale.x, vel.y * scale.y, vel.z * scale.z));
+    }
     this.particles.push({
-      x: (this.worldSpace ? origin.x : 0) + pos.x * scale, y: (this.worldSpace ? origin.y : 0) + pos.y * scale,
-      vx: vel.x, vy: vel.y, age: 0, life: Math.max(0.01, this.startLifetime.at(t, Math.random())),
-      size: this.startSize.at(t, Math.random()) * scale, rotation: this.startRotation.at(t, Math.random()), color: this.startColor, r,
+      x: pos.x, y: pos.y, z: pos.z, vx: vel.x, vy: vel.y, vz: vel.z, age: 0, life: Math.max(0.01, this.startLifetime.at(t, Math.random())),
+      size: this.startSize.at(t, Math.random()), rotation: this.startRotation.at(t, Math.random()), color: this.startColor, r,
     });
   }
 
   _tick(dt: number) {
     dt *= this.speed;
     if (dt <= 0) return;
-    // Unity's default scaling mode uses only the system's own scale, not its parents'.
-    const scale = this.scalingMode === 0 ? this.transform.lossyScale.x : this.transform.localScale.x;
-    const rotation = this.transform.rotation, origin = this.transform.position;
-    const g = -9.81 * this.gravity.at(0, 0) * scale * dt;
-    for (const p of this.particles) { p.age += dt; p.vy += g; p.x += p.vx * dt; p.y += p.vy * dt; }
+    const scale = this.scale, rotation = this.transform.rotation, origin = this.transform.position;
+    // Gravity pulls down in the world; particles simulated in the system's space feel it turned into that space.
+    const down = new Vector3(0, -9.81 * this.gravity.at(0, 0) * dt, 0);
+    const g = this.worldSpace ? down : new Quaternion(-rotation.x, -rotation.y, -rotation.z, rotation.w).rotate(down);
+    const n = this.noiseStrength, f = this.noiseFrequency;
+    for (const p of this.particles) {
+      p.age += dt;
+      p.vx += g.x; p.vy += g.y; p.vz += g.z;
+      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+      if (n !== 0) {
+        // A stand-in for Unity's noise field, which is not reproduced: a smooth pattern in space
+        // that carries nearby particles the same way, at up to the module's strength.
+        const a = p.x * f, b = p.y * f, c = p.z * f;
+        // (No push at the emitter itself, so the effect does not lean one way as a whole.)
+        p.x += n * Math.sin(2.1 * b + 1.3 * c) * Math.cos(1.7 * c - 0.9 * a) * dt;
+        p.y += n * Math.sin(1.9 * c + 1.1 * a) * Math.cos(2.3 * a - 1.2 * b) * dt;
+        p.z += n * Math.sin(2.3 * a + 0.8 * b) * Math.cos(1.4 * b - 1.6 * c) * dt;
+      }
+    }
     this.particles = this.particles.filter((p) => p.age < p.life);
     if (!this.isPlaying) return;
     this.time += dt;
@@ -163,7 +199,9 @@ function defaultParticle(): Texture {
     const c = document.createElement('canvas');
     c.width = c.height = 64;
     const g = c.getContext('2d')!, grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.35, 'rgba(255,255,255,0.45)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+    // Unity's dot fades in both colour and opacity, and its particle shaders multiply the two, so
+    // what reaches the screen falls off as the square of the fade: a small bright core.
+    for (let i = 0; i <= 10; i++) { const fade = (1 - i / 10) ** 2; grad.addColorStop(i / 10, `rgba(255,255,255,${(fade * fade).toFixed(4)})`); }
     g.fillStyle = grad; g.fillRect(0, 0, 64, 64);
     softDot = Texture.from(c);
   }
@@ -173,9 +211,12 @@ function defaultParticle(): Texture {
 export class ParticleSystemRenderer extends Renderer {
   private materialAsset: ParticleMaterial | null = null;
   private pool: PixiSprite[] = [];
+  /** 0: particles face the camera. 2: they lie in the system's own plane, so a tilted system shows them foreshortened. */
+  private alignment = 0;
 
   override _load(data: any, resolve: (ref: any) => any) {
     super._load(data, resolve);
+    this.alignment = Number(data.m_RenderAlignment ?? 0);
     const m = resolve((data.m_Materials ?? [])[0]);
     this.materialAsset = m instanceof ParticleMaterial ? m : null;
   }
@@ -188,7 +229,10 @@ export class ParticleSystemRenderer extends Renderer {
     if (mat?.texture) { const t = mat.texture.pixi; if (!t) { void mat.texture.load(); return false; } tex = t; } else tex = defaultParticle();
     let view = this.view;
     if (!view) { view = this.view = new Container(); layer.addChild(view); }
-    const origin = system.followsTransform ? this.transform.position : new Vector3();
+    const origin = this.transform.position, rotation = this.transform.rotation, scale = system.scale;
+    // The directions a particle's width and height run in on screen.
+    const local = this.alignment === 2;
+    const right = local ? rotation.rotate(new Vector3(1, 0, 0)) : new Vector3(1, 0, 0), up = local ? rotation.rotate(new Vector3(0, 1, 0)) : new Vector3(0, 1, 0);
     const tint = mat?.color ?? Color.white;
     const list = system.particles;
     while (this.pool.length < list.length) { const s = new PixiSprite(tex); s.anchor.set(0.5); view.addChild(s); this.pool.push(s); }
@@ -198,9 +242,14 @@ export class ParticleSystemRenderer extends Renderer {
       const c = system.colorOf(p).mul(tint), size = system.sizeOf(p);
       s.texture = tex;
       s.blendMode = mat?.additive ? 'add' : 'normal';
-      s.position.set(origin.x + p.x, origin.y + p.y);
-      s.scale.set(size / tex.width, -size / tex.height);
-      s.rotation = p.rotation;
+      const at = system.worldOf(p, origin, rotation, scale);
+      const w = (size * scale.x) / tex.width, h = (size * scale.y) / tex.height, cos = Math.cos(p.rotation), sin = Math.sin(p.rotation);
+      // Turn the particle about its own centre, then lay its width and height along the two directions.
+      s.setFromMatrix(new Matrix(
+        (right.x * cos + up.x * sin) * w, (right.y * cos + up.y * sin) * w,
+        -(up.x * cos - right.x * sin) * h, -(up.y * cos - right.y * sin) * h,
+        at.x, at.y,
+      ));
       s.tint = c.hex; s.alpha = Math.max(0, Math.min(1, c.a));
       s.visible = true;
     }

@@ -467,6 +467,31 @@ Compare each with the Unity version side by side.
 - [ ] **3.4 Particles.** Torch glow and water rings against the original;
       noise and velocity limits are not implemented. Note (2026-10-10): under
       the night screen the water rings show as thin dark circle outlines.
+      Partly done (2026-10-12): the camp torch was enlarged nine times beside
+      the Unity build, three moments of each. It was about one and a half
+      times too large, round, and white in the middle; Unity's is a small
+      lumpy yellow flame, wider than tall. Three causes, now fixed:
+      - A system's scale was taken as one number. The glow's is (4, 2, 3), and
+        Unity applies it axis by axis, to distances and to the particles
+        themselves, which makes them twice as wide as tall. Particles are now
+        simulated in the system's own space and scaled afterwards.
+      - Unity's soft dot fades in colour and in opacity and its shader
+        multiplies the two. The stand-in dot only faded in opacity, so every
+        particle had too wide a bright core, and 240 of them added up to
+        white. The brightest pixel is now (255, 255, 170) against Unity's
+        (254, 254, 190).
+      - The sparks have a noise module, which is what makes the flame lumpy.
+        A smooth stand-in field is used. Unity's own noise is not reproduced,
+        so the lumps are not the same lumps, and the flame comes out a little
+        narrower than Unity's (about 13 pixels against 19).
+      Also added: particles that lie in the system's plane instead of facing
+      the camera, which the water rings ask for. Their systems are tilted 63
+      degrees, so the rings should be flat ellipses and not circles.
+      Left: the water rings were not compared. None was on screen in either
+      version in the places visited; find one (they are under `zone_0` and
+      `zone_1` of the first world and on the start menu), take the same
+      moment in both, and check the night-time outline noted above. The
+      rings' velocity limit does nothing (their speed is 0).
 - [ ] **3.5 Draw order.** Look for anything drawn in front of or behind the
       wrong thing, especially windows over the world and battle effects.
 - [ ] **3.6 Mouse cursors.** The hand and merchant cursors.
