@@ -1,8 +1,9 @@
 // Particle effects. The game has three kinds, all ambient: two torch glows and
 // a water ring. This implements the parts of Unity's particle system they use:
 // steady emission from a cone, speed, gravity, size and colour over a
-// particle's lifetime, the system's own (uneven) scale, and particles that
-// face the camera or lie in the system's plane. Noise is not implemented.
+// particle's lifetime, a start delay, the system's own (uneven) scale, and
+// particles that face the camera or lie in the system's plane. Noise is only
+// approximated.
 
 import { Container, Matrix, Sprite as PixiSprite, Texture } from 'pixi.js';
 import { AssetDb, ParticleMaterial } from './assets';
@@ -80,6 +81,8 @@ export class ParticleSystem extends Behaviour {
   /** Noise module: how hard a drifting field pushes particles about, and how fine its swirls are. */
   private noiseStrength = 0; private noiseFrequency = 0.5;
   private time = 0; private toEmit = 0;
+  /** Seconds (of the system's own time) before it starts emitting, and how much of that is left. */
+  private startDelay = 0; private delayLeft = 0;
   private scalingMode = 1;
 
   override _load(d: any, resolve: (ref: any) => any) {
@@ -91,6 +94,7 @@ export class ParticleSystem extends Behaviour {
     this.playOnAwake = Number(d.playOnAwake ?? 1) !== 0;
     this.worldSpace = Number(d.moveWithTransform ?? 0) === 1;
     this.scalingMode = Number(d.scalingMode ?? 1);
+    this.startDelay = this.delayLeft = Number(d.startDelay?.scalar ?? 0);
     this.maxParticles = Number(main.maxNumParticles ?? 1000);
     this.startLifetime = new Curve(main.startLifetime, 5);
     this.startSpeed = new Curve(main.startSpeed, 5);
@@ -114,7 +118,7 @@ export class ParticleSystem extends Behaviour {
   Pause() { this.isPlaying = false; }
   Clear() { this.particles = []; }
   OnEnable() { if (this.playOnAwake) this.isPlaying = true; }
-  OnDisable() { this.particles = []; this.time = 0; }
+  OnDisable() { this.particles = []; this.time = 0; this.delayLeft = this.startDelay; }
 
   /** Size a particle is drawn at right now, before the system's scale. */
   sizeOf(p: Particle) { return p.size * (this.sizeOverLife ? this.sizeOverLife.at(p.age / p.life, p.r) : 1); }
@@ -179,6 +183,7 @@ export class ParticleSystem extends Behaviour {
     }
     this.particles = this.particles.filter((p) => p.age < p.life);
     if (!this.isPlaying) return;
+    if (this.delayLeft > 0) { this.delayLeft -= dt; return; }
     this.time += dt;
     if (!this.looping && this.time > this.duration) { this.isPlaying = false; return; }
     this.toEmit += this.rate.at(this.duration > 0 ? (this.time % this.duration) / this.duration : 0, 0) * dt;

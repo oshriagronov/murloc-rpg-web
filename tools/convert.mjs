@@ -337,7 +337,8 @@ for (const [guid, a] of byKind('material')) {
   materialInfo[guid] = {
     tex: main.guid && assets.get(main.guid)?.kind === 'texture' ? main.guid : null,
     builtin: BUILTIN_GUIDS.has(main.guid) ? Number(main.fileID) : null,
-    additive: builtinShader === 200 || Number(find(props.m_Floats, '_DstBlend')) === 1,
+    // 200 is Unity's Particles/Additive and 10720 its Mobile/Particles/Additive; both add light.
+    additive: builtinShader === 200 || builtinShader === 10720 || Number(find(props.m_Floats, '_DstBlend')) === 1,
     // The additive shader doubles its tint.
     color: [tint.r, tint.g, tint.b, tint.a].map(Number).map((v) => (builtinShader === 200 ? Math.min(1, v * 2) : v)),
   };

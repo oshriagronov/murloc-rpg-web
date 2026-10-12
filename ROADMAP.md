@@ -514,6 +514,22 @@ Compare each with the Unity version side by side.
       rings' velocity limit does nothing (their speed is 0).
       Accepted as done by the owner (2026-10-12): it need not match the Unity
       build exactly. The water rings remain uncompared.
+      Water rings compared after all (2026-10-12), by filming the start menu
+      for twenty seconds in both versions, a picture every 0.4 s. The flat
+      ellipses are right. Two things were not, and are fixed:
+      - Colour. Unity's ring is a faint pale ripple; here it was a strong
+        dark outline. The rings' material uses Unity's Mobile/Particles/
+        Additive shader, which the converter did not know as one that adds
+        light, so the dark ring colour was painted over the water instead of
+        added to it. This was also the "thin dark circle outlines" noted at
+        night.
+      - Timing. The two rings of a pair take turns in Unity; here they
+        appeared together. The smaller one has a start delay, now honoured.
+      Filmed again afterwards: pale ellipses of the same size and growth,
+      taking turns, in both. At night (the lake west of the camp, same save
+      in both) no ring can be seen in either version over twenty seconds: no
+      pixel near the emitter changes by more than 11 of 255 in Unity, 9 here,
+      which is the water's own shimmer.
 - [x] **3.5 Draw order.** Look for anything drawn in front of or behind the
       wrong thing, especially windows over the world and battle effects.
       (2026-10-12, after 3.7; whole screens put beside the Unity build's: the
