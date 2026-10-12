@@ -439,13 +439,31 @@ Compare each with the Unity version side by side.
       about a third of a pixel and a hairline darker edge on the left and
       bottom, at 852 pixels wide; here it is a plain rectangle. Left as it
       is: matching it would mean shipping Unity's own image.)
-- [ ] **3.3 Animation transitions.** State changes switch half-way through the
+- [x] **3.3 Animation transitions.** State changes switch half-way through the
       blend time. Check attack, cast and death timings against the original.
       Note (2026-10-11): curves and write defaults now follow Unity (see 2.4).
       Still approximate: transitions do not blend, weighted tangents are read
       as plain ones (none were seen to matter), and where a parent's animator
       and a child's own both write one property the later-created animator
       wins, which matched Unity in the one case found (the ending).
+      (2026-10-12; switching half-way is what Unity itself does with picture
+      animations: during a blend it shows the frames of whichever state
+      weighs more, and all 156 timed transitions in the game are the default
+      quarter of a second between such animations. Checked by filming both
+      versions ten times a second from the click on Attack, in the same fight
+      from the same save (a level 10 Mage against a Dire Wolf), and laying the
+      frames out in pairs: the swing, the return to idle, the wolf's lunge,
+      the hit reaction and the damage numbers fall on the same frames; so do
+      the wolf's death and the win box in a second, killing turn. The game's
+      scripts start animations themselves and never ask an animator how far
+      it is, so nothing else depends on the blend.
+      Added on the way: a transition can start the next state part of the way
+      in (seven do; the one that shows is Onyxia's death, which skips its
+      first two seconds) and can measure its blend as a fraction of the state
+      it leaves (one does). The converter now keeps both.
+      Not filmed: a spell cast and Onyxia's death. The Browser pane went into
+      the background half-way through and ran at one or two frames a second,
+      too slow for a film. The cast uses the same machinery as the swing.)
 - [ ] **3.4 Particles.** Torch glow and water rings against the original;
       noise and velocity limits are not implemented. Note (2026-10-10): under
       the night screen the water rings show as thin dark circle outlines.
@@ -494,10 +512,13 @@ Compare each with the Unity version side by side.
 - [ ] **6.2 A scripted smoke test** that starts a game and loads every scene,
       failing on console errors.
 - [ ] **6.3 Run typecheck and tests automatically** on every push.
-- [ ] **6.4 Stable converter output.** Running the converter twice numbers the
+- [x] **6.4 Stable converter output.** Running the converter twice numbers the
       image pages in a different order (they are numbered as they finish), so
       `assets.json` changes in over a thousand places although nothing really
-      did. Number them in a fixed order.
+      did. Number them in a fixed order. (2026-10-12, done early because 3.3
+      needed the converter run: pages are numbered by file name and sprites
+      listed by id. Two runs in a row gave byte-identical JSON, and no image
+      file changed.)
 
 ## Original bugs kept on purpose
 

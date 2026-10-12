@@ -222,8 +222,12 @@ export class Animator extends Behaviour {
         const next = tr.to ? this.findState(tr.to) : layer.states.find((s) => s.n === layer.def) ?? null;
         if (!next) continue;
         for (const [, name] of tr.cond) if (this.paramTypes.get(name) === 9) this.params.set(name, 0); // triggers are used up
-        if (tr.dur > 0) { this.pending = { state: next, time: 0, switchIn: tr.dur / 2 }; this.notify(next, 'OnStateEnter'); }
-        else this.enter(next, 0);
+        // The next state can start part of the way in, and the blend can be measured in seconds or
+        // as a fraction of the state being left.
+        const start = (tr.off ?? 0) * (this.clipOf(next)?.len ?? 0);
+        const blend = tr.rel ? tr.dur * len / Math.max(this.state.speed, 1e-6) : tr.dur;
+        if (blend > 0) { this.pending = { state: next, time: start, switchIn: blend / 2 }; this.notify(next, 'OnStateEnter', start); }
+        else this.enter(next, start);
         break;
       }
       this.lastNormalized = this.pending || this.stateTime === 0 ? 0 : normalized;

@@ -266,6 +266,10 @@ for (const [guid, a] of byKind('controller')) {
       hasExit: t.m_HasExitTime === '1',
       exitTime: Number(t.m_ExitTime),
       dur: Number(t.m_TransitionDuration),
+      // Duration in seconds, or (not fixed) as a fraction of the state being left.
+      rel: t.m_HasFixedDuration === '0' || undefined,
+      // Where the next state starts, as a fraction of its length.
+      off: Number(t.m_TransitionOffset) || undefined,
       self: t.m_CanTransitionToSelf === '1' || undefined,
     };
   };
@@ -485,6 +489,15 @@ const spritesByTexture = new Map();
   const mb = (px) => ((px * 4) / 2 ** 20).toFixed(0);
   console.log(`Sprites: ${Object.keys(sprites).length} (${dropped} unreferenced ones left out)`);
   console.log(`Image memory when everything is loaded: ${mb(before)} MB -> ${mb(after)} MB in ${pages.length} pages`);
+
+  // Pages were numbered as their images finished, which differs from run to run. Number them by
+  // file name instead, so that converting twice gives the same assets.json.
+  const order = pages.map((p, i) => [p[0], i]).sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0));
+  const renumber = new Map(order.map(([, old], now) => [old, now]));
+  const sorted = order.map(([, old]) => pages[old]);
+  pages.splice(0, pages.length, ...sorted);
+  for (const g in sprites) if (sprites[g][1] >= 0) sprites[g][1] = renumber.get(sprites[g][1]);
+  for (const g in textures) textures[g] = renumber.get(textures[g]);
 }
 
 // ---------------------------------------------------------------- Resources.Load index
@@ -527,7 +540,9 @@ for (const g in materialInfo) {
 const texts = {};
 for (const [guid, a] of byKind('text')) if (/\.json$/i.test(a.path)) texts[guid] = [path.basename(a.path).replace(/\.[^.]+$/, ''), read(a.path)];
 
-sizes['assets.json'] = writeJson('assets.json', { scenes: scenes.map((s) => path.basename(s)), texts, materials, pages, textures, sprites, audio, fonts, resources, sortingLayers });
+// Sprites and textures are collected as their images finish; list them in a fixed order.
+const byKey = (o) => Object.fromEntries(Object.keys(o).sort().map((k) => [k, o[k]]));
+sizes['assets.json'] = writeJson('assets.json', { scenes: scenes.map((s) => path.basename(s)), texts, materials, pages, textures: byKey(textures), sprites: byKey(sprites), audio, fonts, resources, sortingLayers });
 sizes['animations.json'] = writeJson('animations.json', { clips, controllers });
 
 const total = Object.values(sizes).reduce((a, b) => a + b, 0);
