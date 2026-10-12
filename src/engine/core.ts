@@ -526,7 +526,7 @@ export class Transform extends Component {
   protected _local(): Mat {
     const { x, y, z, w } = this._lr, s = this._ls;
     const r00 = 1 - 2 * (y * y + z * z), r01 = 2 * (x * y - z * w), r10 = 2 * (x * y + z * w), r11 = 1 - 2 * (x * x + z * z);
-    return { a: r00 * s.x, b: r10 * s.x, c: r01 * s.y, d: r11 * s.y, tx: this._lp.x, ty: this._lp.y, z: this._lp.z };
+    return { a: r00 * s.x, b: r10 * s.x, c: r01 * s.y, d: r11 * s.y, tx: this._lp.x, ty: this._lp.y, z: this._lp.z, zs: s.z };
   }
 
   /** Local-to-world matrix. Cached until any transform changes. */
@@ -543,7 +543,7 @@ export class Transform extends Component {
     if (!this._parent) { this.localPosition = v; return; }
     const pm = this._parent.worldMatrix;
     const p = matApply(matInvert(pm), v.x, v.y);
-    this.localPosition = new Vector3(p.x, p.y, ((v as Vector3).z ?? 0) - pm.z);
+    this.localPosition = new Vector3(p.x, p.y, (((v as Vector3).z ?? 0) - pm.z) / ((pm.zs ?? 1) || 1e-12));
   }
   get rotation(): Quaternion { return this._parent ? this._parent.rotation.mul(this._lr) : this._lr.clone(); }
   set rotation(q: Quaternion) {
@@ -563,8 +563,8 @@ export class Transform extends Component {
   get forward() { return new Vector3(0, 0, 1); }
   set forward(_v: Vector3) {}
 
-  TransformPoint(v: Vector3) { const p = matApply(this.worldMatrix, v.x, v.y); return new Vector3(p.x, p.y, this.worldMatrix.z + v.z); }
-  InverseTransformPoint(v: Vector3) { const p = matApply(matInvert(this.worldMatrix), v.x, v.y); return new Vector3(p.x, p.y, v.z - this.worldMatrix.z); }
+  TransformPoint(v: Vector3) { const p = matApply(this.worldMatrix, v.x, v.y); return new Vector3(p.x, p.y, this.worldMatrix.z + (this.worldMatrix.zs ?? 1) * v.z); }
+  InverseTransformPoint(v: Vector3) { const p = matApply(matInvert(this.worldMatrix), v.x, v.y); return new Vector3(p.x, p.y, (v.z - this.worldMatrix.z) / ((this.worldMatrix.zs ?? 1) || 1e-12)); }
   TransformDirection(v: Vector3) { const m = this.worldMatrix; return new Vector3(m.a * v.x + m.c * v.y, m.b * v.x + m.d * v.y, v.z).normalized.mul(v.magnitude); }
 
   Translate(x: number | Vector3, y = 0, z = 0, space = Space.Self) {

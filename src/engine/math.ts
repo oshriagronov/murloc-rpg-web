@@ -182,6 +182,11 @@ export const Random = {
  */
 export interface Mat {
   a: number; b: number; c: number; d: number; tx: number; ty: number; z: number;
+  /**
+   * Scale along the depth axis (1 when left out). A child's local z counts for this much depth,
+   * as in Unity: everything under a canvas scaled to 0.4 is 0.4 times as far apart in depth too.
+   */
+  zs?: number;
 }
 
 export const IDENTITY: Mat = { a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0, z: 0 };
@@ -194,14 +199,16 @@ export function matMul(p: Mat, l: Mat): Mat {
     d: p.b * l.c + p.d * l.d,
     tx: p.a * l.tx + p.c * l.ty + p.tx,
     ty: p.b * l.tx + p.d * l.ty + p.ty,
-    z: p.z + l.z,
+    z: p.z + (p.zs ?? 1) * l.z,
+    zs: (p.zs ?? 1) * (l.zs ?? 1),
   };
 }
 
 export function matInvert(m: Mat): Mat {
   const det = m.a * m.d - m.b * m.c || 1e-12;
   const a = m.d / det, b = -m.b / det, c = -m.c / det, d = m.a / det;
-  return { a, b, c, d, tx: -(a * m.tx + c * m.ty), ty: -(b * m.tx + d * m.ty), z: -m.z };
+  const zs = 1 / ((m.zs ?? 1) || 1e-12);
+  return { a, b, c, d, tx: -(a * m.tx + c * m.ty), ty: -(b * m.tx + d * m.ty), z: -m.z * zs, zs };
 }
 
 export function matApply(m: Mat, x: number, y: number) {

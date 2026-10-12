@@ -11,7 +11,7 @@ import { Canvas, CanvasGroup, DrawContext, Graphic, GraphicRaycaster, PointerEve
 import { Input } from './input';
 import { Behaviour } from './core';
 
-interface Item { view: Container; layer: number; order: number; depth: number; group: number; seq: number }
+interface Item { view: Container; layer: number; order: number; depth: number; ui: number; group: number; seq: number }
 interface Group { overlay: boolean; layer: number; order: number; depth: number; id: number; ctx: DrawContext }
 interface Walk { group: Group | null; hidden: boolean; alpha: number; clickable: boolean; blocks: boolean }
 
@@ -23,7 +23,9 @@ Engine.onComponentRemoved.push((c) => { if (c instanceof Renderer || c instanceo
 let clickable: { graphic: Graphic; overlay: boolean; item: Item }[] = [];
 const drawn = new Set<Renderer | Graphic>();
 
-const byOrder = (a: Item, b: Item) => a.layer - b.layer || a.order - b.order || a.depth - b.depth || a.group - b.group || a.seq - b.seq;
+// Where a sprite and a canvas tie on layer, order and depth, Unity draws the canvas on top (the
+// night screen covers the plants of the next zone, which share all three with it).
+const byOrder = (a: Item, b: Item) => a.layer - b.layer || a.order - b.order || a.depth - b.depth || a.ui - b.ui || a.group - b.group || a.seq - b.seq;
 
 export function drawFrame() {
   const cam = Camera.main;
@@ -74,14 +76,14 @@ export function drawFrame() {
       if (c instanceof Renderer) {
         if (c.enabled && c._draw(Device.worldLayer)) {
           drawn.add(c);
-          world.push({ view: c.view!, layer: c.sortingLayerOrder, order: c.sortingOrder, depth: -t.worldMatrix.z, group: seq, seq: seq++ });
+          world.push({ view: c.view!, layer: c.sortingLayerOrder, order: c.sortingOrder, depth: -t.worldMatrix.z, ui: 0, group: seq, seq: seq++ });
         }
       } else if (c instanceof Graphic) {
         const g = walk.group;
         if (!g || walk.hidden || !c.enabled || !(t instanceof RectTransform)) continue;
         if (!c._draw(g.ctx)) continue;
         drawn.add(c);
-        const item: Item = { view: c.view!, layer: g.layer, order: g.order, depth: g.depth, group: g.id, seq: seq++ };
+        const item: Item = { view: c.view!, layer: g.layer, order: g.order, depth: g.depth, ui: 1, group: g.id, seq: seq++ };
         (g.overlay ? overlay : world).push(item);
         c._screenMatrix = g.overlay ? t.worldMatrix : matMul(screenFromWorld, t.worldMatrix);
         if (c.raycastTarget && walk.clickable && walk.blocks) clickable.push({ graphic: c, overlay: g.overlay, item });

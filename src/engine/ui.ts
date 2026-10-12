@@ -183,9 +183,9 @@ export class Canvas extends Behaviour {
     const s = this.scaleFactor;
     if (this.effectiveRenderMode === RenderMode.ScreenSpaceCamera) {
       const cam = this.camera!, k = s * cam.unitsPerPixel, p = cam.transform.position;
-      return { a: k, b: 0, c: 0, d: k, tx: p.x, ty: p.y, z: p.z + this.planeDistance };
+      return { a: k, b: 0, c: 0, d: k, tx: p.x, ty: p.y, z: p.z + this.planeDistance, zs: k };
     }
-    return { a: s, b: 0, c: 0, d: s, tx: Screen.width / 2, ty: Screen.height / 2, z: 0 };
+    return { a: s, b: 0, c: 0, d: s, tx: Screen.width / 2, ty: Screen.height / 2, z: 0, zs: s };
   }
 }
 

@@ -14,9 +14,11 @@ Stranglethorn Vale and back works. Phase 2 is finished too: Stranglethorn Vale,
 the Gurubashi Arena, Zul'Gurub and the ending have been played through and
 compared with the Unity build, which can now be driven to any point of the
 story (`tools/unity-console.js`). The whole game is playable from a new game
-to the credits. What is left is appearance (Phase 3, begun: text is laid out
-as Unity lays it out, see 3.1), memory, speed and devices (Phase 4) and the
-release. Nothing is hosted yet.
+to the credits. Phase 3 (appearance) has been gone through: five items are
+done, and two are partly done with what is left written under them (3.1,
+Arial text, which needs pictures of the Windows game; 3.4, the water rings).
+What is left besides is memory, speed and devices (Phase 4) and the release.
+Nothing is hosted yet.
 
 ## Done
 
@@ -492,8 +494,19 @@ Compare each with the Unity version side by side.
       `zone_1` of the first world and on the start menu), take the same
       moment in both, and check the night-time outline noted above. The
       rings' velocity limit does nothing (their speed is 0).
-- [ ] **3.5 Draw order.** Look for anything drawn in front of or behind the
+- [x] **3.5 Draw order.** Look for anything drawn in front of or behind the
       wrong thing, especially windows over the world and battle effects.
+      (2026-10-12, after 3.7; whole screens put beside the Unity build's: the
+      start menu, the camp by day with the character sheet, bag, talents and
+      settings open in turn, a dialogue and a question with the mouse on an
+      answer, the camp by night, Stranglethorn Vale's entrance, and fights in
+      the forest and the Vale with the skills panel open, a swing, damage
+      numbers and battle text. One thing was wrong: at night the plants of
+      the next zone, where they reach into the screen, were drawn over the
+      night screen and stayed lit. They share sorting layer, order and depth
+      with it, and such a tie went to whichever came later in the scene.
+      Unity draws the canvas on top; so does this version now. Every screen
+      above was photographed again afterwards and is unchanged.)
 - [x] **3.6 Mouse cursors.** The hand and merchant cursors. (2026-10-12;
       checked as far as it can be. Opening a shop gives the page's canvas the
       32x32 `Buy` image as its pointer and closing it the `Point` hand, both
@@ -505,7 +518,7 @@ Compare each with the Unity version side by side.
       steps), so this version is ahead of the reference here and matches the
       scripts instead. Not seen with eyes: a picture of the page does not
       include the mouse pointer. No code changes.)
-- [ ] **3.7 Depth ignores scale.** An object's depth here is the sum of the
+- [x] **3.7 Depth ignores scale.** An object's depth here is the sum of the
       local z values above it; Unity multiplies each by the scale of its
       parents. Everything under the UI canvas (scale about 0.4) therefore sits
       at a different depth than in Unity: the talent slots and battle skill
@@ -515,6 +528,16 @@ Compare each with the Unity version side by side.
       shows no tooltip, while this version shows it. And sprites that share a
       sorting layer and order are drawn by depth. Give the world matrix a z
       scale, then recheck draw order (3.5).
+      (2026-10-12; the world matrix now carries a depth scale, so a child's
+      local z counts for as much as its parents' scales make it. The numbers
+      in this item were off, though: the UI canvas sits 100 in front of a
+      camera that is at -100, which is depth 0 and not 90. With the scale the
+      talent and skill icons are at -35.7 (local -90.4 times 0.396), in front
+      of the NPC triggers at 0, and the bag and equipment slots at 0, 27.7 and
+      29.9. So tooltips on talents and skills win over an NPC behind the
+      window, as they did before the change; only the distances changed, not
+      which is nearer. Not tried in the Unity build: hovering a slot that
+      lies exactly over an NPC's trigger. Draw order was rechecked in 3.5.)
 
 ### Phase 4 — Memory, speed, devices
 
