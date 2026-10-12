@@ -423,9 +423,22 @@ Compare each with the Unity version side by side.
       Not done: Unity also rounds each letter's advance to a whole pixel
       (`shouldRoundAdvanceValue`); here advances are exact, which can move a
       line break by a word in long wrapped text. None was seen to differ.
-- [ ] **3.2 Built-in panel sprite.** Unity's rounded UI panel is drawn as a
+- [x] **3.2 Built-in panel sprite.** Unity's rounded UI panel is drawn as a
       flat rectangle (save and load slots, some backgrounds). Draw the rounded,
-      nine-sliced version.
+      nine-sliced version. (2026-10-12; nothing needed drawing. The panels
+      with visible corners are the game's own sprites and already rounded:
+      the start menu's button box, the load menu and its slots, the battle
+      menu, the skills panel and the talent tabs were each enlarged 22 to 38
+      times beside the Unity build and have the same corners and borders.
+      Unity's built-in sprite sits on 33 buttons, and on all but four its
+      colour is fully transparent in every state. The four: the two answers
+      of a dialogue question, which get a pale highlight under the mouse, and
+      two buttons of an admin panel that is never shown. The highlight was
+      compared at Waxen's question, mouse on each answer in turn: same place,
+      size and colour. Enlarged 38 times, Unity's has corners rounded by
+      about a third of a pixel and a hairline darker edge on the left and
+      bottom, at 852 pixels wide; here it is a plain rectangle. Left as it
+      is: matching it would mean shipping Unity's own image.)
 - [ ] **3.3 Animation transitions.** State changes switch half-way through the
       blend time. Check attack, cast and death timings against the original.
       Note (2026-10-11): curves and write defaults now follow Unity (see 2.4).
