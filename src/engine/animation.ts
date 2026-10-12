@@ -244,6 +244,19 @@ export class Animator extends Behaviour {
     return t ?? null;
   }
 
+  /**
+   * Starts fetching the pictures of every state, not only the one playing. Images are otherwise
+   * fetched when first drawn, and an animation shown for the first time (a spell cast) would leave
+   * its object blank until its sheet arrived. In Unity everything a scene uses is already there.
+   */
+  private loadPictures() {
+    for (const state of this.controller?.data.layers[0]?.states ?? []) {
+      for (const curve of this.clipOf(state)?.sprite ?? []) {
+        for (const guid of curve.s) if (guid) void AssetDb.sprites.get(guid)?.texture?.load();
+      }
+    }
+  }
+
   /** Remembers the present value of every property the controller's clips animate. */
   private captureDefaults() {
     const defaults = this.defaults = new Map<string, () => void>();
@@ -295,7 +308,7 @@ export class Animator extends Behaviour {
   /** Writes the current frame of the current clip onto the objects it animates. */
   private apply() {
     const clip = this.clipOf(this.state);
-    if (!this.defaults) this.captureDefaults();
+    if (!this.defaults) { this.captureDefaults(); this.loadPictures(); }
     if (this.state) for (const restore of this.restoresFor(this.state, clip)) restore();
     if (!clip) return;
     const t = clip.len <= 0 ? 0 : clip.loop ? this.stateTime % clip.len : Math.min(this.stateTime, clip.len);

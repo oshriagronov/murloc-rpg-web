@@ -14,11 +14,11 @@ Stranglethorn Vale and back works. Phase 2 is finished too: Stranglethorn Vale,
 the Gurubashi Arena, Zul'Gurub and the ending have been played through and
 compared with the Unity build, which can now be driven to any point of the
 story (`tools/unity-console.js`). The whole game is playable from a new game
-to the credits. Phase 3 (appearance) has been gone through: five items are
-done, and two are partly done with what is left written under them (3.1,
-Arial text, which needs pictures of the Windows game; 3.4, the water rings).
-What is left besides is memory, speed and devices (Phase 4) and the release.
-Nothing is hosted yet.
+to the credits. Phase 3 (appearance) is finished. Two of its items (3.1,
+built-in Arial text; 3.4, the torch's exact shape and the water rings) do not
+match the Unity build exactly and were accepted as they are by the owner;
+what differs is written under them. What is left is memory, speed and devices
+(Phase 4) and the release. Nothing is hosted yet.
 
 ## Done
 
@@ -374,7 +374,7 @@ version.
 
 Compare each with the Unity version side by side.
 
-- [ ] **3.1 Text.** Sizes, line breaks and vertical position of UI text,
+- [x] **3.1 Text.** Sizes, line breaks and vertical position of UI text,
       starting with the version label on the start menu (slightly too large).
       Note (2026-10-10): text marked bold in the scene data (the battle menu,
       the win box, shop item names) is drawn bold here but regular in the
@@ -425,6 +425,8 @@ Compare each with the Unity version side by side.
       Not done: Unity also rounds each letter's advance to a whole pixel
       (`shouldRoundAdvanceValue`); here advances are exact, which can move a
       line break by a word in long wrapped text. None was seen to differ.
+      Accepted as done by the owner (2026-10-12): it need not match the Unity
+      build exactly. What is listed as left above stays as it is, unverified.
 - [x] **3.2 Built-in panel sprite.** Unity's rounded UI panel is drawn as a
       flat rectangle (save and load slots, some backgrounds). Draw the rounded,
       nine-sliced version. (2026-10-12; nothing needed drawing. The panels
@@ -466,7 +468,23 @@ Compare each with the Unity version side by side.
       Not filmed: a spell cast and Onyxia's death. The Browser pane went into
       the background half-way through and ran at one or two frames a second,
       too slow for a film. The cast uses the same machinery as the swing.)
-- [ ] **3.4 Particles.** Torch glow and water rings against the original;
+      Filmed later the same day, at the owner's request, with the pane on
+      screen:
+      - Lash of Pain against a Dire Wolf, ten frames a second in both
+        versions: the cast, the effect on the wolf, the wolf's answer, the hit
+        reaction and the damage numbers fall on the same frames. One fault
+        showed: on the first cast after a page load the player vanished for
+        one frame (about a tenth of a second). The cast's pictures are on a
+        sheet that was only fetched when first drawn. An animator now fetches
+        the pictures of all its states when it starts; a first cast on a
+        fresh page, filmed every 40 ms, shows the player in every frame.
+      - Onyxia's death, every 0.15 s for 13 s in both versions, from a level
+        20 character with the Blood Tailisman sent into the lair from the
+        console: after the swing she rears up at once (the death animation
+        starts two seconds in, which is the transition offset added above),
+        falls, and the win box and loot come up; swing to rearing is eight
+        frames in both, rearing to the win box six.
+- [x] **3.4 Particles.** Torch glow and water rings against the original;
       noise and velocity limits are not implemented. Note (2026-10-10): under
       the night screen the water rings show as thin dark circle outlines.
       Partly done (2026-10-12): the camp torch was enlarged nine times beside
@@ -494,6 +512,8 @@ Compare each with the Unity version side by side.
       `zone_1` of the first world and on the start menu), take the same
       moment in both, and check the night-time outline noted above. The
       rings' velocity limit does nothing (their speed is 0).
+      Accepted as done by the owner (2026-10-12): it need not match the Unity
+      build exactly. The water rings remain uncompared.
 - [x] **3.5 Draw order.** Look for anything drawn in front of or behind the
       wrong thing, especially windows over the world and battle effects.
       (2026-10-12, after 3.7; whole screens put beside the Unity build's: the
@@ -677,7 +697,7 @@ These exist in the original game and are reproduced, not fixed.
 - Should bugs in the original game be fixed, or kept as they are (the current
   rule)?
 - How much does phone support matter?
-- Can you take a few pictures of the original Windows game? The load menu,
-  the settings window, the battle skills menu and the win box after a fight
-  would show how Arial text really looked (bold or not, and how high it
-  sits); the WebGL build cannot (see 3.1).
+- Optional, since 3.1 was accepted as it is: a few pictures of the original
+  Windows game (the load menu, the settings window, the battle skills menu,
+  the win box after a fight) would show how Arial text really looked, bold
+  or not and how high it sits. The WebGL build cannot (see 3.1).
