@@ -11,7 +11,7 @@ import { Input } from './input';
 import { AudioListenerComponent, AudioSource, VideoPlayer } from './media';
 import { BoxCollider, BoxCollider2D, CircleCollider2D, Physics2D, Rigidbody2D, sendMouseEvents } from './physics';
 import { Camera, Device, SpriteRenderer } from './render';
-import { SceneManager, registerComponents } from './scene';
+import { SceneManager, registerComponents, tickImageUnloading } from './scene';
 import { Animation } from './animation';
 
 registerComponents({
@@ -39,6 +39,7 @@ export async function startGame(host: HTMLElement, firstScene: string) {
     const dt = (now - last) / 1000;
     last = now;
     try {
+      tickImageUnloading(now);
       if (SceneManager._activatePending()) Physics2D.reset();
       Input.beginFrame();
       EventSystem.process();

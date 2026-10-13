@@ -6,7 +6,7 @@ the date and how you verified it, and add anything new you find.
 
 ## Status
 
-*Last updated 2026-10-12.*
+*Last updated 2026-10-13.*
 
 Phase 1 is finished: the first world has been played from a new game to its
 ending portal, side content included, and the goblin teleporter to
@@ -17,8 +17,9 @@ story (`tools/unity-console.js`). The whole game is playable from a new game
 to the credits. Phase 3 (appearance) is finished. Two of its items (3.1,
 built-in Arial text; 3.4, the torch's exact shape and the water rings) do not
 match the Unity build exactly and were accepted as they are by the owner;
-what differs is written under them. What is left is memory, speed and devices
-(Phase 4) and the release. Nothing is hosted yet.
+what differs is written under them. Phase 4 (memory, speed, devices) has
+begun: images are now unloaded when nothing uses them (4.1). What is left is
+the rest of Phase 4 and the release. Nothing is hosted yet.
 
 ## Done
 
@@ -577,9 +578,29 @@ Compare each with the Unity version side by side.
 
 ### Phase 4 — Memory, speed, devices
 
-- [ ] **4.1 Unload images.** Nothing is ever unloaded, so memory grows as the
+- [x] **4.1 Unload images.** Nothing is ever unloaded, so memory grows as the
       player visits more areas. Release images no longer referenced when the
       scene changes and after fights.
+      (2026-10-13; an image is in use while some object that exists holds one
+      of its sprites in a field, hidden objects included, or has an animator
+      with a picture on it. The rest are unloaded when a scene has been
+      switched, when the game asks (`Resources.UnloadUnusedAssets`, which
+      Stranglethorn Vale and Zul'Gurub call on every screen change; done at
+      the start of the next frame), and, checked every ten seconds, once they
+      have not been drawn for a minute. The minute keeps a spell effect used
+      turn after turn from being fetched each time. An unloaded image is
+      fetched again when something draws it. Finding what is in use takes
+      about 2 ms in the first world (971 objects).
+      Measured with the new `dev.memory()`, decoded size of the loaded sheets,
+      from the save that finished the first world: start menu 238 MB; first
+      world 667 MB; back to the menu 710 → 248 MB; a Dire Wolf fight 668 MB
+      and 633 MB a minute after the wolf died; then Stranglethorn Vale 412,
+      arena 371, the Vale 412, Zul'Gurub 418, the Vale 416, first world
+      651 MB. The same tour used to end with everything it had passed still
+      loaded. A second wolf fight after the tour drew as it should, no
+      console errors.
+      Not measured: what the browser itself reports. These numbers are the
+      sheets' sizes, not the process's memory; 4.2 should look at that.)
 - [ ] **4.2 Measure.** Record load time, memory and frame rate for each scene
       in a visible tab on an ordinary laptop. Write the numbers here.
 - [ ] **4.3 Reduce image memory further** if 4.2 says it is needed

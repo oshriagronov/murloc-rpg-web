@@ -1,7 +1,7 @@
 // Turning scene and prefab data into live objects, and the Unity APIs built
 // on that: Instantiate, SceneManager and Resources.
 
-import { AssetDb, AudioClip, Sprite, TextAsset, Texture2D } from './assets';
+import { AssetDb, AudioClip, ParticleMaterial, Sprite, TextAsset, Texture2D } from './assets';
 import { AsyncOperation, Behaviour, Component, Engine, GameObject, Transform, UObject, destroyAllObjects, withDataCreation } from './core';
 import { Quaternion, Vector3 } from './math';
 import { RectTransform } from './ui';
@@ -179,6 +179,51 @@ export function Instantiate<T = GameObject>(original: any, a?: Transform | Vecto
   return root as unknown as T;
 }
 
+// ---------------------------------------------------------------- unloading images
+
+/**
+ * The images the objects that exist right now can show: sprites and textures held in a field
+ * of any component (or in an array there), hidden objects included, and every picture of
+ * their animators. Prefabs that scripts hold but have not copied do not count.
+ */
+function texturesInUse(): Set<Texture2D> {
+  const used = new Set<Texture2D>();
+  const use = (v: unknown, depth = 0) => {
+    if (!v || typeof v !== 'object') return;
+    if (v instanceof Sprite || v instanceof ParticleMaterial) { if (v.texture) used.add(v.texture); }
+    else if (v instanceof Texture2D) used.add(v);
+    else if (depth > 0 && Array.isArray(v)) for (const x of v) use(x, depth - 1);
+  };
+  for (const go of Engine.objects) {
+    for (const c of go.components) {
+      for (const k in c) use((c as any)[k], 2);
+      c._usedAssets?.(use);
+    }
+  }
+  return used;
+}
+
+/** An image nothing refers to stays this long after it was last drawn before it is unloaded. */
+const IDLE_MS = 60_000;
+const SWEEP_MS = 10_000;
+let sweepAt = 0;
+let unloadRequested = false;
+
+/**
+ * Unloads images no object refers to. With `idleMs`, those drawn in the last so many
+ * milliseconds are kept, so that an effect used over and over in a fight is not fetched each time.
+ */
+export function unloadUnusedImages(idleMs = 0): number {
+  return AssetDb.unloadExcept(texturesInUse(), idleMs);
+}
+
+/** Called at the start of every frame: sets the image clock and unloads what is due. */
+export function tickImageUnloading(now: number) {
+  AssetDb.clock = now;
+  if (unloadRequested) { unloadRequested = false; unloadUnusedImages(); }
+  if (now >= sweepAt) { sweepAt = now + SWEEP_MS; unloadUnusedImages(IDLE_MS); }
+}
+
 // ---------------------------------------------------------------- scenes
 
 interface SceneData { name: string; objects: any[] }
@@ -235,6 +280,8 @@ export const SceneManager = {
     destroyAllObjects();
     active = { name, buildIndex: AssetDb.scenes.indexOf(name) };
     buildObjects(data.objects);
+    // Whatever the old scene alone was showing can go.
+    unloadUnusedImages();
     op.progress = 1;
     op.isDone = true;
     return true;
@@ -289,7 +336,12 @@ export const Resources = {
     return req;
   },
 
+  /**
+   * As in Unity the work is done a little later, not during the call: objects made later in
+   * the same frame keep their images.
+   */
   UnloadUnusedAssets(): AsyncOperation {
+    unloadRequested = true;
     const op = new AsyncOperation();
     op.isDone = true;
     op.progress = 1;

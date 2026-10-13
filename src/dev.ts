@@ -138,6 +138,15 @@ const dev = {
     const p = GameObject.Find('Murky').transform.position;
     return `x ${Math.round(p.x)} y ${Math.round(p.y)} screen ${dev.comp('Character').Get_Zone_Number()} level ${dev.comp('XP_Handler').get_player_level()} health ${dev.comp(dev.comp('Battle_Health_Control').health_text_object, 'Text').text}`;
   },
+  /** Image memory: sheets loaded now and their decoded size, and (with `true`) their names. */
+  memory(list = false) {
+    const loaded = engine.AssetDb.pages.filter((p) => p.pixi);
+    const mb = (bytes: number) => Math.round(bytes / 2 ** 20);
+    const out = `${loaded.length} of ${engine.AssetDb.pages.length} images loaded, ${mb(engine.AssetDb.loadedBytes)} MB`;
+    return list ? [out, ...loaded.sort((a, b) => b.bytes - a.bytes).map((p) => `${mb(p.bytes)} MB ${p.file}`)] : out;
+  },
+  /** Unloads the images nothing refers to, without waiting for them to go unused for a minute. */
+  unload() { const n = engine.unloadUnusedImages(); return `${n} unloaded; ${dev.memory()}`; },
   /** What is in the bag, slot by slot. */
   bag(): string[] { return dev.comp('Inventory').get_items().map((item: any) => item?.name ?? null); },
   /** The monsters that exist right now: name, position, level and type. */

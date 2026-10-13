@@ -158,6 +158,11 @@ export class Component extends UObject {
 
   /** Whether this component should currently run or draw. */
   get isActive(): boolean { return this.gameObject.activeInHierarchy; }
+  /**
+   * Reports assets the component may show that its own fields do not hold (an animator's
+   * pictures), so that their images are kept loaded while it exists.
+   */
+  _usedAssets?(use: (asset: unknown) => void): void;
 
   /** Fills the component from its serialized data. `resolve` turns a reference into the live object. */
   _load(_data: any, _resolve: (ref: any) => any) {}

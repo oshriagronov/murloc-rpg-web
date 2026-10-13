@@ -12,20 +12,45 @@ export const assetUrl = (rel: string) => BASE + rel.split('/').map(encodeURIComp
 export class Texture2D extends UObject {
   pixi: Texture | null = null;
   private loading: Promise<void> | null = null;
+  private unloading: Promise<void> | null = null;
+  /** When the image was last asked for or drawn, on `AssetDb.clock`. */
+  lastUsed = 0;
+  /** Sprites holding a region of the loaded image. */
+  _frames = new Set<Sprite>();
   constructor(public guid: string, public file: string, public width: number, public height: number) {
     super();
     this.name = file.replace(/^.*\//, '').replace(/\.[^.]+$/, '');
   }
   /** Starts fetching the image if needed. Drawing code just skips textures that are not ready. */
   load(): Promise<void> {
+    this.lastUsed = AssetDb.clock;
     if (!this.loading) {
       AssetDb.pending++;
-      this.loading = PixiAssets.load<Texture>(assetUrl(this.file))
+      // An image being released is fetched again only once that has finished.
+      this.loading = (this.unloading ?? Promise.resolve())
+        .then(() => PixiAssets.load<Texture>(assetUrl(this.file)))
         .then((t) => { this.pixi = t; })
         .catch((e) => console.warn(`Could not load texture ${this.file}`, e))
         .finally(() => { AssetDb.pending--; });
     }
     return this.loading;
+  }
+  /** Memory the decoded image takes, in bytes. */
+  get bytes() { return this.width * this.height * 4; }
+  /** Gives the image's memory back. It is fetched again if something asks for it. */
+  _unload() {
+    const t = this.pixi;
+    if (!t) return;
+    for (const s of this._frames) s._dropFrame();
+    this._frames.clear();
+    this.pixi = null;
+    this.loading = null;
+    // PixiJS forgets the image but leaves the decoded picture to the garbage collector; close it now.
+    const picture: unknown = t.source.resource;
+    this.unloading = PixiAssets.unload(assetUrl(this.file))
+      .then(() => { if (typeof ImageBitmap !== 'undefined' && picture instanceof ImageBitmap) picture.close(); })
+      .catch((e) => console.warn(`Could not unload texture ${this.file}`, e))
+      .finally(() => { this.unloading = null; });
   }
 }
 
@@ -63,12 +88,19 @@ export class Sprite extends UObject {
   get hasPixels() { return !!this.texture && this.frameWidth > 0 && this.frameHeight > 0; }
   /** The drawable texture region, or null while the image is still loading. */
   get pixi(): Texture | null {
-    if (this.frame) return this.frame;
     if (!this.hasPixels) return null;
+    this.texture!.lastUsed = AssetDb.clock;
+    if (this.frame) return this.frame;
     const base = this.texture!.pixi;
     if (!base) { void this.texture!.load(); return null; }
     this.frame = new Texture({ source: base.source, frame: new Rectangle(this.frameX, this.frameY, this.frameWidth, this.frameHeight) });
+    this.texture!._frames.add(this);
     return this.frame;
+  }
+  /** Forgets the texture region; called when the image behind it is unloaded. */
+  _dropFrame() {
+    this.frame?.destroy();
+    this.frame = null;
   }
 }
 
@@ -150,6 +182,8 @@ BUILTIN_FONT.lineHeight = (1854 + 434 + 67) / 2048;
 export const AssetDb = {
   /** Number of images still downloading. */
   pending: 0,
+  /** The time in milliseconds, set once a frame; images are stamped with it when used. */
+  clock: 0,
   scenes: [] as string[],
   sortingLayers: new Map<number, number>(),
   /** Every image the game can load. */
@@ -224,6 +258,23 @@ export const AssetDb = {
       case 'prefab': return this.prefabs.has(ref.g) ? this.prefabTemplate(ref.g, ref.f) : null;
       default: return null;
     }
+  },
+
+  /** Memory taken by the images loaded right now, in bytes. */
+  get loadedBytes() { return this.pages.reduce((sum, p) => sum + (p.pixi ? p.bytes : 0), 0); },
+
+  /**
+   * Unloads every loaded image that is not in `used` and has not been asked for or drawn
+   * in the last `idleMs` milliseconds. Returns how many were unloaded.
+   */
+  unloadExcept(used: Set<Texture2D>, idleMs = 0): number {
+    let n = 0;
+    for (const p of this.pages) {
+      if (!p.pixi || used.has(p) || (idleMs > 0 && this.clock - p.lastUsed < idleMs)) continue;
+      p._unload();
+      n++;
+    }
+    return n;
   },
 
   /**

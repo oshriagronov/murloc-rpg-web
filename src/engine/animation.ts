@@ -2,7 +2,7 @@
 // Unity project. Nearly every clip in the game swaps sprites on a frame
 // timeline; a few also animate colours, visibility or positions.
 
-import { AssetDb, ClipData, RuntimeAnimatorController, StateData, TransitionData } from './assets';
+import { AssetDb, ClipData, RuntimeAnimatorController, Sprite, StateData, TransitionData } from './assets';
 import { Behaviour, Component, Engine, GameObject, Time, Transform } from './core';
 import { Color, Quaternion, Vector2, Vector3 } from './math';
 import { SpriteRenderer } from './render';
@@ -250,9 +250,14 @@ export class Animator extends Behaviour {
    * its object blank until its sheet arrived. In Unity everything a scene uses is already there.
    */
   private loadPictures() {
+    this._usedAssets((sprite) => void sprite.texture?.load());
+  }
+
+  /** The pictures of every state. */
+  override _usedAssets(use: (sprite: Sprite) => void) {
     for (const state of this.controller?.data.layers[0]?.states ?? []) {
       for (const curve of this.clipOf(state)?.sprite ?? []) {
-        for (const guid of curve.s) if (guid) void AssetDb.sprites.get(guid)?.texture?.load();
+        for (const guid of curve.s) { const sprite = guid && AssetDb.sprites.get(guid); if (sprite) use(sprite); }
       }
     }
   }
