@@ -95,14 +95,20 @@ export const Input = {
       pointer.y = Screen.height - (e.clientY - r.top) / Device.scale;
       pointer.inside = e.clientX >= r.left && e.clientX < r.right && e.clientY >= r.top && e.clientY < r.bottom;
     };
+    // One pointer at a time, as with Unity's multi-touch switched off: while a finger holds a
+    // movement button, a second finger neither moves the pointer nor lets the button go.
     canvas.addEventListener('pointerdown', (e) => {
+      if (!e.isPrimary) return;
       setPointer(e);
-      canvas.setPointerCapture?.(e.pointerId);
+      // Capture keeps a drag that leaves the canvas; the press counts even where the browser refuses it.
+      try { canvas.setPointerCapture?.(e.pointerId); } catch { /* not a pointer the browser knows */ }
       queue.push({ type: 'down', code: `Mouse${e.button}` });
       e.preventDefault();
     });
-    window.addEventListener('pointerup', (e) => { setPointer(e); queue.push({ type: 'up', code: `Mouse${e.button}` }); });
-    window.addEventListener('pointermove', setPointer);
+    window.addEventListener('pointerup', (e) => { if (!e.isPrimary) return; setPointer(e); queue.push({ type: 'up', code: `Mouse${e.button}` }); });
+    // A touch the browser takes over (a system gesture) never sends its release.
+    window.addEventListener('pointercancel', (e) => { if (!e.isPrimary) return; for (const c of held) if (c.startsWith('Mouse')) queue.push({ type: 'up', code: c }); });
+    window.addEventListener('pointermove', (e) => { if (e.isPrimary) setPointer(e); });
     canvas.addEventListener('pointerleave', () => { pointer.inside = false; });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     canvas.addEventListener('wheel', (e) => { queuedScroll += -Math.sign(e.deltaY) * 0.1; e.preventDefault(); }, { passive: false });

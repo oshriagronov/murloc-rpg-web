@@ -18,7 +18,7 @@ let background: { running: boolean; value: unknown } = { running: false, value: 
 
 function pointer(type: string, x: number, y: number) {
   const canvas = Device.app.canvas, r = canvas.getBoundingClientRect();
-  const init = { bubbles: true, cancelable: true, clientX: r.left + x * Device.scale, clientY: r.top + y * Device.scale, button: 0, pointerId: 1 };
+  const init = { bubbles: true, cancelable: true, clientX: r.left + x * Device.scale, clientY: r.top + y * Device.scale, button: 0, pointerId: 1, isPrimary: true };
   (type === 'pointerdown' ? canvas : window).dispatchEvent(new PointerEvent(type, init));
 }
 

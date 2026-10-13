@@ -21,7 +21,10 @@ function fit() {
 window.addEventListener('resize', fit);
 fit();
 
-document.getElementById('fullscreen')!.addEventListener('click', () => {
+const fullscreen = document.getElementById('fullscreen')!;
+// An iPhone's browser cannot make a page fullscreen; do not offer it there.
+if (!document.fullscreenEnabled) fullscreen.hidden = true;
+fullscreen.addEventListener('click', () => {
   if (document.fullscreenElement) void document.exitFullscreen();
   else void document.documentElement.requestFullscreen?.();
 });

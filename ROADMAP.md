@@ -19,7 +19,8 @@ built-in Arial text; 3.4, the torch's exact shape and the water rings) do not
 match the Unity build exactly and were accepted as they are by the owner;
 what differs is written under them. Phase 4 (memory, speed, devices) has
 begun: images are now unloaded when nothing uses them (4.1) and load time,
-memory and frame rate are written down (4.2). What is left is
+memory and frame rate are written down (4.2), and the game can be played
+by touch on an emulated phone screen (4.5). What is left is
 the rest of Phase 4 and the release. Nothing is hosted yet.
 
 ## Done
@@ -648,15 +649,46 @@ Compare each with the Unity version side by side.
       first step is half-size sheets on small screens (a quarter of the
       memory; a 852x480 game drawn on a phone does not need full-size art).
 - [ ] **4.4 Browsers.** Play the opening in Chrome, Firefox and Safari.
-- [ ] **4.5 Touch.** The game has on-screen movement and chat buttons. Check
+- [x] **4.5 Touch.** The game has on-screen movement and chat buttons. Check
       them and the menus on a phone-sized touch screen.
+      (2026-10-13; in the browser pane set to a phone's size (740x360, and
+      375x812 upright) with its phone emulation on, driven with touch-type
+      pointer events and no mouse movement between taps. Not a real phone:
+      see 4.7. All by touch: Play, New Game, choosing a class (first tap
+      shows it, second confirms), walking (the left and right halves of the
+      screen are two invisible buttons; hold to walk, let go to stop), the
+      speech-bubble button that appears beside an NPC, tapping anywhere to
+      go through Ketchin's dialogue, the character, bag, talent and settings
+      windows and the music button, loading a save, walking into a Mistvale
+      Gorilla, Attack from the battle menu, taking loot and Continue. No
+      console errors. Changed on the way:
+      - A touch the browser takes away (`pointercancel`) now releases the
+        button; the character would have walked on for ever.
+      - Only the first finger counts, as with Unity's multi-touch off. A
+        second finger used to be ignored going down but let the movement
+        button go coming up.
+      - The page no longer zooms, selects text, opens the long-press menu or
+        pulls to refresh under a finger, and the fullscreen button is hidden
+        where the browser cannot do it (iPhone).
+      Things a touch screen cannot do, as in the original: there is no hover,
+      so an item's tooltip shows on the tap that also uses or picks the item.
+      Held upright the game is the width of the phone and a quarter of its
+      height; it is meant to be held sideways.)
 - [ ] **4.6 Loading feedback.** Show progress while the first data and images
       download, and a message if something fails to load.
+- [ ] **4.7 A real phone.** 4.5 was checked with an emulated touch screen.
+      Play the opening on an actual iPhone and an Android phone, sideways:
+      does it load at all (see 4.3 on memory), do the taps land, does sound
+      start, does the browser's own bar get in the way. Needs the game on an
+      address a phone can reach (5.3, or the dev server on the local network).
 
 ### Phase 5 — Release
 
 - [ ] **5.1 Decisions from the owner** (see "Questions for the owner").
 - [ ] **5.2 Page polish.** Title, icon, description, a short "how to play".
+      Also (found in 4.5): a hint to turn a phone sideways, and a better
+      place for the fullscreen button, which sits over the corner of the bag
+      icon when the window is exactly 16:9 and leaves no margin.
 - [ ] **5.3 Hosting.** Deploy `dist/` to the chosen host; check it works from
       its real address and that caching headers are sensible. The largest
       single file is the 22 MB intro video.

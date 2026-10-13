@@ -6,6 +6,8 @@
     <title>Murloc RPG: Stranglethorn Fever</title>
     <style>
       html, body { margin: 0; height: 100%; background: #0b0d10; overflow: hidden; font-family: system-ui, sans-serif; color: #e8e6e3; }
+      /* On a touch screen: no page zoom, pull-to-refresh, text selection or long-press menu over the game. */
+      body { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
       #stage { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #000; overflow: hidden; }
       #stage canvas { width: 100%; height: 100%; touch-action: none; }
       #overlay { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: #0b0d10; }
