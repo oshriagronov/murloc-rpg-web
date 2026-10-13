@@ -5,7 +5,7 @@ engine underneath. It loads the original scenes, sprites and animations as plain
 JSON and runs the game's logic against a small runtime that mirrors the parts of
 Unity the game was written for.
 
-**Play it: https://murloc-rpg.oshri-mcp.workers.dev**
+**Play it: https://murloc-rpg.pages.dev**
 
 **Status: playable from a new game to the credits.** Every area has been
 played through and compared with the original: the first world, Stranglethorn
@@ -18,7 +18,7 @@ list of what is done and what is left; `AGENTS.md` explains how to work on it.
 npm install
 npm run dev        # http://localhost:5173
 npm run build      # static site in dist/
-npm run deploy     # build, then upload dist/ to Cloudflare (wrangler.jsonc)
+npm run deploy     # build, then upload dist/ to Cloudflare Pages (wrangler.jsonc)
 ```
 
 ## How it is put together
@@ -32,7 +32,7 @@ src/engine/         the runtime: objects, transforms, sprites, UI, animation, in
 src/game/           the game's own scripts, one file per original script
 src/dev.ts          console helpers for development builds (`murloc`, `dev`)
 src/main.ts         the page: sizing, the Play button, start-up
-worker/ranges.js    runs on the host: serves the intro video in parts, for Safari
+functions/          runs on the host: serves the intro video in parts, for Safari
 ```
 
 ### The runtime

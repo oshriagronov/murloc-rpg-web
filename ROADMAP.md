@@ -27,7 +27,7 @@ of Safari are done) and, put off by
 the owner, a real phone (4.7). What is left is
 the rest of Phase 4 and the release. Phase 5 (release) has begun: the
 page around the game is done (5.2), the owner's decisions are in (5.1) and
-the game is live at https://murloc-rpg.oshri-mcp.workers.dev (5.3). The
+the game is live at https://murloc-rpg.pages.dev (5.3, moved in 5.7). The
 repository has its licence and credits and is pushed (5.4). Left in Phase 5:
 a preview picture for links (5.5) and, if wanted, the owner's own address
 (5.6).
@@ -785,8 +785,21 @@ Compare each with the Unity version side by side.
       title and description for link previews but no picture; add a
       1200x630 one (the start menu would do) and `og:image` with the site's
       full address.
+- [x] **5.7 An address without the account's name.** The owner did not want
+      `oshri-mcp` (the Cloudflare account's `workers.dev` name, shared with
+      other projects of theirs) in the address. (2026-10-13: moved to
+      Cloudflare Pages, whose addresses carry only the project's name:
+      https://murloc-rpg.pages.dev. The address in 5.3 is gone; the worker
+      there was deleted. `npm run deploy` now runs `wrangler pages deploy`.
+      Pages ignores requests for part of a file as well, so the handler for
+      the intro video moved from `worker/ranges.js` to
+      `functions/game/video/[[path]].js`. Checked again at the new address:
+      caching headers, ranges and a byte-for-byte slice with curl; Play, the
+      intro video and the menu in the Browser pane. Wrangler sends
+      `pages project create` to Workers unless given `--force`; that was
+      needed once, to create the project, and not since.)
 - [ ] **5.6 The owner's own address**, if wanted: the site answers on
-      Cloudflare's `workers.dev` name. A custom domain is a setting on the
+      Cloudflare's `pages.dev` name. A custom domain is a setting on the
       Cloudflare side plus the address in 5.5.
 - [x] **5.4 Publish the repository.** Licence file, credits, push.
       Also bring `README.md` up to date first: its "Status" and "Known gaps"

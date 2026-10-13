@@ -20,7 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-This licence covers the code in this repository: src/, tools/, worker/ and the
+This licence covers the code in this repository: src/, tools/, functions/ and the
 page and build files at its top level. It does not cover the game's content:
 the art, sound, music, video, fonts and text under public/ (public/game and
 public/icon.png). Those belong to their owners and are included with
