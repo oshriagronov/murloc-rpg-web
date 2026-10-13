@@ -31,7 +31,8 @@ the game is live at https://murloc-rpg.pages.dev (5.3, moved in 5.7). The
 repository has its licence and credits and is pushed (5.4). Left in Phase 5:
 a preview picture for links (5.5) and, if wanted, the owner's own address
 (5.6). Phase 6 (keeping it healthy) has begun: the engine has unit tests
-(6.1, `npm test`).
+(6.1, `npm test`) and a scripted smoke test of every scene (6.2,
+`npm run smoke`).
 
 ## Done
 
@@ -828,8 +829,24 @@ Compare each with the Unity version side by side.
       on purpose (the half-way point of a blend, rounding of a half, the
       parent's pivot in anchoring): five tests failed, then the lines were put
       back. `tests/` is part of `npm run typecheck`.)
-- [ ] **6.2 A scripted smoke test** that starts a game and loads every scene,
+- [x] **6.2 A scripted smoke test** that starts a game and loads every scene,
       failing on console errors.
+      (2026-10-13: `npm run smoke` runs `tools/smoke.mjs`: it serves the
+      project on port 5183, drives the installed Chrome without a window
+      through `playwright-core` (a development dependency that downloads no
+      browser), and uses the `dev` helpers: start menu, New Game, Warrior,
+      then Stranglethorn Vale, the arena, back, Zul'Gurub, back, the first
+      world, the credits and the menu again. Each scene has to load and then
+      keep drawing frames for two seconds. A console error, an uncaught
+      exception, a failed request or an HTTP error fails the run with exit
+      code 1. Passed: 18 steps in 36 s, no errors and no warnings; the
+      character arrives where each door puts it (screen 2 of STV from the
+      arena, screen 7 from Zul'Gurub, screen 9 of the first world). It was
+      seen failing first: a run that went from Zul'Gurub straight to the
+      first world stopped on `Character.Start ... reading 'game_complete'`.
+      That is not a route the game has (`Resume_Game` only expects the first
+      world to be entered new, from a save or from STV), so the script was
+      changed to follow the doors and nothing was changed in the game.)
 - [ ] **6.3 Run typecheck and tests automatically** on every push.
 - [x] **6.4 Stable converter output.** Running the converter twice numbers the
       image pages in a different order (they are numbered as they finish), so

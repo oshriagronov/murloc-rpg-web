@@ -25,7 +25,7 @@ to work in it.
    in the browser before you change anything, so you know what is actually
    wrong.
 4. **An item is done when** all of these hold:
-   - `npm run typecheck` and `npm test` pass.
+   - `npm run typecheck`, `npm test` and `npm run smoke` pass.
    - You exercised the behaviour in a browser and it works, with no new errors
      in the console (`dev.errorSummary()`).
    - Where the item is about looks or behaviour matching the original, you
@@ -55,6 +55,7 @@ npm install
 npm run dev          # dev server, http://localhost:5173
 npm run typecheck    # whole project (relaxed nulls), then the engine alone (strict)
 npm test             # unit tests for the engine (tests/), in Node, no browser
+npm run smoke        # new game and every scene in headless Chrome; fails on any console error
 npm run build        # typecheck + static site in dist/
 npm run preview      # serve dist/
 npm run convert -- ../unity-project    # rebuild public/game from the Unity project
@@ -139,6 +140,15 @@ object lifecycle with coroutines, and the animator's state machine. When you
 change one of those, or fix an engine bug, add or adjust a test; the expected
 values are Unity's behaviour, not whatever the code does today. The game
 itself has no tests of that kind. Verify it by playing.
+
+`npm run smoke` (`tools/smoke.mjs`) is the one scripted check of the whole
+game: it serves the project on its own port, opens it in the installed Google
+Chrome without a window, starts a new game, goes through every area in the
+order the game's doors allow, plays the credits and returns to the menu. Any
+console error, uncaught exception or failed request fails it. It takes about
+half a minute. It shows that every scene loads and runs, not that the game
+plays right. `npm run smoke -- --show` opens a window to watch;
+`SMOKE_BROWSER=/path/to/browser` uses another Chromium-based browser.
 
 In a dev build the browser console has `murloc` (the whole engine) and `dev`:
 

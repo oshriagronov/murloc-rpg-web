@@ -92,7 +92,8 @@ the engine on its own with strict settings.
 
 Tests: `npm test` runs the engine's unit tests (`tests/`, Vitest, in Node with
 no browser): the C# behaviour helpers, the maths, layout, the object lifecycle
-and the animator's state machine.
+and the animator's state machine. `npm run smoke` starts a new game in headless
+Chrome, visits every scene and fails on any console error.
 
 ## Known gaps
 

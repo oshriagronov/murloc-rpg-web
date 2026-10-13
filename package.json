@@ -12,12 +12,14 @@
     "deploy": "npm run build && npx wrangler pages deploy --branch main",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.engine.json",
     "test": "vitest run",
+    "smoke": "node tools/smoke.mjs",
     "convert": "node tools/convert.mjs"
   },
   "dependencies": {
     "pixi.js": "^8.22.0"
   },
   "devDependencies": {
+    "playwright-core": "^1.64.0",
     "sharp": "^0.35.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
