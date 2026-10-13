@@ -27,7 +27,10 @@ of Safari are done) and, put off by
 the owner, a real phone (4.7). What is left is
 the rest of Phase 4 and the release. Phase 5 (release) has begun: the
 page around the game is done (5.2), the owner's decisions are in (5.1) and
-the game is live at https://murloc-rpg.oshri-mcp.workers.dev (5.3).
+the game is live at https://murloc-rpg.oshri-mcp.workers.dev (5.3). The
+repository has its licence and credits and is pushed (5.4). Left in Phase 5:
+a preview picture for links (5.5) and, if wanted, the owner's own address
+(5.6).
 
 ## Done
 
@@ -785,9 +788,15 @@ Compare each with the Unity version side by side.
 - [ ] **5.6 The owner's own address**, if wanted: the site answers on
       Cloudflare's `workers.dev` name. A custom domain is a setting on the
       Cloudflare side plus the address in 5.5.
-- [ ] **5.4 Publish the repository.** Licence file, credits, push.
+- [x] **5.4 Publish the repository.** Licence file, credits, push.
       Also bring `README.md` up to date first: its "Status" and "Known gaps"
       still describe the game as mostly unplayed (found in 5.2).
+      (2026-10-13: `LICENSE` is MIT for the code and says the game's content
+      under `public/` is not covered. `README.md` has the address, the real
+      status, today's known gaps and a credits section; the page before the
+      game names Tkon games and the port's author, seen in the browser and
+      on the live page. The repository on GitHub was already public; pushed
+      to `origin/main`.)
 
 ### Phase 6 — Keeping it healthy
 

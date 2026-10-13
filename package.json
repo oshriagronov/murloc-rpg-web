@@ -2,6 +2,7 @@
   "name": "murloc-web",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Murloc RPG: Stranglethorn Fever, rebuilt for the web in TypeScript on PixiJS",
   "scripts": {
