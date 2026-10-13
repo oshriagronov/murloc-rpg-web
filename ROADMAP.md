@@ -870,6 +870,18 @@ original.
       button still starts the game, console clean. Where 5.2 and the
       AGENTS.md notes say "Play", this is the button they mean.)
 
+- [x] **A.4 A calmer, plainer look for the page before the game.** Asked
+      for by the owner, who approved a design of it first. (2026-10-13: warm
+      charcoal ground, off-white text and a muted gold; no outlined boxes;
+      the credits side by side with a thin line between; the button a
+      rounded pill; the controls in one row under the word "Controls"; one
+      footer line with the note about saves and the GitHub link. The arrow
+      keys and "mouse or touch" are no longer listed, as in the approved
+      design. The design used the Figtree typeface; the page uses the
+      system's own rounded or default font, so as not to load a font from a
+      third party. Seen at 1280x720 and 480x270, nothing cut off; the button
+      still starts the game, console clean.)
+
 ## Original bugs kept on purpose
 
 These exist in the original game and are reproduced until fixed under 7.1
