@@ -22,7 +22,8 @@ begun: images are now unloaded when nothing uses them (4.1) and load time,
 memory and frame rate are written down (4.2), and the game can be played
 by touch on an emulated phone screen (4.5). Start-up shows its progress
 and a lost connection is waited out instead of breaking the game (4.6).
-Open in Phase 4: Safari and Firefox (4.4; Chrome is done) and, put off by
+Open in Phase 4: Firefox and Safari's intro video (4.4; Chrome and the rest
+of Safari are done) and, put off by
 the owner, a real phone (4.7). What is left is
 the rest of Phase 4 and the release. Nothing is hosted yet.
 
@@ -663,13 +664,19 @@ Compare each with the Unity version side by side.
         the Chief's ten lines, the dagger in the bag, out through the gate
         and a Wolf Cub beaten in three turns, loot taken. 100 frames a
         second, no console errors.
-      - Safari 27: not done. The agent can neither click in Safari nor see
-        it. `dev.selftest` was added for this: opening
-        `http://127.0.0.1:5173/?selftest=safari` plays the same opening
-        without anyone touching it and shows a report in the corner of the
-        page. It was opened in Safari, but no report had come back after
-        some eight minutes, and what the page showed is not known. Someone
-        has to look at that tab (see "Questions for the owner").
+      - Safari 27.0.1, through `dev.selftest` (the agent may look at Safari
+        but not click in it): `http://localhost:5173/?selftest=safari` played
+        the opening by itself and reported all twelve fonts loaded, New Game,
+        Ketchin's five lines, the tent, the Chief's ten lines, the quest
+        numbers 3, 3, 1, the dagger in the bag, a Wolf Cub beaten in three
+        turns and its loot taken, 100 frames a second at 1679x946, no console
+        errors. The menu and the forest were looked at in the window and are
+        drawn as in Chrome, and the tab was playing sound. Left for a person:
+        the intro video, which the script cannot start (a browser wants a
+        real click on Play; it reported "paused").
+        Safari with "HTTPS-Only" on refuses `http://127.0.0.1:5173`
+        outright; `http://localhost:5173` is let through. The hosted game
+        must be served over HTTPS (5.3).
       - Firefox: not installed on this machine.
       Note for the self-test: it only means something in a window that is on
       screen. In the hidden browser pane it ran at one frame a second and
@@ -736,7 +743,9 @@ Compare each with the Unity version side by side.
       place for the fullscreen button, which sits over the corner of the bag
       icon when the window is exactly 16:9 and leaves no margin.
 - [ ] **5.3 Hosting.** Deploy `dist/` to the chosen host; check it works from
-      its real address and that caching headers are sensible. The largest
+      its real address and that caching headers are sensible. It has to be
+      HTTPS: Safari with HTTPS-Only on will not open a plain HTTP address
+      (4.4). The largest
       single file is the 22 MB intro video.
 - [ ] **5.4 Publish the repository.** Licence file, credits, push.
 
@@ -855,12 +864,11 @@ These exist in the original game and are reproduced, not fixed.
   rule)?
 - ~~How much does phone support matter?~~ Answered 2026-10-13: not for now,
   maybe later. 4.3 is closed on that basis and 4.7 waits.
-- Safari (4.4): with `npm run dev` running, open
-  `http://127.0.0.1:5173/?selftest=safari` in Safari, leave the window on
-  screen for a few minutes, and say what the report in the top-left corner
-  shows (or that none appears, and what the page looks like). Then reload
-  without `?selftest`, press Play yourself and say whether the intro video
-  plays with sound. The same in Firefox if it gets installed.
+- Safari (4.4): open `http://localhost:5173` in Safari, press Play and say
+  whether the intro video plays with sound. Everything after it was checked.
+  Firefox is not installed here; if it gets installed, open
+  `http://localhost:5173/?selftest=firefox` in it and report what the corner
+  of the page says.
 - Optional, since 3.1 was accepted as it is: a few pictures of the original
   Windows game (the load menu, the settings window, the battle skills menu,
   the win box after a fight) would show how Arial text really looked, bold
