@@ -739,7 +739,11 @@ Compare each with the Unity version side by side.
 
 ### Phase 5 — Release
 
-- [ ] **5.1 Decisions from the owner** (see "Questions for the owner").
+- [x] **5.1 Decisions from the owner** (see "Questions for the owner").
+      (2026-10-13, asked and answered: host on Cloudflare; MIT for the code,
+      with the art, sound and text stated as not covered; credit Tkon games
+      as the original author; fix the original's bugs, all of them, over
+      time. The last one changes the fidelity rule: see Phase 7.)
 - [x] **5.2 Page polish.** Title, icon, description, a short "how to play".
       Also (found in 4.5): a hint to turn a phone sideways, and a better
       place for the fullscreen button, which sits over the corner of the bag
@@ -780,9 +784,24 @@ Compare each with the Unity version side by side.
       listed by id. Two runs in a row gave byte-identical JSON, and no image
       file changed.)
 
+### Phase 7 — Fix the original's bugs
+
+The owner decided on 2026-10-13 that the bugs of the original game are to be
+fixed in this version, all of them, over time. Until one is fixed it stays
+reproduced as it is.
+
+- [ ] **7.1 Work down the list under "Original bugs kept on purpose".** One
+      bug per commit. Say in the commit and next to the bug what the fixed
+      behaviour is, and mark the bug "Fixed" with the date instead of removing
+      it. Where the right behaviour is a matter of taste (what should happen
+      when Hakkar dies, which experience formula is the real one), ask the
+      owner first. The Unity project is not changed; from then on the two
+      versions differ there on purpose.
+
 ## Original bugs kept on purpose
 
-These exist in the original game and are reproduced, not fixed.
+These exist in the original game and are reproduced until fixed under 7.1
+(they were kept on purpose until the owner's decision of 2026-10-13).
 
 - Loading a save made inside a monster zone logs an error at start-up: monsters
   are spawned before their prefab has finished loading
@@ -874,10 +893,12 @@ These exist in the original game and are reproduced, not fixed.
 
 ## Questions for the owner
 
-- Where should the game be hosted?
-- Which licence for the code, and how should the original authors be credited?
-- Should bugs in the original game be fixed, or kept as they are (the current
-  rule)?
+- ~~Where should the game be hosted?~~ Answered 2026-10-13: Cloudflare.
+- ~~Which licence for the code, and how should the original authors be
+  credited?~~ Answered 2026-10-13: MIT; credit Tkon games as the original
+  game's author.
+- ~~Should bugs in the original game be fixed, or kept as they are?~~
+  Answered 2026-10-13: fix them all, over time (Phase 7).
 - ~~How much does phone support matter?~~ Answered 2026-10-13: not for now,
   maybe later. 4.3 is closed on that basis and 4.7 waits.
 - Safari (4.4): open `http://localhost:5173` in Safari, press Play and say

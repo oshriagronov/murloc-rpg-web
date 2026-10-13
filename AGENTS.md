@@ -66,7 +66,9 @@ The translator in `tools/cs2ts` needs the .NET SDK and is not part of the build.
 **Fidelity first.** The game should behave like the original, including its
 quirks. Do not "improve" game logic, balance, text or layout. If the original
 has a bug, keep it unless the roadmap says to fix it; list bugs you find under
-"Original bugs kept on purpose" in the roadmap.
+"Original bugs kept on purpose" in the roadmap. (Since 2026-10-13 the roadmap
+does say so: Phase 7 fixes them one at a time. A bug is still reproduced
+until its turn comes, and still gets listed first.)
 
 **Fix problems where they come from.** When something behaves differently from
 the original, the cause is almost always one of:
