@@ -61,6 +61,9 @@ npm run preview      # serve dist/
 npm run convert -- ../unity-project    # rebuild public/game from the Unity project
 ```
 
+On GitHub, `.github/workflows/check.yml` runs the type check, the tests and
+the smoke test on every push and pull request.
+
 The translator in `tools/cs2ts` needs the .NET SDK and is not part of the build.
 
 ## Rules for the code

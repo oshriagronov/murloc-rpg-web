@@ -32,7 +32,8 @@ repository has its licence and credits and is pushed (5.4). Left in Phase 5:
 a preview picture for links (5.5) and, if wanted, the owner's own address
 (5.6). Phase 6 (keeping it healthy) has begun: the engine has unit tests
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
-`npm run smoke`).
+`npm run smoke`). A GitHub workflow that runs both on every push is written
+but has not run yet: it needs a push (6.3).
 
 ## Done
 
@@ -848,6 +849,15 @@ Compare each with the Unity version side by side.
       world to be entered new, from a save or from STV), so the script was
       changed to follow the doors and nothing was changed in the game.)
 - [ ] **6.3 Run typecheck and tests automatically** on every push.
+      Partly done (2026-10-13): `.github/workflows/check.yml` runs
+      `npm ci`, `npm run typecheck`, `npm test` and `npm run smoke` on GitHub
+      for every push and pull request. The same four commands pass in a fresh
+      clone on this Mac. Left: it has not run on GitHub, because that takes a
+      push and the owner has not asked for one. After the push, look at the
+      run under the repository's Actions tab. The step to watch is the smoke
+      test: it counts on the runner's own Google Chrome and on WebGL without
+      a graphics card (`--enable-unsafe-swiftshader`), and neither could be
+      tried here. Tick this item when a run is green.
 - [x] **6.4 Stable converter output.** Running the converter twice numbers the
       image pages in a different order (they are numbered as they finish), so
       `assets.json` changes in over a thousand places although nothing really
