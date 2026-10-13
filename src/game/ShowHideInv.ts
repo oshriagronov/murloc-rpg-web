@@ -1,4 +1,4 @@
-import { Canvas, Cursor, CursorMode, GameObject, Image, MonoBehaviour, Texture2D, Vector2, alive } from '../engine';
+import { Button, Canvas, Cursor, CursorMode, GameObject, Image, Input, KeyCode, MonoBehaviour, Texture2D, Vector2, alive } from '../engine';
 import { Character } from './Character';
 import { Equipment } from './Equipment';
 import { Inventory } from './Inventory';
@@ -29,6 +29,35 @@ export class ShowHideInv extends MonoBehaviour {
   PLAYER: GameObject = null;
   is_merchant: boolean = false;
   cursorTextureHand: Texture2D = null;
+
+  // Not in the original game: keyboard shortcuts for the four icons, added at the owner's request.
+  // A key presses its icon's button, so it does what a click would and nothing when the icons are
+  // hidden (in a fight or a conversation). Many buttons carry this script; only the icon bar listens.
+  private static readonly SHORTCUTS: [KeyCode, string][] = [
+    [KeyCode.I, 'Inventory_Button'],
+    [KeyCode.K, 'Talent_Button'],
+    [KeyCode.C, 'Character_Button'],
+    [KeyCode.O, 'Settings'],
+  ];
+
+  Update(): void {
+    if (this.gameObject.name !== 'UI_ICONS') {
+      return;
+    }
+    // Leave Ctrl+C and the like to the browser.
+    if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) {
+      return;
+    }
+    for (const [key, name] of ShowHideInv.SHORTCUTS) {
+      if (!Input.GetKeyDown(key)) {
+        continue;
+      }
+      const button = this.transform.Find(name)?.GetComponent(Button);
+      if (alive(button) && button.isActiveAndEnabled && button.IsInteractable()) {
+        button.onClick.Invoke();
+      }
+    }
+  }
 
   show_chat(): void {
     this.chat_button.SetActive(true);

@@ -827,6 +827,21 @@ reproduced as it is.
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
 
+### Additions the original does not have
+
+Asked for by the owner; each is marked in the code as not being in the
+original.
+
+- [x] **A.1 Keyboard shortcuts for the four icons**: I bag, K skills (the
+      talent window), C character and equipment, O settings. (2026-10-13:
+      `ShowHideInv.Update`, on the icon bar only, presses the icon's own
+      button, so a key does exactly what a click does and nothing while the
+      icons are hidden. Tried in the first world: each key opens and closes
+      its window, I and C stay open together, K closes C, O closes the rest,
+      nothing happens with the icon bar hidden, console clean. The page
+      before the game lists the keys. Ignored while Ctrl is held, so Ctrl+C
+      stays the browser's.)
+
 ## Original bugs kept on purpose
 
 These exist in the original game and are reproduced until fixed under 7.1
