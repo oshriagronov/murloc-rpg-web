@@ -30,7 +30,8 @@ page around the game is done (5.2), the owner's decisions are in (5.1) and
 the game is live at https://murloc-rpg.pages.dev (5.3, moved in 5.7). The
 repository has its licence and credits and is pushed (5.4). Left in Phase 5:
 a preview picture for links (5.5) and, if wanted, the owner's own address
-(5.6).
+(5.6). Phase 6 (keeping it healthy) has begun: the engine has unit tests
+(6.1, `npm test`).
 
 ## Done
 
@@ -813,8 +814,20 @@ Compare each with the Unity version side by side.
 
 ### Phase 6 — Keeping it healthy
 
-- [ ] **6.1 Tests for the engine.** Unit tests for layout maths, the C#
+- [x] **6.1 Tests for the engine.** Unit tests for layout maths, the C#
       behaviour helpers and animator transitions.
+      (2026-10-13: `npm test` runs 122 tests in `tests/` with Vitest, a
+      development dependency only; they run in Node, with no browser. Five
+      files: the C# helpers (`compat`), the maths types, transform and
+      RectTransform layout with canvas scaling and the aspect fitter, the
+      object lifecycle with Invoke and coroutines, and the animator
+      (conditions, triggers, exit times, any-state, blends, `Play`, state
+      scripts, curves and write-defaults). Expected values are Unity's rules,
+      worked out by hand. All pass against the engine as it is, so no engine
+      bug turned up. To see that they can fail, three engine lines were broken
+      on purpose (the half-way point of a blend, rounding of a half, the
+      parent's pivot in anchoring): five tests failed, then the lines were put
+      back. `tests/` is part of `npm run typecheck`.)
 - [ ] **6.2 A scripted smoke test** that starts a game and loads every scene,
       failing on console errors.
 - [ ] **6.3 Run typecheck and tests automatically** on every push.

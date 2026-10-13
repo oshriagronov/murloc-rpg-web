@@ -90,6 +90,10 @@ Type checking: `npm run typecheck` checks the whole project with null checks
 relaxed (the game code is C# at heart, where any reference may be null) and then
 the engine on its own with strict settings.
 
+Tests: `npm test` runs the engine's unit tests (`tests/`, Vitest, in Node with
+no browser): the C# behaviour helpers, the maths, layout, the object lifecycle
+and the animator's state machine.
+
 ## Known gaps
 
 - Text in the built-in Arial font, the torch's flame and the rings on the water

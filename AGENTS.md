@@ -15,8 +15,8 @@ to work in it.
 `ROADMAP.md` is the plan and the record of what has been done. Work from it.
 
 1. **Start of a session.** Read `ROADMAP.md` from top to bottom, then run
-   `npm install` (if needed) and `npm run typecheck` so you know the starting
-   state is clean.
+   `npm install` (if needed), `npm run typecheck` and `npm test` so you know
+   the starting state is clean.
 2. **Pick the work.** If the owner asked for something specific, do that.
    Otherwise take the first unchecked item under "Next", top to bottom. Do not
    skip ahead because a later item looks more interesting. Skip an item only if
@@ -25,7 +25,7 @@ to work in it.
    in the browser before you change anything, so you know what is actually
    wrong.
 4. **An item is done when** all of these hold:
-   - `npm run typecheck` passes.
+   - `npm run typecheck` and `npm test` pass.
    - You exercised the behaviour in a browser and it works, with no new errors
      in the console (`dev.errorSummary()`).
    - Where the item is about looks or behaviour matching the original, you
@@ -54,6 +54,7 @@ left partly done, and anything you could not verify.
 npm install
 npm run dev          # dev server, http://localhost:5173
 npm run typecheck    # whole project (relaxed nulls), then the engine alone (strict)
+npm test             # unit tests for the engine (tests/), in Node, no browser
 npm run build        # typecheck + static site in dist/
 npm run preview      # serve dist/
 npm run convert -- ../unity-project    # rebuild public/game from the Unity project
@@ -132,7 +133,12 @@ any runtime dependency.
 
 ## Testing in the browser
 
-There are no automated tests yet. Verify by playing.
+The engine has unit tests in `tests/` (`npm test`, Vitest, run in Node): the
+C# behaviour helpers, the maths types, transform and RectTransform layout, the
+object lifecycle with coroutines, and the animator's state machine. When you
+change one of those, or fix an engine bug, add or adjust a test; the expected
+values are Unity's behaviour, not whatever the code does today. The game
+itself has no tests of that kind. Verify it by playing.
 
 In a dev build the browser console has `murloc` (the whole engine) and `dev`:
 

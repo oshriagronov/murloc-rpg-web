@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "deploy": "npm run build && npx wrangler pages deploy --branch main",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.engine.json",
+    "test": "vitest run",
     "convert": "node tools/convert.mjs"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "sharp": "^0.35.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
+    "vitest": "^5.0.4",
     "yaml": "^2.9.1"
   }
 }
