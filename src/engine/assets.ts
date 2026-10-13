@@ -9,6 +9,32 @@ import { UObject } from './core';
 const BASE = `${import.meta.env.BASE_URL}game/`;
 export const assetUrl = (rel: string) => BASE + rel.split('/').map(encodeURIComponent).join('/');
 
+// Files that failed to load are tried again every few seconds; a dropped connection should
+// hold the game up, not break it.
+const RETRY_MS = 3000;
+const failing = new Set<string>();
+function setFailing(file: string, failed: boolean) {
+  if (failed === failing.has(file)) return;
+  if (failed) failing.add(file); else failing.delete(file);
+  AssetDb.onProblem?.(failing.size ? [...failing] : null);
+}
+
+/** Fetches one of the game's files, trying again for as long as it fails. */
+export async function fetchGameFile(rel: string): Promise<Response> {
+  for (;;) {
+    try {
+      const r = await fetch(assetUrl(rel));
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      setFailing(rel, false);
+      return r;
+    } catch (e) {
+      console.warn(`Could not load ${rel}; trying again`, e);
+      setFailing(rel, true);
+      await new Promise((resolve) => setTimeout(resolve, RETRY_MS));
+    }
+  }
+}
+
 export class Texture2D extends UObject {
   pixi: Texture | null = null;
   private loading: Promise<void> | null = null;
@@ -29,8 +55,13 @@ export class Texture2D extends UObject {
       // An image being released is fetched again only once that has finished.
       this.loading = (this.unloading ?? Promise.resolve())
         .then(() => PixiAssets.load<Texture>(assetUrl(this.file)))
-        .then((t) => { this.pixi = t; })
-        .catch((e) => console.warn(`Could not load texture ${this.file}`, e))
+        .then((t) => { this.pixi = t; setFailing(this.file, false); })
+        .catch((e) => {
+          // Whoever waits for the image goes on without it; it appears when a later try succeeds.
+          console.warn(`Could not load texture ${this.file}; trying again`, e);
+          setFailing(this.file, true);
+          setTimeout(() => { this.loading = null; void this.load(); }, RETRY_MS);
+        })
         .finally(() => { AssetDb.pending--; });
     }
     return this.loading;
@@ -180,6 +211,11 @@ BUILTIN_FONT.descent = 434 / 2048;
 BUILTIN_FONT.lineHeight = (1854 + 434 + 67) / 2048;
 
 export const AssetDb = {
+  /**
+   * Told when files fail to load (with their names) and again with `null` once every one of
+   * them has arrived after all.
+   */
+  onProblem: null as ((files: string[] | null) => void) | null,
   /** Number of images still downloading. */
   pending: 0,
   /** The time in milliseconds, set once a frame; images are stamped with it when used. */
@@ -205,9 +241,13 @@ export const AssetDb = {
    */
   prefabTemplate: ((_guid: string, _fileId?: string) => null) as (guid: string, fileId?: string) => any,
 
-  async init() {
+  /** Loads the data files and fonts. `onProgress` is given the fraction done, 0 to 1. */
+  async init(onProgress?: (fraction: number) => void) {
+    // The three data files are most of the bytes; the fonts share the rest.
+    let progress = 0;
+    const advance = (by: number) => onProgress?.(Math.min(1, progress += by));
     const [a, anim, prefabs] = await Promise.all(
-      ['assets.json', 'animations.json', 'prefabs.json'].map((f) => fetch(BASE + f).then((r) => r.json())),
+      ['assets.json', 'animations.json', 'prefabs.json'].map((f) => fetchGameFile(f).then((r) => r.json()).then((v) => { advance(0.25); return v; })),
     );
     this.scenes = a.scenes;
     a.sortingLayers.forEach(([, id]: [string, number], order: number) => this.sortingLayers.set(id >>> 0, order));
@@ -228,14 +268,16 @@ export const AssetDb = {
       const family = `murloc-${name.replace(/[^A-Za-z0-9]+/g, '-')}`;
       const font = new Font(g, name, `"${family}", Arial, sans-serif`, file);
       this.fonts.set(g, font);
-      faces.push(fetch(assetUrl(file)).then((r) => r.arrayBuffer()).then((data) => {
+      faces.push(fetchGameFile(file).then((r) => r.arrayBuffer()).then((data) => {
         font._readMetrics(data);
         const face = new FontFace(family, data);
         document.fonts.add(face);
         return face.load();
-      }).catch((e) => console.warn(`Could not load font ${file}`, e)));
+      }).catch((e) => console.warn(`Could not use font ${file}`, e)));
     }
+    for (const face of faces) void face.then(() => advance(0.25 / faces.length));
     await Promise.all(faces);
+    onProgress?.(1);
     for (const g in prefabs) this.prefabs.set(g, prefabs[g]);
     for (const g in anim.clips) this.clips.set(g, new AnimationClip(g, anim.clips[g]));
     for (const g in anim.controllers) this.controllers.set(g, new RuntimeAnimatorController(g, anim.controllers[g]));

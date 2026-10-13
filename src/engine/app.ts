@@ -23,16 +23,31 @@ registerComponents({
   ParticleSystem, ParticleSystemRenderer, MeshRenderer, MeshFilter, UniversalAdditionalCameraData,
 });
 
+export interface StartOptions {
+  /** Called as start-up advances, with the fraction done (0 to 1). */
+  onProgress?: (fraction: number) => void;
+  /**
+   * Called when files fail to load, with their names, and with `null` when they have all
+   * arrived after all. The engine keeps trying by itself; this is for telling the player.
+   */
+  onProblem?: (files: string[] | null) => void;
+}
+
 /**
  * Starts the game inside `host` and loads the first scene. The returned
- * promise resolves once the engine is running; `resize` should be called
+ * promise resolves once that scene is on screen; `resize` should be called
  * whenever the host element changes size.
  */
-export async function startGame(host: HTMLElement, firstScene: string) {
+export async function startGame(host: HTMLElement, firstScene: string, options: StartOptions = {}) {
+  // The data files are a small part of the wait; the first scene's images are most of it.
+  const DATA_SHARE = 0.3;
+  AssetDb.onProblem = options.onProblem ?? null;
   await Device.init(host);
-  await AssetDb.init();
+  await AssetDb.init((f) => options.onProgress?.(f * DATA_SHARE));
   Input.attach(Device.app.canvas);
-  SceneManager.LoadSceneAsync(firstScene);
+  const first = SceneManager.LoadSceneAsync(firstScene);
+  let shown: (() => void) | null = null;
+  const firstShown = new Promise<void>((resolve) => { shown = resolve; });
 
   let last = performance.now();
   const frame = (now: number) => {
@@ -41,6 +56,10 @@ export async function startGame(host: HTMLElement, firstScene: string) {
     try {
       tickImageUnloading(now);
       if (SceneManager._activatePending()) Physics2D.reset();
+      if (shown) {
+        options.onProgress?.(DATA_SHARE + (1 - DATA_SHARE) * first.progress);
+        if (first.isDone) { shown(); shown = null; }
+      }
       Input.beginFrame();
       EventSystem.process();
       sendMouseEvents();
@@ -53,5 +72,6 @@ export async function startGame(host: HTMLElement, firstScene: string) {
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
+  await firstShown;
   return { resize: (cssWidth: number, cssHeight: number) => Device.resize(cssWidth, cssHeight) };
 }

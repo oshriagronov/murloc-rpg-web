@@ -20,7 +20,9 @@ match the Unity build exactly and were accepted as they are by the owner;
 what differs is written under them. Phase 4 (memory, speed, devices) has
 begun: images are now unloaded when nothing uses them (4.1) and load time,
 memory and frame rate are written down (4.2), and the game can be played
-by touch on an emulated phone screen (4.5). What is left is
+by touch on an emulated phone screen (4.5). Start-up shows its progress
+and a lost connection is waited out instead of breaking the game (4.6).
+What is left is
 the rest of Phase 4 and the release. Nothing is hosted yet.
 
 ## Done
@@ -674,8 +676,28 @@ Compare each with the Unity version side by side.
       so an item's tooltip shows on the tap that also uses or picks the item.
       Held upright the game is the width of the phone and a quarter of its
       height; it is meant to be held sideways.)
-- [ ] **4.6 Loading feedback.** Show progress while the first data and images
+- [x] **4.6 Loading feedback.** Show progress while the first data and images
       download, and a message if something fails to load.
+      (2026-10-13; pressing Play now shows a bar and a percentage: the data
+      files and fonts are the first 30%, the first scene's images the rest,
+      and the start screen goes away when the menu scene is actually drawn
+      (it used to go as soon as the data had arrived, leaving a black
+      picture until the images came). Later scenes already have the game's
+      own loading bar.
+      Nothing gives up any more. A data file, font or scene that fails to
+      load is fetched again every three seconds, and so is an image (the
+      scene goes on without it and it appears when it arrives; it used to
+      stay missing for good). While anything is failing, a line at the top
+      of the page says so; it goes when everything has arrived. A browser
+      that cannot start WebGL gets a sentence saying that instead of the bar.
+      Checked: with the data files slowed down and one made to fail twice,
+      the bar ran 8% → 30% → 91%, the notice showed during the failures and
+      went, and the menu came up. Then for real, in the production build:
+      the server was stopped at the menu and New Game pressed; the game
+      stayed on its loading picture with the notice up for fifteen seconds,
+      and when the server came back the notice went and class selection
+      appeared, complete. The dev server cannot be used for this: its page
+      reloads itself when the server returns.)
 - [ ] **4.7 A real phone.** 4.5 was checked with an emulated touch screen.
       Play the opening on an actual iPhone and an Android phone, sideways:
       does it load at all (see 4.3 on memory), do the taps land, does sound

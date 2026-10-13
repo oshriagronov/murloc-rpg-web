@@ -1,7 +1,7 @@
 // Turning scene and prefab data into live objects, and the Unity APIs built
 // on that: Instantiate, SceneManager and Resources.
 
-import { AssetDb, AudioClip, ParticleMaterial, Sprite, TextAsset, Texture2D } from './assets';
+import { AssetDb, AudioClip, ParticleMaterial, Sprite, TextAsset, Texture2D, fetchGameFile } from './assets';
 import { AsyncOperation, Behaviour, Component, Engine, GameObject, Transform, UObject, destroyAllObjects, withDataCreation } from './core';
 import { Quaternion, Vector3 } from './math';
 import { RectTransform } from './ui';
@@ -242,7 +242,7 @@ function sceneName(nameOrIndex: string | number): string {
 function fetchScene(name: string): Promise<SceneData> {
   let p = sceneCache.get(name);
   if (!p) {
-    p = fetch(`${import.meta.env.BASE_URL}game/scenes/${name}.json`).then((r) => r.json());
+    p = fetchGameFile(`scenes/${name}.json`).then((r) => r.json());
     sceneCache.set(name, p);
   }
   return p;
