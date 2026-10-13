@@ -1,0 +1,9 @@
+# Caching, read by Cloudflare. Without a rule a file is checked with the server on every visit.
+
+# Code: Vite puts a hash of the contents in each name, so a file never changes.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Game data keeps its names from one version to the next, so it is kept for an hour only.
+/game/*
+  Cache-Control: public, max-age=3600

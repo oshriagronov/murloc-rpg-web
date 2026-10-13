@@ -1,0 +1,9 @@
+// Hosting: the built site (dist/) served as static files by Cloudflare.
+// `npm run deploy` builds and uploads it.
+{
+  "name": "murloc-rpg",
+  "compatibility_date": "2026-10-01",
+  // Code runs for the intro video only, to serve it in parts; every other file is served as it is.
+  "main": "./worker/ranges.js",
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/game/video/*"] }
+}

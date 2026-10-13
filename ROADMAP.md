@@ -26,8 +26,8 @@ Open in Phase 4: Firefox and Safari's intro video (4.4; Chrome and the rest
 of Safari are done) and, put off by
 the owner, a real phone (4.7). What is left is
 the rest of Phase 4 and the release. Phase 5 (release) has begun: the
-page around the game is done (5.2). Hosting and publishing wait for the
-owner's answers (5.1). Nothing is hosted yet.
+page around the game is done (5.2), the owner's decisions are in (5.1) and
+the game is live at https://murloc-rpg.oshri-mcp.workers.dev (5.3).
 
 ## Done
 
@@ -760,11 +760,31 @@ Compare each with the Unity version side by side.
       was looked at in the world, a merchant window and an arena fight at
       exactly 852x480: nothing of the game is under it. Console clean,
       `npm run build` passes and the built page finds its icon.)
-- [ ] **5.3 Hosting.** Deploy `dist/` to the chosen host; check it works from
+- [x] **5.3 Hosting.** Deploy `dist/` to the chosen host; check it works from
       its real address and that caching headers are sensible. It has to be
       HTTPS: Safari with HTTPS-Only on will not open a plain HTTP address
       (4.4). The largest
       single file is the 22 MB intro video.
+      (2026-10-13: live at https://murloc-rpg.oshri-mcp.workers.dev, on
+      Cloudflare as static files; `npm run deploy` builds and uploads,
+      settings in `wrangler.jsonc`. Caching is set in `public/_headers`: the
+      hashed code for a year, game data for an hour, the page itself checked
+      every visit; read back with curl. Cloudflare's file hosting ignores
+      requests for part of a file, which Safari needs for video, so
+      `worker/ranges.js` answers those for the intro video only; ranges at
+      the start, middle, end and past the end were checked with curl and a
+      slice compared byte for byte with the file. Played from the real
+      address in the Browser pane: Play, the intro video with a jump to its
+      end, the menu, New Game, the loading screen, the class window in the
+      first world; 34 requests, none failed, console clean. Not checked
+      there: Safari and a phone, see 4.4 and 4.7.)
+- [ ] **5.5 A preview picture for links** (found in 5.2/5.3). The page has a
+      title and description for link previews but no picture; add a
+      1200x630 one (the start menu would do) and `og:image` with the site's
+      full address.
+- [ ] **5.6 The owner's own address**, if wanted: the site answers on
+      Cloudflare's `workers.dev` name. A custom domain is a setting on the
+      Cloudflare side plus the address in 5.5.
 - [ ] **5.4 Publish the repository.** Licence file, credits, push.
       Also bring `README.md` up to date first: its "Status" and "Known gaps"
       still describe the game as mostly unplayed (found in 5.2).
