@@ -860,6 +860,16 @@ original.
       opening https://github.com/oshriagronov/murloc-rpg-web in a new tab.
       Seen at 852x480 and 480x270; everything still fits.)
 
+- [x] **A.3 The page before the game is a credits page.** Asked for by the
+      owner: the credits are its main subject, the button reads "Continue to
+      the game" instead of "Play", and the controls come last. (2026-10-13:
+      the game's name is now a small heading, "A game by Tkon games" and
+      "Web version by Oshri Agronov" are the large text with the GitHub
+      button under them, then the button, the controls in small type and the
+      note about saves. Seen at 852x480 and 480x270, where it all fits; the
+      button still starts the game, console clean. Where 5.2 and the
+      AGENTS.md notes say "Play", this is the button they mean.)
+
 ## Original bugs kept on purpose
 
 These exist in the original game and are reproduced until fixed under 7.1

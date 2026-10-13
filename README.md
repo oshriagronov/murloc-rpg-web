@@ -31,7 +31,7 @@ public/game/        the converted game data; committed, so the converter is only
 src/engine/         the runtime: objects, transforms, sprites, UI, animation, input
 src/game/           the game's own scripts, one file per original script
 src/dev.ts          console helpers for development builds (`murloc`, `dev`)
-src/main.ts         the page: sizing, the Play button, start-up
+src/main.ts         the page: sizing, the start button, start-up
 functions/          runs on the host: serves the intro video in parts, for Safari
 ```
 

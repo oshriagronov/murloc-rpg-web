@@ -137,7 +137,7 @@ There are no automated tests yet. Verify by playing.
 In a dev build the browser console has `murloc` (the whole engine) and `dev`:
 
 ```js
-await dev.start();                 // press Play, skip the intro, wait for the menu
+await dev.start();                 // press the start button, skip the intro, wait for the menu
 await dev.click(248, 197);         // click at a game position (852x480, from the top-left)
 await dev.key('KeyD', 2000);       // hold a key (KeyboardEvent.code) for 2 s
 await dev.scene('Test');           // wait until a scene is active

@@ -19,17 +19,21 @@
       #stage canvas { width: 100%; height: 100%; touch-action: none; }
       #overlay { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.2cqh; background: #0b0d10; }
       /* The page before the game: sized from the stage, so it fits a small window as it fits a large one. */
-      #overlay h1 { margin: 0; display: flex; align-items: center; gap: 0.5em; font-size: clamp(16px, 3.4cqw, 34px); font-weight: 600; color: #f3d77a; }
+      #overlay h1 { margin: 0; display: flex; align-items: center; gap: 0.5em; font-size: clamp(13px, 2.4cqw, 24px); font-weight: 600; color: #c9c5bd; }
+      /* The credits are what this page is for; the controls come last and smaller. */
+      #credits { display: flex; gap: 6cqw; text-align: center; }
+      #credits span { display: block; font-size: clamp(11px, 1.9cqw, 17px); color: #8f8b84; }
+      #credits strong { display: block; font-size: clamp(20px, 5cqw, 46px); font-weight: 600; color: #f3d77a; }
       #overlay h1 img { width: 1.6em; height: 1.6em; border-radius: 0.2em; image-rendering: auto; }
-      #howto { margin: 0; display: grid; grid-template-columns: auto auto; gap: 0.35em 1.2em; font-size: clamp(11px, 1.9cqw, 16px); color: #c9c5bd; }
-      #howto dt { text-align: right; color: #e8e6e3; }
+      #howto { margin: 0; display: grid; grid-template-columns: auto auto; gap: 0.3em 1.2em; font-size: clamp(10px, 1.6cqw, 14px); color: #8f8b84; }
+      #howto dt { text-align: right; color: #c9c5bd; }
       #howto dd { margin: 0; }
-      #saves { margin: 0; text-align: center; line-height: 1.5; font-size: clamp(10px, 1.6cqw, 14px); color: #8f8b84; }
+      #saves { margin: 0; text-align: center; font-size: clamp(9px, 1.4cqw, 12px); color: #6f6b65; }
       #github { display: inline-flex; align-items: center; gap: 0.5em; padding: 0.4em 0.9em; border: 1px solid #555; border-radius: 6px; background: #1d2026; color: #c9c5bd; font-size: clamp(10px, 1.6cqw, 14px); text-decoration: none; }
       #github:hover { color: #fff; border-color: #888; }
       #github svg { width: 1.3em; height: 1.3em; fill: currentColor; }
       kbd { font: inherit; padding: 0 0.35em; border: 1px solid #555; border-radius: 4px; background: #1d2026; }
-      #start { font: inherit; font-size: 22px; padding: 12px 36px; border: 2px solid #c9a227; border-radius: 6px; background: #1d2026; color: #f3d77a; cursor: pointer; }
+      #start { font: inherit; font-size: clamp(14px, 2.6cqw, 22px); padding: 0.5em 1.5em; border: 2px solid #c9a227; border-radius: 6px; background: #1d2026; color: #f3d77a; cursor: pointer; }
       #start:hover:enabled { background: #2a2e36; }
       #start:disabled { opacity: 0.7; cursor: default; }
       #loading { width: min(320px, 70%); text-align: center; font-size: 15px; color: #c9c5bd; }
@@ -51,7 +55,15 @@
     <div id="stage">
       <div id="overlay">
         <h1><img src="/icon.png" alt="" />Murloc RPG: Stranglethorn Fever</h1>
-        <button id="start">Play</button>
+        <div id="credits">
+          <div><span>A game by</span><strong>Tkon games</strong></div>
+          <div><span>Web version by</span><strong>Oshri Agronov</strong></div>
+        </div>
+        <a id="github" href="https://github.com/oshriagronov/murloc-rpg-web" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          Source code on GitHub
+        </a>
+        <button id="start">Continue to the game</button>
         <div id="loading" hidden><div id="bar"><div id="fill"></div></div><div id="status">Loading…</div></div>
         <dl id="howto">
           <dt><kbd>A</kbd> <kbd>D</kbd> or <kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>move (hold <kbd>Ctrl</kbd> to walk)</dd>
@@ -59,11 +71,7 @@
           <dt><kbd>I</kbd> <kbd>K</kbd> <kbd>C</kbd> <kbd>O</kbd></dt><dd>bag, skills, character, settings</dd>
           <dt>Mouse or touch</dt><dd>everything else</dd>
         </dl>
-        <p id="saves">Saved games are kept in this browser.<br />A game by Tkon games. Web version by Oshri Agronov.</p>
-        <a id="github" href="https://github.com/oshriagronov/murloc-rpg-web" target="_blank" rel="noopener">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-          Source code on GitHub
-        </a>
+        <p id="saves">Saved games are kept in this browser.</p>
       </div>
     </div>
     <div id="notice" role="status" hidden>Part of the game could not be loaded. Check your connection; trying again…</div>
