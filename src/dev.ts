@@ -145,6 +145,22 @@ const dev = {
     const out = `${loaded.length} of ${engine.AssetDb.pages.length} images loaded, ${mb(engine.AssetDb.loadedBytes)} MB`;
     return list ? [out, ...loaded.sort((a, b) => b.bytes - a.bytes).map((p) => `${mb(p.bytes)} MB ${p.file}`)] : out;
   },
+  /** Frame rate over a few seconds, measured between animation frames. Only means something in a visible tab. */
+  async fps(seconds = 5) {
+    const gaps: number[] = [];
+    await new Promise<void>((done) => {
+      const t0 = performance.now();
+      let last = t0;
+      const tick = (now: number) => {
+        gaps.push(now - last); last = now;
+        if (now - t0 < seconds * 1000) requestAnimationFrame(tick); else done();
+      };
+      requestAnimationFrame(tick);
+    });
+    gaps.shift();
+    const total = gaps.reduce((a, b) => a + b, 0), c = Device.app.canvas;
+    return `${Math.round((gaps.length * 1000) / total)} frames a second, longest frame ${Math.round(Math.max(...gaps))} ms, ${gaps.filter((g) => g > 34).length} of ${gaps.length} over 34 ms, canvas ${c.width}x${c.height}`;
+  },
   /** Unloads the images nothing refers to, without waiting for them to go unused for a minute. */
   unload() { const n = engine.unloadUnusedImages(); return `${n} unloaded; ${dev.memory()}`; },
   /** What is in the bag, slot by slot. */

@@ -18,7 +18,8 @@ to the credits. Phase 3 (appearance) is finished. Two of its items (3.1,
 built-in Arial text; 3.4, the torch's exact shape and the water rings) do not
 match the Unity build exactly and were accepted as they are by the owner;
 what differs is written under them. Phase 4 (memory, speed, devices) has
-begun: images are now unloaded when nothing uses them (4.1). What is left is
+begun: images are now unloaded when nothing uses them (4.1) and load time,
+memory and frame rate are written down (4.2). What is left is
 the rest of Phase 4 and the release. Nothing is hosted yet.
 
 ## Done
@@ -601,10 +602,51 @@ Compare each with the Unity version side by side.
       console errors.
       Not measured: what the browser itself reports. These numbers are the
       sheets' sizes, not the process's memory; 4.2 should look at that.)
-- [ ] **4.2 Measure.** Record load time, memory and frame rate for each scene
+- [x] **4.2 Measure.** Record load time, memory and frame rate for each scene
       in a visible tab on an ordinary laptop. Write the numbers here.
+      (2026-10-13; a MacBook Air M2 with 16 GB, Chromium (the desktop app's
+      browser pane, on screen), game drawn at 1704x960, dev server on the same
+      machine. A new Warrior was taken through every scene in one go, first
+      from an address the browser had never loaded, so nothing was cached.
+
+      | Scene | Images loaded | Decoded | Compressed (new on this visit) | Load | Script per frame |
+      |---|---|---|---|---|---|
+      | StartMenu | 31 | 238 MB | 9.8 MB (9.8) | 0.5 s | 0.5 ms |
+      | Test (first world) | 181 | 657 MB | 26.9 MB (17.9) | 0.7 s | 1.7 ms |
+      | STV | 132 | 412 MB | 17.9 MB (4.1) | 0.2 s | 0.9 ms |
+      | Arena | 132 | 370 MB | 16.3 MB (0.8) | 0.2 s | 0.9 ms |
+      | ZG | 131 | 418 MB | 17.8 MB (6.6) | 0.3 s | 0.9 ms |
+      | Credits | 20 | 239 MB | 10.2 MB (0.6) | 0.1 s | 0.4 ms |
+
+      - Load is from the click or call that asks for the scene until it is
+        shown and no image is still on its way. With a local server it is
+        almost all decoding; on a real host add the download, which is the
+        compressed column. The second, cached pass gave 0.2 to 0.6 s.
+      - Before any scene: the page's script is 163 KB gzipped (718 KB), the
+        three data files 1.3 MB (0.47 MB gzipped), the fonts 1.7 MB, a scene's
+        own data 0.03 to 2.1 MB (Test: 0.12 MB gzipped), and the intro video
+        22 MB, which plays while it downloads. The whole site is 151 MB.
+      - Frame rate: 100 a second, the screen's own rate, standing and walking
+        in every scene, no frame over 12 ms in five seconds of each. The
+        script's share of a frame is the last column (99th percentile under
+        3 ms; the slowest single frame while walking 20 ms).
+      - Real memory, from macOS's `footprint` for the tab's process: 425 MB
+        in the credits and 848 MB in the first world, so about 200 MB plus
+        the decoded size. The graphics process, shared with the rest of the
+        app, went from 622 to 657 MB. The script's own heap is 27 to 55 MB.
+      - 238 MB of every scene is the player: an animator loads the pictures
+        of all its states (3.3), and the murloc has thirteen sheets.
+      Not measured: other browsers (4.4) and any phone. Measure again with
+      `dev.memory()` and `dev.fps()`.)
 - [ ] **4.3 Reduce image memory further** if 4.2 says it is needed
       (GPU-compressed textures, or smaller sheets for small screens).
+      Blocked (2026-10-13) on the owner's answer to "How much does phone
+      support matter?". On a laptop 4.2 says it is not needed: the largest
+      scene takes about 850 MB and runs at the screen's full frame rate. On a
+      phone it would be: browsers there close a tab somewhere around 1 GB,
+      and the first world alone decodes 657 MB. If phones matter, the cheap
+      first step is half-size sheets on small screens (a quarter of the
+      memory; a 852x480 game drawn on a phone does not need full-size art).
 - [ ] **4.4 Browsers.** Play the opening in Chrome, Firefox and Safari.
 - [ ] **4.5 Touch.** The game has on-screen movement and chat buttons. Check
       them and the menus on a phone-sized touch screen.

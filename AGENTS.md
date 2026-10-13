@@ -159,6 +159,7 @@ dev.mobs();                        // the monsters that exist right now
 await dev.area(1);                 // go to another area as its doors do: 0 first world, 1 STV, 2 arena, 3 ZG
 dev.save(1);                       // save to a slot without the menus
 dev.memory();                      // how many image sheets are loaded and their size; dev.memory(true) lists them
+await dev.fps(5);                  // frame rate over five seconds (visible tab only)
 dev.unload();                      // unload unreferenced images now (the engine does it a minute after last use)
 dev.run(async () => { ... });      // start a long script without waiting for it
 await dev.result();                // ... and collect its result (or { running: true })
