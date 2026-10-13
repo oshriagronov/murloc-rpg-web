@@ -17,11 +17,14 @@ function fit() {
   stage.style.width = `${w}px`;
   stage.style.height = `${h}px`;
   resize?.(w, h);
+  // The button sits in the margin beside or below the game, when there is one.
+  const margin = Math.max(window.innerWidth - w, window.innerHeight - h) / 2;
+  fullscreen.classList.toggle('over', margin < 42);
 }
+const fullscreen = document.getElementById('fullscreen')!;
 window.addEventListener('resize', fit);
 fit();
 
-const fullscreen = document.getElementById('fullscreen')!;
 // An iPhone's browser cannot make a page fullscreen; do not offer it there.
 if (!document.fullscreenEnabled) fullscreen.hidden = true;
 fullscreen.addEventListener('click', () => {

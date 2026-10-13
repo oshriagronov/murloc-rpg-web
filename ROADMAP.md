@@ -25,7 +25,9 @@ and a lost connection is waited out instead of breaking the game (4.6).
 Open in Phase 4: Firefox and Safari's intro video (4.4; Chrome and the rest
 of Safari are done) and, put off by
 the owner, a real phone (4.7). What is left is
-the rest of Phase 4 and the release. Nothing is hosted yet.
+the rest of Phase 4 and the release. Phase 5 (release) has begun: the
+page around the game is done (5.2). Hosting and publishing wait for the
+owner's answers (5.1). Nothing is hosted yet.
 
 ## Done
 
@@ -738,16 +740,30 @@ Compare each with the Unity version side by side.
 ### Phase 5 — Release
 
 - [ ] **5.1 Decisions from the owner** (see "Questions for the owner").
-- [ ] **5.2 Page polish.** Title, icon, description, a short "how to play".
+- [x] **5.2 Page polish.** Title, icon, description, a short "how to play".
       Also (found in 4.5): a hint to turn a phone sideways, and a better
       place for the fullscreen button, which sits over the corner of the bag
       icon when the window is exactly 16:9 and leaves no margin.
+      (2026-10-13: the page before the game shows the name, the game's own
+      murloc icon, Play and the controls (A/D or arrows, Ctrl to walk, Space,
+      mouse), sized from the stage; seen at 852x480, 1100x480 and 480x320.
+      `public/icon.png` is `Murloc_icon.png` from the Unity project, also the
+      tab icon. Description and social-preview tags added, without a preview
+      picture: that needs the site's real address (5.3). An emulated upright
+      phone shows "Turn your phone sideways to play" over everything. The
+      fullscreen button stays in the margin when there is one; with none it
+      moves to the middle of the top edge, faint until pointed at. That spot
+      was looked at in the world, a merchant window and an arena fight at
+      exactly 852x480: nothing of the game is under it. Console clean,
+      `npm run build` passes and the built page finds its icon.)
 - [ ] **5.3 Hosting.** Deploy `dist/` to the chosen host; check it works from
       its real address and that caching headers are sensible. It has to be
       HTTPS: Safari with HTTPS-Only on will not open a plain HTTP address
       (4.4). The largest
       single file is the 22 MB intro video.
 - [ ] **5.4 Publish the repository.** Licence file, credits, push.
+      Also bring `README.md` up to date first: its "Status" and "Known gaps"
+      still describe the game as mostly unplayed (found in 5.2).
 
 ### Phase 6 — Keeping it healthy
 
