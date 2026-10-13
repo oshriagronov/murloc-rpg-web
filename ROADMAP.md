@@ -855,6 +855,11 @@ original.
       before the game lists the keys. Ignored while Ctrl is held, so Ctrl+C
       stays the browser's.)
 
+- [x] **A.2 A button to the GitHub repository** on the page before the
+      game. (2026-10-13: "Source code on GitHub" under the credits line,
+      opening https://github.com/oshriagronov/murloc-rpg-web in a new tab.
+      Seen at 852x480 and 480x270; everything still fits.)
+
 ## Original bugs kept on purpose
 
 These exist in the original game and are reproduced until fixed under 7.1
