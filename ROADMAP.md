@@ -22,8 +22,8 @@ begun: images are now unloaded when nothing uses them (4.1) and load time,
 memory and frame rate are written down (4.2), and the game can be played
 by touch on an emulated phone screen (4.5). Start-up shows its progress
 and a lost connection is waited out instead of breaking the game (4.6).
-Open in Phase 4: further memory reduction, which waits on whether phones
-matter (4.3), Firefox and Safari (4.4) and a real phone (4.7). What is left is
+Open in Phase 4: Safari and Firefox (4.4; Chrome is done) and, put off by
+the owner, a real phone (4.7). What is left is
 the rest of Phase 4 and the release. Nothing is hosted yet.
 
 ## Done
@@ -642,26 +642,38 @@ Compare each with the Unity version side by side.
         of all its states (3.3), and the murloc has thirteen sheets.
       Not measured: other browsers (4.4) and any phone. Measure again with
       `dev.memory()` and `dev.fps()`.)
-- [ ] **4.3 Reduce image memory further** if 4.2 says it is needed
+- [x] **4.3 Reduce image memory further** if 4.2 says it is needed
       (GPU-compressed textures, or smaller sheets for small screens).
-      Blocked (2026-10-13) on the owner's answer to "How much does phone
-      support matter?". On a laptop 4.2 says it is not needed: the largest
-      scene takes about 850 MB and runs at the screen's full frame rate. On a
-      phone it would be: browsers there close a tab somewhere around 1 GB,
-      and the first world alone decodes 657 MB. If phones matter, the cheap
-      first step is half-size sheets on small screens (a quarter of the
-      memory; a 852x480 game drawn on a phone does not need full-size art).
+      (2026-10-13; not needed, nothing changed. On a laptop the largest scene
+      takes about 850 MB and runs at the screen's full frame rate (4.2). It
+      would be needed on a phone, where browsers close a tab somewhere around
+      1 GB and the first world alone decodes 657 MB; the owner said the same
+      day that phones do not matter for now. If they come to matter, the
+      cheap first step is half-size sheets on small screens: a quarter of
+      the memory, and a 852x480 game on a phone does not need full-size art.
+      See 4.7.)
 - [ ] **4.4 Browsers.** Play the opening in Chrome, Firefox and Safari.
-      Partly done (2026-10-13): everything in this phase was played in
-      Chromium 152 (the desktop app's browser pane), which is Chrome's
-      engine: the opening, the windows, fights, every scene, the production
-      build. Left: Firefox and Safari, and Chrome itself for form's sake.
-      Blocked for the agent: Firefox is not installed on this machine, Safari
-      cannot be clicked in by the agent's tools, and the Chrome extension was
-      not connected. For whoever does it: `npm run dev`, open
-      http://localhost:5173, play from Play to the first wolf fight, and look
-      for (Safari especially) the intro video playing with sound, music
-      starting, the fonts, and `dev.errorSummary()` in the console.
+      Partly done (2026-10-13).
+      - Chromium 152 (the desktop app's browser pane): everything in this
+        phase, the production build included.
+      - Chrome 155, the owner's own, driven through the Chrome extension: a
+        real click on Play starts the intro video with sound (playing and
+        unmuted four seconds in) and the menu song follows; then, from the
+        console helpers, New Game, Warrior, Ketchin's five lines, the tent,
+        the Chief's ten lines, the dagger in the bag, out through the gate
+        and a Wolf Cub beaten in three turns, loot taken. 100 frames a
+        second, no console errors.
+      - Safari 27: not done. The agent can neither click in Safari nor see
+        it. `dev.selftest` was added for this: opening
+        `http://127.0.0.1:5173/?selftest=safari` plays the same opening
+        without anyone touching it and shows a report in the corner of the
+        page. It was opened in Safari, but no report had come back after
+        some eight minutes, and what the page showed is not known. Someone
+        has to look at that tab (see "Questions for the owner").
+      - Firefox: not installed on this machine.
+      Note for the self-test: it only means something in a window that is on
+      screen. In the hidden browser pane it ran at one frame a second and
+      reported no dialogue and no fight, with no errors.
 - [x] **4.5 Touch.** The game has on-screen movement and chat buttons. Check
       them and the menus on a phone-sized touch screen.
       (2026-10-13; in the browser pane set to a phone's size (740x360, and
@@ -709,7 +721,8 @@ Compare each with the Unity version side by side.
       and when the server came back the notice went and class selection
       appeared, complete. The dev server cannot be used for this: its page
       reloads itself when the server returns.)
-- [ ] **4.7 A real phone.** 4.5 was checked with an emulated touch screen.
+- [ ] **4.7 A real phone.** Not now: the owner said on 2026-10-13 that phones
+      do not matter for the moment. 4.5 was checked with an emulated touch screen.
       Play the opening on an actual iPhone and an Android phone, sideways:
       does it load at all (see 4.3 on memory), do the taps land, does sound
       start, does the browser's own bar get in the way. Needs the game on an
@@ -840,11 +853,14 @@ These exist in the original game and are reproduced, not fixed.
 - Which licence for the code, and how should the original authors be credited?
 - Should bugs in the original game be fixed, or kept as they are (the current
   rule)?
-- How much does phone support matter? (Decides 4.3: on a laptop memory is
-  fine as it is; a phone would need smaller images.)
-- Can you play the opening once in Safari and once in Firefox (4.4), or
-  should an agent be given a way to (Firefox installed; Safari's "Allow
-  remote automation" switched on)?
+- ~~How much does phone support matter?~~ Answered 2026-10-13: not for now,
+  maybe later. 4.3 is closed on that basis and 4.7 waits.
+- Safari (4.4): with `npm run dev` running, open
+  `http://127.0.0.1:5173/?selftest=safari` in Safari, leave the window on
+  screen for a few minutes, and say what the report in the top-left corner
+  shows (or that none appears, and what the page looks like). Then reload
+  without `?selftest`, press Play yourself and say whether the intro video
+  plays with sound. The same in Firefox if it gets installed.
 - Optional, since 3.1 was accepted as it is: a few pictures of the original
   Windows game (the load menu, the settings window, the battle skills menu,
   the win box after a fight) would show how Arial text really looked, bold

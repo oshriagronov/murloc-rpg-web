@@ -165,6 +165,7 @@ dev.run(async () => { ... });      // start a long script without waiting for it
 await dev.result();                // ... and collect its result (or { running: true })
 await dev.shot('menu');            // send a picture to tools/compare.py (see "Checking against the original")
 dev.errorSummary();                // distinct console errors so far, with counts
+await dev.selftest();              // plays the opening up to the first wolf fight and reports; see below
 murloc.GameObject.Find('Murky');   // the player object
 ```
 
@@ -177,6 +178,13 @@ Saves are JSON in `localStorage` under `murloc-save/gamedata_one.tkon`,
 and edit it. A zone is 852 units wide; for zone `n` set `cam_pos = 852 * n`,
 `cam_x = 426 + 852 * n` and `x_pos` inside the zone. Quest progress is the
 `quests` array.
+
+To check a browser that cannot be scripted, open
+`http://localhost:5173/?selftest=safari` in it: the page plays the opening by
+itself, shows a report in the corner and, when `python3 tools/compare.py serve`
+is running, saves the report and a picture there as `t_selftest_safari*`. The
+intro video and sound still need a person: a browser only allows them after a
+real click.
 
 Practical notes:
 

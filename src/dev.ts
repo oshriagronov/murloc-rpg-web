@@ -276,6 +276,89 @@ const dev = {
       copy.toBlob(async (blob) => { await fetch(`http://127.0.0.1:8799/t_${name}`, { method: 'POST', body: blob }); resolve(`${copy.width}x${copy.height}`); });
     }), 0));
   },
+  /**
+   * Plays the opening without anyone at the keyboard: Play, New Game, Warrior, Ketchin, the
+   * Chief in his tent, out of the gate and a fight with the first wolf. The report is shown
+   * on the page and, if `tools/compare.py serve` is running, saved there as t_selftest_<name>
+   * with a picture. Opening the page with `?selftest` (or `?selftest=name`) runs it; that is
+   * the way to check a browser nobody can script. Play is pressed by the script, not a
+   * person, so a browser may refuse the intro video and sound: check those by hand.
+   */
+  async selftest(name = 'run') {
+    const report: Record<string, unknown> = { browser: navigator.userAgent };
+    const until = async (test: () => unknown, ms = 30000) => {
+      for (let t = 0; t < ms; t += 100) { try { if (test()) return true; } catch { /* not there yet */ } await wait(100); }
+      return false;
+    };
+    const scene = () => SceneManager.GetActiveScene().name;
+    const at = () => GameObject.Find('Murky').transform.position;
+    const hold = async (code: string, test: () => boolean, ms: number) => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code }));
+      await until(test, ms);
+      window.dispatchEvent(new KeyboardEvent('keyup', { code }));
+      await wait(300);
+    };
+    try {
+      const t0 = performance.now();
+      (document.getElementById('start') as HTMLButtonElement | null)?.click();
+      report.started = await until(() => GameObject.Find('IntroVideo'), 60000);
+      report.startSeconds = +((performance.now() - t0) / 1000).toFixed(1);
+      await wait(3000);
+      const video = document.querySelector('video');
+      report.introVideo = video ? `at ${video.currentTime.toFixed(1)} s, ${video.paused ? 'paused' : 'playing'}${video.muted ? ', muted' : ''}` : 'no video element';
+      await dev.start();
+      await wait(1500);
+      report.menu = scene();
+      report.fonts = [...document.fonts].map((f) => `${f.family} ${f.status}`);
+      for (let i = 0; i < 6 && scene() === 'StartMenu'; i++) { await dev.click(515, 326); await until(() => scene() === 'Test', 5000); }
+      await until(() => dev.find('ClassSelect').length);
+      await wait(1500);
+      for (let i = 0; i < 6 && dev.find('ClassSelect').length; i++) { await dev.click(190, 228); await wait(900); }
+      await until(() => dev.comp('Character').can_move);
+      report.newGame = dev.where();
+      const talks: string[] = [];
+      for (const npc of ['npc_0', 'large_tent', 'npc_6']) {
+        await dev.near(npc);
+        talks.push(`${npc}: ${(await dev.say()).length} lines`);
+        await wait(1200);
+      }
+      report.talks = talks;
+      const quests = dev.comp('Character_Quests');
+      report.quests = Object.entries(quests).filter(([, v]) => typeof v === 'number' && v > 0).map(([k, v]) => `${k} ${v}`);
+      report.bag = dev.bag().filter(Boolean);
+      // Out of the tent to the left, then east through the gate until a wolf turns up.
+      await hold('KeyA', () => at().y > -100, 15000);
+      const battle = dev.comp('Battle_Control').BattleUICanvas.gameObject;
+      for (let i = 0; i < 8 && !battle.activeSelf; i++) {
+        const east = i % 2 === 0;
+        await hold(east ? 'KeyD' : 'KeyA', () => battle.activeSelf || (east ? at().x > 7500 : at().x < 4500), 40000);
+      }
+      if (battle.activeSelf) {
+        await wait(3000);
+        report.fight = `${dev.battle().mob}: ${(await dev.fight()).slice(-1)[0]}`;
+        await wait(2600);
+        report.loot = await dev.loot();
+        await wait(1000);
+      } else report.fight = 'no monster met';
+      report.where = dev.where();
+      report.frameRate = await dev.fps(3);
+      report.memory = dev.memory();
+    } catch (e) {
+      report.failed = String((e as Error)?.stack ?? e).slice(0, 400);
+    }
+    report.errors = dev.errorSummary();
+    const text = JSON.stringify(report, null, 1);
+    const box = document.createElement('pre');
+    box.id = 'selftest';
+    box.textContent = text;
+    box.style.cssText = 'position:fixed;left:0;top:0;z-index:9;margin:0;padding:6px;max-width:60%;max-height:100%;overflow:auto;background:rgba(0,0,0,.8);color:#dfd;font:11px/13px monospace;white-space:pre-wrap';
+    document.body.append(box);
+    try {
+      await fetch(`http://127.0.0.1:8799/t_selftest_${name}_report`, { method: 'POST', body: text });
+      await dev.shot(`selftest_${name}`);
+    } catch { /* the picture server is optional */ }
+    return report;
+  },
   /** Active objects whose name contains `text`. */
   find(text: string) { return [...Engine.objects].filter((o) => o.activeInHierarchy && o.name.includes(text)); },
   screen: Screen,
@@ -283,3 +366,6 @@ const dev = {
 };
 
 Object.assign(window, { murloc: engine, dev });
+
+const selftest = new URLSearchParams(location.search).get('selftest');
+if (selftest !== null) void dev.selftest(selftest || 'run');
