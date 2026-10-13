@@ -22,7 +22,8 @@ begun: images are now unloaded when nothing uses them (4.1) and load time,
 memory and frame rate are written down (4.2), and the game can be played
 by touch on an emulated phone screen (4.5). Start-up shows its progress
 and a lost connection is waited out instead of breaking the game (4.6).
-What is left is
+Open in Phase 4: further memory reduction, which waits on whether phones
+matter (4.3), Firefox and Safari (4.4) and a real phone (4.7). What is left is
 the rest of Phase 4 and the release. Nothing is hosted yet.
 
 ## Done
@@ -651,6 +652,16 @@ Compare each with the Unity version side by side.
       first step is half-size sheets on small screens (a quarter of the
       memory; a 852x480 game drawn on a phone does not need full-size art).
 - [ ] **4.4 Browsers.** Play the opening in Chrome, Firefox and Safari.
+      Partly done (2026-10-13): everything in this phase was played in
+      Chromium 152 (the desktop app's browser pane), which is Chrome's
+      engine: the opening, the windows, fights, every scene, the production
+      build. Left: Firefox and Safari, and Chrome itself for form's sake.
+      Blocked for the agent: Firefox is not installed on this machine, Safari
+      cannot be clicked in by the agent's tools, and the Chrome extension was
+      not connected. For whoever does it: `npm run dev`, open
+      http://localhost:5173, play from Play to the first wolf fight, and look
+      for (Safari especially) the intro video playing with sound, music
+      starting, the fonts, and `dev.errorSummary()` in the console.
 - [x] **4.5 Touch.** The game has on-screen movement and chat buttons. Check
       them and the menus on a phone-sized touch screen.
       (2026-10-13; in the browser pane set to a phone's size (740x360, and
@@ -829,7 +840,11 @@ These exist in the original game and are reproduced, not fixed.
 - Which licence for the code, and how should the original authors be credited?
 - Should bugs in the original game be fixed, or kept as they are (the current
   rule)?
-- How much does phone support matter?
+- How much does phone support matter? (Decides 4.3: on a laptop memory is
+  fine as it is; a phone would need smaller images.)
+- Can you play the opening once in Safari and once in Firefox (4.4), or
+  should an agent be given a way to (Firefox installed; Safari's "Allow
+  remote automation" switched on)?
 - Optional, since 3.1 was accepted as it is: a few pictures of the original
   Windows game (the load menu, the settings window, the battle skills menu,
   the win box after a fight) would show how Arial text really looked, bold
