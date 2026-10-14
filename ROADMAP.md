@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: three bugs on the list are fixed (7.1, partly done).
+bugs) has begun: four bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,9 +894,10 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 3 of 24 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 4 of 24 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
-      the stats of a loaded character). Next is the win box's experience.
+      the stats of a loaded character; the win box's experience). Next is
+      the dialogue answer that is remembered for good.
 
 ### Additions the original does not have
 
@@ -997,10 +998,12 @@ These exist in the original game and are reproduced until fixed under 7.1
   350/350 health (85 + 110 + the level bonus) on loading, in Stranglethorn
   Vale and back. Console clean. The attacks were not measured; they use the
   same strength.
-- The win box shows the experience gained multiplied by the monster's level
-  (a level 8 crab shows 6400 and gives 800).
+- **Fixed 2026-10-14.** The win box shows the experience gained multiplied by
+  the monster's level (a level 8 crab shows 6400 and gives 800).
   `Battle_Control.update_battle_over_info` multiplies by the level a second
-  time.
+  time. Now it shows what `mob_dead` gives. Checked with a level 1 character
+  and a level 2 wolf cub: experience 0 to 100 and the box says 100 (the old
+  code would have said 200), console clean.
 - An answer picked in a dialogue is remembered for that character and never
   cleared (`Npc_Dialouge.SELECTED_OPTION`). At a later question from the same
   character, pressing Space repeats the earlier answer instead of waiting for

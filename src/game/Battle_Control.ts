@@ -730,7 +730,9 @@ export class Battle_Control extends MonoBehaviour {
   private update_battle_over_info(): void {
     GameObject.Find('Level_Info_Text').gameObject.GetComponent(Text).text = String(this.gameObject.GetComponent(XP_Handler).get_player_level());
     let mob_level: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_level;
-    let num: number = this.gameObject.GetComponent(CorpseInventory).get_dropped_xp(mob_level) * mob_level;
+    // Fixed (7.1): the original multiplied by mob_level a second time, so the box showed the
+    // experience given times the monster's level. It now shows what mob_dead gave.
+    let num: number = this.gameObject.GetComponent(CorpseInventory).get_dropped_xp(mob_level);
     GameObject.Find('XP_Info_Text').gameObject.GetComponent(Text).text = String(num);
     GameObject.Find('XP_To_Level_Info_Text').gameObject.GetComponent(Text).text = floatString(this.gameObject.GetComponent(XP_Handler).get_xp_to_level());
     GameObject.Find('Talent_Points_Info_Text').gameObject.GetComponent(Text).text = String(this.gameObject.GetComponent(Talent_Manager).talent_points);
