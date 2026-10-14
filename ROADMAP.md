@@ -6,7 +6,7 @@ the date and how you verified it, and add anything new you find.
 
 ## Status
 
-*Last updated 2026-10-13.*
+*Last updated 2026-10-14.*
 
 Phase 1 is finished: the first world has been played from a new game to its
 ending portal, side content included, and the goblin teleporter to
@@ -33,7 +33,8 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (5.6). Phase 6 (keeping it healthy) has begun: the engine has unit tests
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
-but has not run yet: it needs a push (6.3).
+but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
+bugs) has begun: the first bug on the list is fixed (7.1, partly done).
 
 ## Done
 
@@ -865,6 +866,14 @@ Compare each with the Unity version side by side.
       needed the converter run: pages are numbered by file name and sprites
       listed by id. Two runs in a row gave byte-identical JSON, and no image
       file changed.)
+- [ ] **6.5 The smoke test's frame check is too tight for slow machines.**
+      "Runs" means more than 20 frames in two seconds. In a cloud container
+      with four cores and software WebGL the game draws 21 to 27 frames
+      there, so about one run in two fails on a random scene, with or without
+      changes (2026-10-14, seen with the code before and after 7.1's first
+      fix). A GitHub runner with SwiftShader (6.3) may be as slow. Check for
+      frames still coming in a way that does not depend on the machine's
+      speed, for example at least a few frames, or a longer wait.
 
 ### Phase 7 — Fix the original's bugs
 
@@ -879,6 +888,8 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
+      Partly done: fixed so far, 1 of 22 (2026-10-14, the monsters of a save
+      loaded in a monster zone). Next is `Buff.take_shield_damage`.
 
 ### Additions the original does not have
 
@@ -927,9 +938,17 @@ original.
 These exist in the original game and are reproduced until fixed under 7.1
 (they were kept on purpose until the owner's decision of 2026-10-13).
 
-- Loading a save made inside a monster zone logs an error at start-up: monsters
-  are spawned before their prefab has finished loading
-  (`MobLoader.load_zones`).
+- **Fixed 2026-10-14.** Loading a save made inside a monster zone logs an
+  error at start-up: monsters are spawned before their prefab has finished
+  loading (`MobLoader.load_zones`). The error also cut `Character.Start`
+  short, and the zone stayed empty. Now `MobLoader` counts the prefab loads
+  it has running and, while any are, waits for them before spawning; a zone
+  change in the meantime cancels the wait. Seen before the fix in two loads of
+  four in the first world's second wolf zone, an error each time the spawn
+  roll came up; after it, six loads with no error, the wolf cub there in four
+  (the roll is one in two) and fought to the end. Walking between zones spawns
+  at once as before, since the prefabs are loaded by then (from the code;
+  not played through here).
 - `Buff.take_shield_damage` tests `sheild_health != -1 || sheild_health != 0`,
   which is always true.
 - A character loaded from the start menu has strength, stamina, intellect,

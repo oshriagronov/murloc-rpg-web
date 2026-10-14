@@ -20,6 +20,10 @@ export class MobLoader extends MonoBehaviour {
   private onyxia: GameObject = null;
   private PLAYER: GameObject = null;
   private mobs: GameObject[] = [];
+  // Not in the original (fixes its bug, 7.1): how many prefab loads are still running, and
+  // which call of load_zones is the latest, so that a zone waits for its prefabs.
+  private loads_pending: number = 0;
+  private load_zones_call: number = 0;
 
   Start(): void {
   }
@@ -38,6 +42,28 @@ export class MobLoader extends MonoBehaviour {
     this.PLAYER = GameObject.Find('Murky').gameObject;
     let zone_Number: number = this.PLAYER.GetComponent(Character).Get_Zone_Number();
     this.load_mob_resources();
+    // The original spawned at once, before a prefab loaded for the first time had arrived,
+    // which failed for a save loaded inside a monster zone. Wait for the loads instead.
+    let call: number = ++this.load_zones_call;
+    if (this.loads_pending > 0) {
+      this.StartCoroutine(this.spawn_when_loaded(call, zone_Number, is_direction_left));
+      return;
+    }
+    this.spawn_zone(zone_Number, is_direction_left);
+  }
+
+  // Not in the original (7.1).
+  private *spawn_when_loaded(call: number, zone_Number: number, is_direction_left: boolean): Routine {
+    while (this.loads_pending > 0) {
+      yield null;
+    }
+    // A later zone change has spawned for itself already.
+    if (call === this.load_zones_call) {
+      this.spawn_zone(zone_Number, is_direction_left);
+    }
+  }
+
+  private spawn_zone(zone_Number: number, is_direction_left: boolean): void {
     switch (zone_Number) {
       case -5:
         this.princess_farm(is_direction_left);
@@ -322,9 +348,11 @@ export class MobLoader extends MonoBehaviour {
   private *AsyncLoadMobResources(mob_name: string, mob_object: GameObject): Routine {
     if (!alive(mob_object)) {
       let resourcesRequest: ResourceRequest = Resources.LoadAsync(mob_name, GameObject);
+      this.loads_pending++;
       while (!resourcesRequest.isDone) {
         yield null;
       }
+      this.loads_pending--;
       if (mob_name === 'wolf_dire') {
         this.dire_wolf = resourcesRequest.asset;
       }
