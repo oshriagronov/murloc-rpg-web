@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: ten bugs on the list are fixed (7.1, partly done).
+bugs) has begun: eleven bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,13 +894,14 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 10 of 25 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 11 of 25 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
       the error when a fight starts beside a shopkeeper; the tooltips during
       a fight; the battle Items menu's cut-off names; the Skills menu's
-      "Adrenaline Rush"). Next is dying in Stranglethorn Vale.
+      "Adrenaline Rush"; the camera after dying in Stranglethorn Vale). Next
+      is a save made outside the first world loading at the entrance.
 
 ### Additions the original does not have
 
@@ -1069,14 +1070,20 @@ These exist in the original game and are reproduced until fixed under 7.1
   Screenshots of the Skills menu in a fight, before and after: "Adrenaline",
   then "Adrenaline Rush" on two lines; the Spells menu shown too, every name
   whole. Console clean.
-- Dying in Stranglethorn Vale leaves the camera on the battle spot. After
-  Release Spirit the ghost stands by Waxen's machine as intended, but the
+- **Fixed 2026-10-14.** Dying in Stranglethorn Vale leaves the camera on the
+  battle spot. After Release Spirit the ghost stands by Waxen's machine as intended, but the
   screen shows empty scenery: no player, no spirit healer, no blue death
   screen. The healer can still be reached blind (a few steps right, then Space
   twice), and the camera stays wrong until the next scene change (the arena,
   Zul'Gurub or the teleporter). `Character.warp_character_start` moves the
   camera only in the first world. (Seen in the Unity build.) Dying in the
-  arena or Zul'Gurub reloads the scene, so it does not happen there.
+  arena or Zul'Gurub reloads the scene, so it does not happen there. Now
+  `warp_character_start` puts the camera on the first screen in Stranglethorn
+  Vale too. Seen at level 1, losing to a tiger: before, the ghost at x 441
+  and the camera still at the battle (5538, -240), empty scenery in the
+  screenshot; after, the camera at (426, 240) with the ghost, the spirit
+  healer, Waxen's machine and the blue death screen in view. Talking to the
+  healer revived the player, who then walked on to screen 1. Console clean.
 - A save made in Stranglethorn Vale, the arena or Zul'Gurub always loads at
   that area's entrance, whatever the saved position says:
   `Character.Load_World_Start_Zones` has no case for a game loaded from the

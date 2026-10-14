@@ -316,6 +316,9 @@ export class Character extends MonoBehaviour {
 
   warp_character_start(): void {
     if (SaveData.loaded_game_zone === 1) {
+      // Fixed (7.1): the original did not move the camera here, so after dying in
+      // Stranglethorn Vale it stayed on the battle spot and the ghost was off the screen.
+      this.player_camera.transform.position = new Vector3(426, 240, -10);
       this.transform.position = new Vector3(441, 106, 0);
       this.set_camera_movement(0);
     } else if (!this.game_complete) {
