@@ -637,12 +637,14 @@ export function stepFrame(dtSeconds: number, hooks: { fixedUpdate?: () => void; 
   fixedAccumulator += Time.deltaTime;
   for (let n = 0; fixedAccumulator >= Time.fixedDeltaTime && n < 8; n++) {
     fixedAccumulator -= Time.fixedDeltaTime;
-    for (const b of [...Engine.behaviours]) if (b._live && b._started) send(b, 'FixedUpdate');
+    for (const b of [...Engine.behaviours]) if (b._live && b._started && b instanceof MonoBehaviour) send(b, 'FixedUpdate');
     hooks.fixedUpdate?.();
   }
   if (fixedAccumulator > Time.fixedDeltaTime * 8) fixedAccumulator = 0;
 
-  for (const b of [...Engine.behaviours]) if (b._live && b._started) send(b, 'Update');
+  // The frame messages go to scripts only, as in Unity: a built-in component's own Update (the
+  // Animator's) is a method to call, not a message.
+  for (const b of [...Engine.behaviours]) if (b._live && b._started && b instanceof MonoBehaviour) send(b, 'Update');
   flushStarts();
 
   // Invoke / InvokeRepeating
@@ -665,7 +667,7 @@ export function stepFrame(dtSeconds: number, hooks: { fixedUpdate?: () => void; 
   }
 
   hooks.beforeLateUpdate?.();
-  for (const b of [...Engine.behaviours]) if (b._live && b._started) send(b, 'LateUpdate');
+  for (const b of [...Engine.behaviours]) if (b._live && b._started && b instanceof MonoBehaviour) send(b, 'LateUpdate');
   flushStarts();
   flushDestroys();
 }

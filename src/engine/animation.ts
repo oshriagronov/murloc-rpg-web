@@ -150,6 +150,14 @@ export class Animator extends Behaviour {
     if (announce) this.notify(next, 'OnStateEnter', time);
   }
 
+  /**
+   * Evaluates the animator now, moving it on by `deltaTime` seconds, as Unity's `Animator.Update`.
+   * `Update(0)` writes the current pose again, over whatever changed it since.
+   */
+  Update(deltaTime: number) {
+    this._tick(deltaTime);
+  }
+
   Play(stateName: string, _layer = -1, normalizedTime = 0) {
     const s = this.findState(stateName);
     if (!s) { console.warn(`Animator on "${this.gameObject.name}" has no state "${stateName}"`); return; }

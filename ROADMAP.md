@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: eighteen bugs on the list are fixed (7.1, partly done).
+bugs) has begun: nineteen bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,7 +894,7 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 18 of 27 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 19 of 27 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
@@ -905,8 +905,10 @@ reproduced as it is.
       of a full slot; monsters always hitting for the top of their range;
       Beardon's Flash Heal; Mar'li's Drain Life). Jeklok and the loot left
       on a corpse are skipped until the owner decides (see "Questions for
-      the owner"); the tiger's and black wolf's unused moves). Next is what
-      happens when Hakkar dies, which needs the owner.
+      the owner"); the tiger's and black wolf's unused moves; Murk in the
+      ending's cut scene). Hakkar's death and the two experience formulas
+      (with the level 45 overflow that follows from one of them) wait for
+      the owner too. Next is the load menu's name for a completed save.
 
 ### Additions the original does not have
 
@@ -1162,8 +1164,8 @@ These exist in the original game and are reproduced until fixed under 7.1
   times; after, Drain Life five times. Console clean.
 - **Fixed 2026-10-14.** Two more monsters have a move they never use, found by
   comparing every monster script with the table (2026-10-14): the
-  Stranglethorn tiger has no entry, so its second move (the same claw with another animation) never
-  comes; the black wolf (Feronius) has 4, so his fourth move, a second copy
+  Stranglethorn tiger has no entry, so its second move (the same claw, with
+  the same animation) never comes; the black wolf (Feronius) has 4, so his fourth move, a second copy
   of his bite, never comes, which leaves the bite one chance in three
   instead of two in four. Now the table has the tiger at 3 and the black
   wolf at 5. Feronius over 24 turns at the goblin camp: moves 1 to 3 only
@@ -1173,15 +1175,28 @@ These exist in the original game and are reproduced until fixed under 7.1
   was measured. Console clean.
 - Nothing happens when Hakkar dies beyond the loot and `zg_boss` = 6.
   `End_Game_Cut_Scene` is an empty script. The game's ending is the portal in
-  the first world.
+  the first world. Waiting for the owner (2026-10-14): what should happen is
+  a design choice, asked under "Questions for the owner".
 - The experience needed for the next level is worked out two ways: 100 x
   level x (level + 1) after levelling up, but 200 x 1.45^(level - 1) after a
   save is loaded or an area is entered. So the number changes whenever the
-  character walks through a door.
-- Murk is invisible in the ending's cut scene. The scene fades him in and
-  walks him to the portal, but his own animator (the player's, which animates
+  character walks through a door. Waiting for the owner (2026-10-14): which
+  formula is the real one is asked under "Questions for the owner".
+- **Fixed 2026-10-14.** Murk is invisible in the ending's cut scene. The scene
+  fades him in and walks him to the portal, but his own animator (the player's, which animates
   colour for Ambush) writes his colour back to the scene's starting value,
   which is transparent. Only the portal is seen. (Seen in the Unity build.)
+  Now `CreditDelay`, the cut scene's script, which sits beside its animator,
+  writes the cut scene's pose again in `LateUpdate` with
+  `Animator.Update(0)`, so its colour wins. That needed two engine changes,
+  both as Unity has them: `Animator.Update(deltaTime)`, and the frame
+  messages (`Update`, `LateUpdate`, `FixedUpdate`) going to scripts only, so
+  that a built-in component's method of that name is not called as one; no
+  built-in component had one before. Two unit tests cover them, and each
+  fails without its change. Checked in the Credits scene: Murk's colour was
+  0 throughout before; after, 0 at 3 s, 1 from the fade-in at about 7.5 s
+  to 12 s, 0 again at 14 s, and at 9 s the screenshot shows him walking by
+  the portal. Console clean.
 - The load menu describes a completed save by where the portal was ("Camp
   Brakil"), though loading it starts at Darkmoon Faire.
 - From level 45 the second formula no longer fits in an int and C# turns it
@@ -1189,7 +1204,8 @@ These exist in the original game and are reproduced until fixed under 7.1
   hundreds of level-ups at once: a level 45 character that enters Zul'Gurub
   and kills Venoxis is level 401. (Seen in the Unity build; reproduced here by
   `toInt`.) Level 45 is far beyond what the game's monsters give without a
-  great deal of grinding.
+  great deal of grinding. Waiting for the owner (2026-10-14): it goes away
+  with the first formula, so it follows the answer about the two formulas.
 
 ## Questions for the owner
 
@@ -1199,6 +1215,18 @@ These exist in the original game and are reproduced until fixed under 7.1
   game's author.
 - ~~Should bugs in the original game be fixed, or kept as they are?~~
   Answered 2026-10-13: fix them all, over time (Phase 7).
+- Hakkar (7.1, asked 2026-10-14): killing him, the last boss of Zul'Gurub,
+  gives his loot and sets `zg_boss` to 6, and nothing else happens; the
+  script meant for it, `End_Game_Cut_Scene`, is empty in the original. The
+  game's ending is the portal in the first world. Should anything happen
+  when he dies (a message, the portal opening, the credits), or is it fine
+  as it is?
+- The experience formula (7.1, asked 2026-10-14): after levelling up, the
+  next level needs 100 x level x (level + 1); after loading a save or going
+  through a door, 200 x 1.45^(level - 1). Which is the real one? At level 5
+  they give 3000 and 884; at level 10, 11000 and 5667; at level 20, 42000
+  and 232 821. The first is the one used while playing, and it does not
+  overflow at level 45.
 - Loot left on a corpse (7.1, asked 2026-10-14): Continue throws away
   whatever is still on the corpse, so with a full bag an arena fighter's
   unique item is lost for good. What should happen? Possibilities: Continue

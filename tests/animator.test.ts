@@ -362,6 +362,17 @@ describe('curves', () => {
     expect(a.transform.localPosition.x).toBeCloseTo(10, 3);
   });
 
+  test('Update(0) writes the current pose again; Update(dt) moves on', () => {
+    const k = [[0, 0, 0, 0, 0, 0, 0, 10, 0, 0], [1, 10, 0, 0, 10, 0, 0, 10, 0, 0]];
+    const a = animator([state('move', clip('pose', 1, false, { pos: [{ path: '', k }] }))]);
+    tick(a, 0.5);
+    a.transform.localPosition = new Vector3(99, 0, 0);
+    a.Update(0);
+    expect(a.transform.localPosition.x).toBeCloseTo(5, 3);
+    a.Update(0.25);
+    expect(a.transform.localPosition.x).toBeCloseTo(7.5, 3);
+  });
+
   test('a looping clip starts again', () => {
     const k = [[0, 0, 0, 0, 0, 0, 0, 10, 0, 0], [1, 10, 0, 0, 10, 0, 0, 10, 0, 0]];
     const a = animator([state('move', clip('move', 1, true, { pos: [{ path: '', k }] }))]);
