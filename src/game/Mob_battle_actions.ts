@@ -56,8 +56,9 @@ export class Mob_battle_actions extends MonoBehaviour {
     switch (mob_type) {
       case 'wolf':
         return 1;
+      // Fixed (7.1): 4 in the original, so the black wolf's fourth move never came.
       case 'black_wolf':
-        return 4;
+        return 5;
       case 'crab':
         return 1;
       case 'croc':
@@ -74,6 +75,9 @@ export class Mob_battle_actions extends MonoBehaviour {
         return 1;
       case 'gorilla':
         return 1;
+      // Fixed (7.1): not in the original, so the tiger's second move never came.
+      case 'tiger':
+        return 3;
       case 'menrok':
         return 3;
       case 'cathy':

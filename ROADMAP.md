@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: seventeen bugs on the list are fixed (7.1, partly done).
+bugs) has begun: eighteen bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,7 +894,7 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 17 of 27 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 18 of 27 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
@@ -905,7 +905,8 @@ reproduced as it is.
       of a full slot; monsters always hitting for the top of their range;
       Beardon's Flash Heal; Mar'li's Drain Life). Jeklok and the loot left
       on a corpse are skipped until the owner decides (see "Questions for
-      the owner"). Next are the tiger's and black wolf's unused moves.
+      the owner"); the tiger's and black wolf's unused moves). Next is what
+      happens when Hakkar dies, which needs the owner.
 
 ### Additions the original does not have
 
@@ -1159,12 +1160,17 @@ These exist in the original game and are reproduced until fixed under 7.1
   only three moves, all of which he uses, so there is no fourth to restore.
   Checked against Mar'li in Zul'Gurub over 16 turns: before, move 1 sixteen
   times; after, Drain Life five times. Console clean.
-- Two more monsters have a move they never use, found by comparing every
-  monster script with the table (2026-10-14): the Stranglethorn tiger has no
-  entry, so its second move (the same claw with another animation) never
+- **Fixed 2026-10-14.** Two more monsters have a move they never use, found by
+  comparing every monster script with the table (2026-10-14): the
+  Stranglethorn tiger has no entry, so its second move (the same claw with another animation) never
   comes; the black wolf (Feronius) has 4, so his fourth move, a second copy
   of his bite, never comes, which leaves the bite one chance in three
-  instead of two in four.
+  instead of two in four. Now the table has the tiger at 3 and the black
+  wolf at 5. Feronius over 24 turns at the goblin camp: moves 1 to 3 only
+  before (13, 13, 12); all four after (4, 11, 7, 12), so he roars less
+  often. The tiger used both moves after (10 and 14); the run on the old
+  code did not reach a tiger, but its case is the same as Mar'li's, which
+  was measured. Console clean.
 - Nothing happens when Hakkar dies beyond the loot and `zg_boss` = 6.
   `End_Game_Cut_Scene` is an empty script. The game's ending is the portal in
   the first world.
