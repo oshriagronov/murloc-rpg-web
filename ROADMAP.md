@@ -32,8 +32,7 @@ repository has its licence and credits and is pushed (5.4). Left in Phase 5:
 a preview picture for links (5.5) and, if wanted, the owner's own address
 (5.6). Phase 6 (keeping it healthy) has begun: the engine has unit tests
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
-`npm run smoke`). A GitHub workflow that runs both on every push is written
-but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
+`npm run smoke`), and a GitHub workflow runs them on every push (6.3). Phase 7 (fixing the original's
 bugs) has begun: 22 of the 27 bugs on the list are fixed (7.1, partly
 done); the other five wait for the owner's answers to questions.
 
@@ -850,7 +849,7 @@ Compare each with the Unity version side by side.
       That is not a route the game has (`Resume_Game` only expects the first
       world to be entered new, from a save or from STV), so the script was
       changed to follow the doors and nothing was changed in the game.)
-- [ ] **6.3 Run typecheck and tests automatically** on every push.
+- [x] **6.3 Run typecheck and tests automatically** on every push.
       Partly done (2026-10-13): `.github/workflows/check.yml` runs
       `npm ci`, `npm run typecheck`, `npm test` and `npm run smoke` on GitHub
       for every push and pull request. The same four commands pass in a fresh
@@ -860,6 +859,9 @@ Compare each with the Unity version side by side.
       test: it counts on the runner's own Google Chrome and on WebGL without
       a graphics card (`--enable-unsafe-swiftshader`), and neither could be
       tried here. Tick this item when a run is green.
+      (2026-10-14: the first run, on the push of branch
+      `claude/eager-hopper-jxh0lw`, passed in about 70 seconds:
+      https://github.com/oshriagronov/murloc-rpg-web/actions/runs/38607151746.)
 - [x] **6.4 Stable converter output.** Running the converter twice numbers the
       image pages in a different order (they are numbered as they finish), so
       `assets.json` changes in over a thousand places although nothing really
