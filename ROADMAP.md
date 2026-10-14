@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: six bugs on the list are fixed (7.1, partly done).
+bugs) has begun: seven bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,11 +894,12 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 6 of 24 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 7 of 24 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
-      dialogue answer remembered for good; the mine chest with a full bag).
-      Next is the error when a fight starts beside a shopkeeper.
+      dialogue answer remembered for good; the mine chest with a full bag;
+      the error when a fight starts beside a shopkeeper). Next are the
+      tooltips during a fight.
 
 ### Additions the original does not have
 
@@ -1028,10 +1029,15 @@ These exist in the original game and are reproduced until fixed under 7.1
   Full", left an empty slot and no candlestick; now "You receive Large
   Candlestick", in the dynamite's slot. Console clean. The dialogue was run
   from the console with the mine shown, not by walking into the mine.
-- When a fight starts while the player stands next to a shopkeeper (Feronius
-  beside Krakho), `Open_Merchant_UI.OnTriggerExit2D` logs an error: it looks
-  up the `UI_ICONS` object, which is hidden during fights. Nothing else is
-  affected.
+- **Fixed 2026-10-14.** When a fight starts while the player stands next to a
+  shopkeeper (Feronius beside Krakho), `Open_Merchant_UI.OnTriggerExit2D` logs
+  an error: it looks up the `UI_ICONS` object, which is hidden during fights.
+  Nothing else is affected. Now `Open_Merchant_UI` keeps the icon bar from
+  when the player came in range and hides the chat button through that.
+  Checked at Ketchin: in range, the icons hidden as a fight hides them, the
+  player moved 400 to the right: the old code logged the error, now there is
+  none; the chat button is hidden when the icons come back, as before (his
+  dialogue trigger hides it too). Not tried with Feronius and Krakho.
 - Skill and spell tooltips do not show during a fight or inside the tent.
   `SpellHoverDetails.Display_Spell_Details` moves the tooltip down by 480 when
   the camera is below the world, which puts it off the screen. The Unity build

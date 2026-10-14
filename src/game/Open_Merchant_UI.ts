@@ -21,6 +21,9 @@ export class Open_Merchant_UI extends MonoBehaviour {
   troll_icon: GameObject = null;
   shop_unlocked: boolean = false;
   npc_id: number = 0;
+  // Not in the original (fixes its bug, 7.1): the icon bar, kept from when the player came in
+  // range, because it is hidden (and so cannot be found) during a fight.
+  private ui_icons: GameObject = null;
 
   Start(): void {
   }
@@ -60,12 +63,15 @@ export class Open_Merchant_UI extends MonoBehaviour {
 
   OnTriggerEnter2D(other: Collider2D): void {
     this.player_in_range = true;
-    GameObject.Find('UI_ICONS').GetComponent(ShowHideInv).show_chat();
+    this.ui_icons = GameObject.Find('UI_ICONS');
+    this.ui_icons.GetComponent(ShowHideInv).show_chat();
   }
 
   OnTriggerExit2D(other: Collider2D): void {
     this.player_in_range = false;
-    GameObject.Find('UI_ICONS').GetComponent(ShowHideInv).hide_chat_button();
+    // Fixed (7.1): the original looked UI_ICONS up here, which fails when a fight starting
+    // beside a shopkeeper moves the player away, since the icons are hidden then.
+    this.ui_icons.GetComponent(ShowHideInv).hide_chat_button();
   }
 
   private Change_merchant_icon(): void {
