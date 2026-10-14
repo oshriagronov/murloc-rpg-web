@@ -24,13 +24,16 @@ export class Buff {
 
   take_shield_damage(damage: number): number {
     let result: number = 0;
-    if (this.sheild_health !== -1 || (this.sheild_health as number) !== 0) {
-      this.sheild_health -= damage;
-      if (this.sheild_health < 0) {
-        result = this.sheild_health;
-        this.sheild_health = 0;
-        result *= -1;
-      }
+    // The original tested `sheild_health != -1 || sheild_health != 0`, which is always true.
+    // Fixed (7.1): a shield that is down (0) or a buff without one (-1) absorbs nothing.
+    if (this.sheild_health <= 0) {
+      return damage;
+    }
+    this.sheild_health -= damage;
+    if (this.sheild_health < 0) {
+      result = this.sheild_health;
+      this.sheild_health = 0;
+      result *= -1;
     }
     return result;
   }

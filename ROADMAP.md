@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: the first bug on the list is fixed (7.1, partly done).
+bugs) has begun: two bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,8 +894,9 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 1 of 22 (2026-10-14, the monsters of a save
-      loaded in a monster zone). Next is `Buff.take_shield_damage`.
+      Partly done: fixed so far, 2 of 24 (2026-10-14: the monsters of a save
+      loaded in a monster zone; the shield test in `Buff.take_shield_damage`).
+      Next is the stats of a character loaded from the start menu.
 
 ### Additions the original does not have
 
@@ -955,8 +956,29 @@ These exist in the original game and are reproduced until fixed under 7.1
   (the roll is one in two) and fought to the end. Walking between zones spawns
   at once as before, since the prefabs are loaded by then (from the code;
   not played through here).
-- `Buff.take_shield_damage` tests `sheild_health != -1 || sheild_health != 0`,
-  which is always true.
+- **Fixed 2026-10-14.** `Buff.take_shield_damage` tests
+  `sheild_health != -1 || sheild_health != 0`, which is always true. In play it
+  made no difference: only Power Word: Shield (buff 7, which always has a
+  value) reaches it, and a shield worn down to 0 is removed at the end of the
+  same turn, before it can be hit again. Now the test says what was meant: a
+  shield that is down (0) or a buff without one (-1) absorbs nothing and the
+  whole hit goes through, which is what the old code gave for 0 as well.
+  Checked against the old code for shields of 0 to 400 and hits of 0 to 500
+  (same result and same shield left in every case), and in a fight with a
+  wolf cub given a 20-point shield: hits of 6 took it to 14, 8 and 2 with no
+  health lost, the fourth broke it and it was gone after that turn, console
+  clean. The two bugs below were found on the way and are still there.
+- When a hit breaks Power Word: Shield, the player loses the whole hit, not
+  only what the shield did not absorb: `Battle_Control.play_mob_attack` passes
+  `damage` to `Take_Damage` instead of what `damage_shield_buff` returned.
+  (Seen here: a shield with 2 left and a hit of 6, 4 reported through, 6
+  health lost.)
+- A hit that breaks Power Word: Shield cannot kill. The same branch of
+  `play_mob_attack` ignores what `Take_Damage` returns and never sets
+  `is_player_dead`, so a player brought to 0 health that way gets another turn
+  at 0 and dies only at the monster's next hit (or wins, if their attack kills
+  first). (Seen here: 3 health, a shield with 2 left, a hit of 6: 0/85 and the
+  fight went on.)
 - A character loaded from the start menu has strength, stamina, intellect,
   agility and armour of 0, and so less health and far weaker attacks, until
   the player opens the bag, character sheet or talent window, or changes
