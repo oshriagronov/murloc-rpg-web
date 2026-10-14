@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: thirteen bugs on the list are fixed (7.1, partly done).
+bugs) has begun: fourteen bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,16 +894,17 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 13 of 26 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 14 of 26 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
       the error when a fight starts beside a shopkeeper; the tooltips during
       a fight; the battle Items menu's cut-off names; the Skills menu's
       "Adrenaline Rush"; the camera after dying in Stranglethorn Vale; saves
-      made outside the first world; the troll brothers' colour). Jeklok is
-      skipped until the owner decides (see "Questions for the owner"). Next
-      is the colour of a full slot in the bag and other windows.
+      made outside the first world; the troll brothers' colour; the colour
+      of a full slot). Jeklok is skipped until the owner decides (see
+      "Questions for the owner"). Next is monsters always hitting for the
+      top of their range.
 
 ### Additions the original does not have
 
@@ -1113,13 +1114,19 @@ These exist in the original game and are reproduced until fixed under 7.1
   and (1, 1, 1, 0). Seen in Stranglethorn Vale with the trolls rescued: the
   sprites' colour reads 255s before and 1s after, and the two screenshots
   show the brothers alike. Console clean.
-- The bag, equipment, shop and loot windows make the same mistake: a full
-  slot's colour is (255, 255, 255, 255) (`full_color` in `Inventory`,
+- **Fixed 2026-10-14.** The bag, equipment, shop and loot windows make the
+  same mistake: a full slot's colour is (255, 255, 255, 255) (`full_color` in `Inventory`,
   `Equipment`, `Merchant` and `CorpseInventory`). Unlike a sprite's, an
   image's colour is multiplied by its button's hover or press tint, and 255
   times any tint is still full, so a full slot can never show one. Fixing
   it would make those tints appear, if the slots have them; look at the
-  slots' buttons first.
+  slots' buttons first. They do: Unity's defaults, 0.96 under the mouse and
+  0.78 pressed. Now the four scripts give (1, 1, 1, 1) and (1, 1, 1, 0).
+  Measured on a bag slot holding a Short Sword (the average colour of its
+  middle): at rest the same before and after (138); under the mouse 97
+  before, 93 after; pressed 97 before (no change), 77 after. Console clean.
+  So full slots now darken a little under the mouse and more when pressed,
+  as Unity's buttons do; a small change in look.
 - Monsters always hit for the top of their damage range. Every attack picks
   between its low and high number with `Random.Range(0, 1) != 1`, and the
   integer `Random.Range(0, 1)` can only give 0.

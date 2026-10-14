@@ -18,8 +18,10 @@ export class Inventory extends MonoBehaviour {
   copper_icon: GameObject = null;
   private item_db: Item_Database = null;
   private item_slots: Item[] = new Array(16).fill(null);
-  private empty_color: Color = new Color(255, 255, 255, 0);
-  private full_color: Color = new Color(255, 255, 255, 255);
+  // Fixed (7.1): the original gave (255, 255, 255, ...) where 1 is full, so a full slot's button
+  // tint (hover, press) was lost: 255 times any tint is still full.
+  private empty_color: Color = new Color(1, 1, 1, 0);
+  private full_color: Color = new Color(1, 1, 1, 1);
   private slot_0_GO: GameObject = null;
   player_money: number = 0;
   private TOUCH_CONTROLS: boolean = true;
