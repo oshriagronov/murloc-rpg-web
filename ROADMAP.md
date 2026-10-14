@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: eleven bugs on the list are fixed (7.1, partly done).
+bugs) has begun: twelve bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,14 +894,15 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 11 of 25 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 12 of 25 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
       the error when a fight starts beside a shopkeeper; the tooltips during
       a fight; the battle Items menu's cut-off names; the Skills menu's
-      "Adrenaline Rush"; the camera after dying in Stranglethorn Vale). Next
-      is a save made outside the first world loading at the entrance.
+      "Adrenaline Rush"; the camera after dying in Stranglethorn Vale; saves
+      made outside the first world). Next is Jeklok staying after he is
+      gone.
 
 ### Additions the original does not have
 
@@ -1084,10 +1085,20 @@ These exist in the original game and are reproduced until fixed under 7.1
   screenshot; after, the camera at (426, 240) with the ghost, the spirit
   healer, Waxen's machine and the blue death screen in view. Talking to the
   healer revived the player, who then walked on to screen 1. Console clean.
-- A save made in Stranglethorn Vale, the arena or Zul'Gurub always loads at
-  that area's entrance, whatever the saved position says:
-  `Character.Load_World_Start_Zones` has no case for a game loaded from the
-  menu. (Seen in the Unity build for Stranglethorn Vale.)
+- **Fixed 2026-10-14.** A save made in Stranglethorn Vale, the arena or
+  Zul'Gurub always loads at that area's entrance, whatever the saved position
+  says: `Character.Load_World_Start_Zones` has no case for a game loaded from
+  the menu. (Seen in the Unity build for Stranglethorn Vale.) Now
+  `Load_Game`, when it hands a save over to the area it was made in, says so in
+  `SaveData.loading_saved_position`, and `Load_World_Start_Zones` then uses
+  the saved position. `Load_Game` sets the flag afresh each time, so it does
+  not outlive the load (the in-game load buttons call `Load_Game` too).
+  Checked in all three areas, saving after a short walk, reloading the page
+  and loading from the start menu: before, Stranglethorn Vale x 1956 loaded
+  at 441, the arena x 449 at 129, Zul'Gurub x 703 at 303; after, each loaded
+  at the saved position with the saved camera, and the screenshots look
+  right. Console clean. The camera's depth becomes -10 there instead of the
+  scene's -100, as on any load (`move_camera`); nothing looks different.
 - After Jeklok escapes or dies he is invisible but still there: Space at his
   spot starts the fight again while Felva's quest is at that step (which is
   how a second attempt is possible), and afterwards he goes back to telling

@@ -21,6 +21,9 @@ export class SaveData {
   static intro_done: boolean = false;
   static saved_game_data: GameData = null;
   static loading_dead_player: boolean = false;
+  // Not in the original (fixes its bug, 7.1): set when a save from the start menu is handed
+  // from the first world to the area it was made in, so that the area uses its position.
+  static loading_saved_position: boolean = false;
 
   static SaveGame(player: GameObject, slot: GameObject): void {
     let text: string = SaveData.get_save_name(slot);
