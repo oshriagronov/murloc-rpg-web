@@ -1,4 +1,4 @@
-import { Canvas, Color, Debug, GameObject, Image, Input, MonoBehaviour, Resources, Routine, Sprite, SpriteRenderer, Text, WaitForSecondsRealtime, alive } from '../engine';
+import { Canvas, Color, Debug, GameObject, Image, Input, MonoBehaviour, RectTransform, Resources, Routine, Sprite, SpriteRenderer, Text, Vector2, WaitForSecondsRealtime, alive } from '../engine';
 import { Equipment } from './Equipment';
 import { Item } from './Item';
 import { ItemHoverDetails } from './ItemHoverDetails';
@@ -324,6 +324,18 @@ export class Inventory extends MonoBehaviour {
     let gameObject5: GameObject = obj2.transform.Find('item_amount').gameObject;
     let gameObject6: GameObject = obj2.transform.Find('item_icon').gameObject;
     this.set_battle_item_details(gameObject4, gameObject5, gameObject6, false);
+    // Fixed (7.1): the labels' best fit could not go below size 35, at which a two-word name
+    // does not fit and its second word was cut off ("Magic", "Spiced"). Let them shrink, as
+    // the original's own Bloodrage label does, and end them where the amount begins, which
+    // overlapped their last 30 units.
+    for (const label of [gameObject, gameObject4]) {
+      label.GetComponent(Text).resizeTextMinSize = 3;
+      let rect: RectTransform = label.GetComponent(RectTransform);
+      if (rect.sizeDelta.x > 130) { // once: this runs whenever the bag changes
+        rect.anchoredPosition = new Vector2(rect.anchoredPosition.x - 17, rect.anchoredPosition.y);
+        rect.sizeDelta = new Vector2(rect.sizeDelta.x - 34, rect.sizeDelta.y);
+      }
+    }
     if (num2 > 0) {
       this.set_battle_item_details(gameObject, gameObject2, gameObject3, true);
       gameObject.GetComponent(Text).text = 'Magic Dust';

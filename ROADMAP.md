@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: eight bugs on the list are fixed (7.1, partly done).
+bugs) has begun: nine bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,12 +894,13 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 7 of 24 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 9 of 25 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
       the error when a fight starts beside a shopkeeper; the tooltips during
-      a fight). Next is the battle Items menu's cut-off names.
+      a fight; the battle Items menu's cut-off names). Next is the Skills
+      menu's cut-off "Adrenaline Rush", found on the way.
 
 ### Additions the original does not have
 
@@ -1048,10 +1049,20 @@ These exist in the original game and are reproduced until fixed under 7.1
   the old code put the tooltip at y 759 of the 480-high screen; now it is at
   279, just above the icon, with "Heroic Strike (Rank 1)", its cost and text
   (seen in a screenshot). Console clean. The tent was not tried.
-- The battle Items menu shows only the first word of an item's name ("Magic",
-  "Spiced"): the label is too narrow for both words and is set to cut off what
-  does not fit. (Worked out from the scene data; the Unity build was not
-  checked for this one.)
+- **Fixed 2026-10-14.** The battle Items menu shows only the first word of an
+  item's name ("Magic", "Spiced"): the label is too narrow for both words and
+  is set to cut off what does not fit. (Worked out from the scene data; the
+  Unity build was not checked for this one.) Now `Inventory.update_consumes` lets the two labels shrink to fit (minimum size
+  3, as the original's own Bloodrage label has) and ends them where the
+  amount begins, since the amount label covered their last 30 units. Seen in
+  a fight with Magic Dust and Spiced Wolf Meat in the bag, before and after
+  in screenshots: "Magic" and "Spiced" before; "Magic Dust" on two lines and
+  "Spiced Wolf Meat" on two smaller lines after, clear of "x2" and "x1".
+  Console clean. The look is this version's choice; the owner may prefer
+  another (a wider menu, shorter names).
+- The battle Skills menu shows "Adrenaline" for Adrenaline Rush, the same
+  way: its label's best fit cannot go below size 35 and cuts off the second
+  line. (Seen in a screenshot of the Skills menu, 2026-10-14.)
 - Dying in Stranglethorn Vale leaves the camera on the battle spot. After
   Release Spirit the ghost stands by Waxen's machine as intended, but the
   screen shows empty scenery: no player, no spirit healer, no blue death
