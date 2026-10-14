@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: fifteen bugs on the list are fixed (7.1, partly done).
+bugs) has begun: sixteen bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,7 +894,7 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 15 of 26 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 16 of 26 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
@@ -902,9 +902,9 @@ reproduced as it is.
       a fight; the battle Items menu's cut-off names; the Skills menu's
       "Adrenaline Rush"; the camera after dying in Stranglethorn Vale; saves
       made outside the first world; the troll brothers' colour; the colour
-      of a full slot; monsters always hitting for the top of their range).
-      Jeklok is skipped until the owner decides (see "Questions for the
-      owner"). Next is Beardon's Flash Heal.
+      of a full slot; monsters always hitting for the top of their range;
+      Beardon's Flash Heal). Jeklok is skipped until the owner decides (see
+      "Questions for the owner"). Next is loot left on a corpse.
 
 ### Additions the original does not have
 
@@ -1136,9 +1136,14 @@ These exist in the original game and are reproduced until fixed under 7.1
   game is a little easier. (The Harpy and Jeklok scripts call it without
   using the result; left alone.) Measured on a wolf cub (4 to 6) over 24
   attacks: 24 sixes before; 12 fours and 12 sixes after. Console clean.
-- Beardon's Flash Heal heals him for a third of his health and also hits the
-  player for 44 times his level: `BeardonBattleActionClass.fourth_attack`
-  returns that number as damage. The other healers return 0.
+- **Fixed 2026-10-14.** Beardon's Flash Heal heals him for a third of his
+  health and also hits the player for 44 times his level:
+  `BeardonBattleActionClass.fourth_attack` returns that number as damage. The
+  other healers return 0. Now it returns 0 too. Checked in the arena against
+  Beardon (level 16) with his fourth move forced each turn: before, it
+  returned 704 and a level 10 player went from 480 to 0 in one cast; after,
+  it returned 0 three times, the player stayed at 480 and Beardon healed
+  back to full each time. Console clean.
 - Loot left on a corpse is lost when Continue is pressed, so with a full bag
   an arena fighter's unique item cannot be picked up, and the fight cannot be
   repeated.

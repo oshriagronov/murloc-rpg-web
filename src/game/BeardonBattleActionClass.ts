@@ -61,7 +61,9 @@ export class BeardonBattleActionClass extends MobBattleActionBaseClass {
 
   fourth_attack(): number {
     if (!this.playerObject.GetComponent(Buff_Handler).check_for_mob_buff(3)) {
-      let result: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_level * 44;
+      // Fixed (7.1): the original returned mob_level * 44 here, so his Flash Heal also hit the
+      // player for that much. A heal does no damage, as the other healers' return 0.
+      let result: number = 0;
       this.mob_being_battled.GetComponent(Animator).Play('Dwarf_Cast', -1, 0);
       let renew_prefab: GameObject = this.playerObject.GetComponent(Battle_Control).renew_prefab;
       let x: number = this.mob_being_battled.transform.position.x;
