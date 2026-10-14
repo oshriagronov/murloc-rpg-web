@@ -48,10 +48,15 @@ try {
     console.log(steps[steps.length - 1]);
     if (!ok) throw new Error(name);
   };
-  /** A scene counts as running when its frames keep coming for two seconds. */
+  /**
+   * A scene counts as running when its frames keep coming: at least two seconds, and 20 more
+   * frames within ten. Software WebGL on a slow machine draws about ten frames a second.
+   */
   const runs = async () => {
     const a = murloc.Time.frameCount;
+    const t0 = performance.now();
     await dev.wait(2000);
+    while (murloc.Time.frameCount - a <= 20 && performance.now() - t0 < 10000) await dev.wait(250);
     return murloc.Time.frameCount - a > 20;
   };
 

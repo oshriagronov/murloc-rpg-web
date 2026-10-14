@@ -866,7 +866,7 @@ Compare each with the Unity version side by side.
       needed the converter run: pages are numbered by file name and sprites
       listed by id. Two runs in a row gave byte-identical JSON, and no image
       file changed.)
-- [ ] **6.5 The smoke test's frame check is too tight for slow machines.**
+- [x] **6.5 The smoke test's frame check is too tight for slow machines.**
       "Runs" means more than 20 frames in two seconds. In a cloud container
       with four cores and software WebGL the game draws 21 to 27 frames
       there, so about one run in two fails on a random scene, with or without
@@ -874,6 +874,12 @@ Compare each with the Unity version side by side.
       fix). A GitHub runner with SwiftShader (6.3) may be as slow. Check for
       frames still coming in a way that does not depend on the machine's
       speed, for example at least a few frames, or a longer wait.
+      (2026-10-14, done ahead of its turn because every Phase 7 item needs a
+      green smoke run and three runs in a row had failed here: a scene now
+      has to draw 20 frames in at least two and at most ten seconds, so a
+      slow machine waits a little longer and a frozen scene still fails. Two
+      full runs in a row passed in this container; a copy asking for an
+      impossible number of frames failed at the first scene after 10.3 s.)
 
 ### Phase 7 — Fix the original's bugs
 
