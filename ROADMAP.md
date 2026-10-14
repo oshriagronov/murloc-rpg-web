@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: sixteen bugs on the list are fixed (7.1, partly done).
+bugs) has begun: seventeen bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,7 +894,7 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 16 of 26 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 17 of 27 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
@@ -903,8 +903,9 @@ reproduced as it is.
       "Adrenaline Rush"; the camera after dying in Stranglethorn Vale; saves
       made outside the first world; the troll brothers' colour; the colour
       of a full slot; monsters always hitting for the top of their range;
-      Beardon's Flash Heal). Jeklok is skipped until the owner decides (see
-      "Questions for the owner"). Next is loot left on a corpse.
+      Beardon's Flash Heal; Mar'li's Drain Life). Jeklok and the loot left
+      on a corpse are skipped until the owner decides (see "Questions for
+      the owner"). Next are the tiger's and black wolf's unused moves.
 
 ### Additions the original does not have
 
@@ -1147,9 +1148,23 @@ These exist in the original game and are reproduced until fixed under 7.1
 - Loot left on a corpse is lost when Continue is pressed, so with a full bag
   an arena fighter's unique item cannot be picked up, and the fight cannot be
   repeated.
-- Mar'li never drains life and Hakkar's fourth move does not exist: the move
-  table in `Mob_battle_actions.calculate_move_total` has no entry for Mar'li
-  (so she only scratches) and rolls one to three for Hakkar.
+  Waiting for the owner (2026-10-14): what should happen is a design choice,
+  asked under "Questions for the owner".
+- **Fixed 2026-10-14.** Mar'li never drains life and Hakkar's fourth move does
+  not exist: the move table in `Mob_battle_actions.calculate_move_total` has
+  no entry for Mar'li (so she only scratches) and rolls one to three for
+  Hakkar. Now the table has Mar'li at 3, so she rolls her two moves, as the
+  table does for every other monster (it holds one more than the number of
+  moves, since `Random.RangeInt` leaves out its top). Hakkar's script has
+  only three moves, all of which he uses, so there is no fourth to restore.
+  Checked against Mar'li in Zul'Gurub over 16 turns: before, move 1 sixteen
+  times; after, Drain Life five times. Console clean.
+- Two more monsters have a move they never use, found by comparing every
+  monster script with the table (2026-10-14): the Stranglethorn tiger has no
+  entry, so its second move (the same claw with another animation) never
+  comes; the black wolf (Feronius) has 4, so his fourth move, a second copy
+  of his bite, never comes, which leaves the bite one chance in three
+  instead of two in four.
 - Nothing happens when Hakkar dies beyond the loot and `zg_boss` = 6.
   `End_Game_Cut_Scene` is an empty script. The game's ending is the portal in
   the first world.
@@ -1178,6 +1193,13 @@ These exist in the original game and are reproduced until fixed under 7.1
   game's author.
 - ~~Should bugs in the original game be fixed, or kept as they are?~~
   Answered 2026-10-13: fix them all, over time (Phase 7).
+- Loot left on a corpse (7.1, asked 2026-10-14): Continue throws away
+  whatever is still on the corpse, so with a full bag an arena fighter's
+  unique item is lost for good. What should happen? Possibilities: Continue
+  refuses while something is left and the bag is full ("Inventory Full"),
+  so the player can make room first; or what is left goes to the bag when
+  room is made later; or the arena fight can be fought again until its item
+  is taken.
 - Jeklok (7.1, asked 2026-10-14): in a fight he can only escape, so the one
   way to beat him is to kill him with the opening Ambush. In the original a
   second try works only through his bug: invisible, he still answers Space

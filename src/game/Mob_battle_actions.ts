@@ -96,6 +96,9 @@ export class Mob_battle_actions extends MonoBehaviour {
         return 3;
       case 'venoxis':
         return 3;
+      // Fixed (7.1): not in the original, so Mar'li only ever used her first move.
+      case 'marli':
+        return 3;
       case 'thekal':
         return 3;
       case 'arlokk':
