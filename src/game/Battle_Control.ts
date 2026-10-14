@@ -64,6 +64,9 @@ export class Battle_Control extends MonoBehaviour {
   mob_fleeing: boolean = false;
 
   Start(): void {
+    // Fixed (7.1): this label's best fit could not go below size 35, which cut "Adrenaline
+    // Rush" down to "Adrenaline". It may shrink now, as the Bloodrage and Pyroblast labels do.
+    this.BattleUICanvas.transform.Find('SkillsMenu/AdrenalineRush_Button/Attack_button_text').GetComponent(Text).resizeTextMinSize = 3;
   }
 
   Update(): void {

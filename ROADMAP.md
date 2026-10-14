@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: nine bugs on the list are fixed (7.1, partly done).
+bugs) has begun: ten bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,13 +894,13 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 9 of 25 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 10 of 25 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
       the error when a fight starts beside a shopkeeper; the tooltips during
-      a fight; the battle Items menu's cut-off names). Next is the Skills
-      menu's cut-off "Adrenaline Rush", found on the way.
+      a fight; the battle Items menu's cut-off names; the Skills menu's
+      "Adrenaline Rush"). Next is dying in Stranglethorn Vale.
 
 ### Additions the original does not have
 
@@ -1060,9 +1060,15 @@ These exist in the original game and are reproduced until fixed under 7.1
   "Spiced Wolf Meat" on two smaller lines after, clear of "x2" and "x1".
   Console clean. The look is this version's choice; the owner may prefer
   another (a wider menu, shorter names).
-- The battle Skills menu shows "Adrenaline" for Adrenaline Rush, the same
-  way: its label's best fit cannot go below size 35 and cuts off the second
-  line. (Seen in a screenshot of the Skills menu, 2026-10-14.)
+- **Fixed 2026-10-14.** The battle Skills menu shows "Adrenaline" for
+  Adrenaline Rush, the same way: its label's best fit cannot go below size 35
+  and cuts off the second line. (Seen in a screenshot of the Skills menu,
+  2026-10-14.) It is the only such label in the four scenes with fights; the
+  Bloodrage and Pyroblast labels already shrink (minimum 3). Now
+  `Battle_Control.Start`, empty in the original, gives it the same minimum.
+  Screenshots of the Skills menu in a fight, before and after: "Adrenaline",
+  then "Adrenaline Rush" on two lines; the Spells menu shown too, every name
+  whole. Console clean.
 - Dying in Stranglethorn Vale leaves the camera on the battle spot. After
   Release Spirit the ghost stands by Waxen's machine as intended, but the
   screen shows empty scenery: no player, no spirit healer, no blue death
