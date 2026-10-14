@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: fourteen bugs on the list are fixed (7.1, partly done).
+bugs) has begun: fifteen bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,7 +894,7 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 14 of 26 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 15 of 26 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
@@ -902,9 +902,9 @@ reproduced as it is.
       a fight; the battle Items menu's cut-off names; the Skills menu's
       "Adrenaline Rush"; the camera after dying in Stranglethorn Vale; saves
       made outside the first world; the troll brothers' colour; the colour
-      of a full slot). Jeklok is skipped until the owner decides (see
-      "Questions for the owner"). Next is monsters always hitting for the
-      top of their range.
+      of a full slot; monsters always hitting for the top of their range).
+      Jeklok is skipped until the owner decides (see "Questions for the
+      owner"). Next is Beardon's Flash Heal.
 
 ### Additions the original does not have
 
@@ -1127,9 +1127,15 @@ These exist in the original game and are reproduced until fixed under 7.1
   before, 93 after; pressed 97 before (no change), 77 after. Console clean.
   So full slots now darken a little under the mouse and more when pressed,
   as Unity's buttons do; a small change in look.
-- Monsters always hit for the top of their damage range. Every attack picks
-  between its low and high number with `Random.Range(0, 1) != 1`, and the
-  integer `Random.Range(0, 1)` can only give 0.
+- **Fixed 2026-10-14.** Monsters always hit for the top of their damage range.
+  Every attack picks between its low and high number with
+  `Random.Range(0, 1) != 1`, and the integer `Random.Range(0, 1)` can only
+  give 0. Now the 33 such choices in 29 monster scripts use
+  `Random.RangeInt(0, 2)`, a coin toss between the two numbers, which is
+  what the code was written to do. Monsters hit softer on average, so the
+  game is a little easier. (The Harpy and Jeklok scripts call it without
+  using the result; left alone.) Measured on a wolf cub (4 to 6) over 24
+  attacks: 24 sixes before; 12 fours and 12 sixes after. Console clean.
 - Beardon's Flash Heal heals him for a third of his health and also hits the
   player for 44 times his level: `BeardonBattleActionClass.fourth_attack`
   returns that number as damage. The other healers return 0.

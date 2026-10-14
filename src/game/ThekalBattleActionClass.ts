@@ -14,7 +14,8 @@ export class ThekalBattleActionClass extends MobBattleActionBaseClass {
     let num: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_base_attack_low * mob_level;
     let num2: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_base_attack_high * mob_level;
     let num3: number = 0;
-    num3 = ((Random.RangeInt(0, 1) !== 1) ? num2 : num);
+    // Fixed (7.1): (0, 2); the original's (0, 1) only ever gives 0, so always the high number.
+    num3 = ((Random.RangeInt(0, 2) !== 1) ? num2 : num);
     this.mob_being_battled.GetComponent(Animator).Play('thekal_melee', -1, 0);
     this.mob_attack_display.gameObject.SetActive(true);
     this.mob_attack_display.GetComponent(Text).text = 'Thekal Scratches you.';

@@ -14,7 +14,8 @@ export class AzzimaBattleActionClass extends MobBattleActionBaseClass {
     let num: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_base_attack_low * mob_level;
     let num2: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_base_attack_high * mob_level;
     let num3: number = 0;
-    num3 = ((Random.RangeInt(0, 1) !== 1) ? num2 : num);
+    // Fixed (7.1): (0, 2); the original's (0, 1) only ever gives 0, so always the high number.
+    num3 = ((Random.RangeInt(0, 2) !== 1) ? num2 : num);
     this.mob_being_battled.GetComponent(Animator).Play('hunter_melee_animation', -1, 0);
     this.mob_attack_display.gameObject.SetActive(true);
     this.mob_attack_display.GetComponent(Text).text = 'Azzima uses Raptor strike.';
@@ -28,7 +29,8 @@ export class AzzimaBattleActionClass extends MobBattleActionBaseClass {
     let num2: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_base_attack_high * mob_level;
     let num3: number = 0;
     let num4: number = 4 * mob_level;
-    num3 = ((Random.RangeInt(0, 1) !== 1) ? (num2 + num4) : (num + num4));
+    // Fixed (7.1): (0, 2); the original's (0, 1) only ever gives 0, so always the high number.
+    num3 = ((Random.RangeInt(0, 2) !== 1) ? (num2 + num4) : (num + num4));
     this.mob_being_battled.GetComponent(Animator).Play('hunter_bow_animation', -1, 0);
     this.mob_attack_display.gameObject.SetActive(true);
     this.mob_attack_display.GetComponent(Text).text = 'Azzima uses Arcane shot.';
@@ -41,7 +43,8 @@ export class AzzimaBattleActionClass extends MobBattleActionBaseClass {
     let num: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_base_attack_low * mob_level;
     let num2: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_base_attack_high * mob_level;
     let num3: number = 0;
-    num3 = ((Random.RangeInt(0, 1) !== 1) ? num2 : num);
+    // Fixed (7.1): (0, 2); the original's (0, 1) only ever gives 0, so always the high number.
+    num3 = ((Random.RangeInt(0, 2) !== 1) ? num2 : num);
     let obj: GameObject = Instantiate(Resources.Load('pet_attack', GameObject));
     let position: Vector3 = this.playerObject.transform.position;
     let width: number = this.playerObject.GetComponent(RectTransform).rect.width;
