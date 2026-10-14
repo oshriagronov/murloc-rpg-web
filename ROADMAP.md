@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: five bugs on the list are fixed (7.1, partly done).
+bugs) has begun: six bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,11 +894,11 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 5 of 24 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 6 of 24 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
-      dialogue answer remembered for good). Next is the mine chest with a
-      full bag.
+      dialogue answer remembered for good; the mine chest with a full bag).
+      Next is the error when a fight starts beside a shopkeeper.
 
 ### Additions the original does not have
 
@@ -1019,9 +1019,15 @@ These exist in the original game and are reproduced until fixed under 7.1
   closed the dialogue as if "Not thanks" had been clicked; now the question
   stays up, and clicking "Not thanks" still closes it. Console clean. Gottum
   and Shin were not played after the change.
-- Opening the mine chest with a full bag loses the Large Candlestick:
-  `NPC16_Chat_Script` gives the item before it removes the dynamite, and the
-  chest counts as opened either way.
+- **Fixed 2026-10-14.** Opening the mine chest with a full bag loses the Large
+  Candlestick: `NPC16_Chat_Script` gives the item before it removes the
+  dynamite, and the chest counts as opened either way. Now the dynamite is
+  taken first; it does not stack (its stack size is 0), so its slot is always
+  free for the candlestick. Checked by running the chest's dialogue with a
+  bag of 15 items and one stick of dynamite: the old code said "Inventory
+  Full", left an empty slot and no candlestick; now "You receive Large
+  Candlestick", in the dynamite's slot. Console clean. The dialogue was run
+  from the console with the mine shown, not by walking into the mine.
 - When a fight starts while the player stands next to a shopkeeper (Feronius
   beside Krakho), `Open_Merchant_UI.OnTriggerExit2D` logs an error: it looks
   up the `UI_ICONS` object, which is hidden during fights. Nothing else is

@@ -46,8 +46,11 @@ export class NPC16_Chat_Script extends Chat_Script {
         this.gameObject.GetComponent(Npc_Dialouge).TEXT_BOX_CONTAINER.enabled = false;
         this.display_value = 0;
         PLAYER_CHARACTER.GetComponent(Character_Quests).chest_opened = 3;
-        PLAYER_CHARACTER.GetComponent(Inventory).give_player_item('Large Candlestick');
+        // Fixed (7.1): the original gave the candlestick before taking the dynamite, so with a
+        // full bag the candlestick was lost. Dynamite does not stack, so taking it first frees
+        // a slot.
         PLAYER_CHARACTER.GetComponent(Inventory).remove_item('Goblin Dynamite');
+        PLAYER_CHARACTER.GetComponent(Inventory).give_player_item('Large Candlestick');
         this.start_player_moving(PLAYER_CHARACTER);
       } else if (this.display_value === 3 && this.gameObject.GetComponent(Npc_Dialouge).SELECTED_OPTION === 2) {
         this.NPC_TEXT.SetActive(true);
