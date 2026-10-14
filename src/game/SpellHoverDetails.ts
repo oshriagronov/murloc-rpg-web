@@ -1,5 +1,4 @@
 import { Camera, Canvas, GameObject, Input, MonoBehaviour, Text, Vector3 } from '../engine';
-import { Character } from './Character';
 import { XP_Handler } from './XP_Handler';
 
 export class SpellHoverDetails extends MonoBehaviour {
@@ -38,7 +37,6 @@ export class SpellHoverDetails extends MonoBehaviour {
   }
 
   Display_Spell_Details(): void {
-    let obj: GameObject = GameObject.Find('Murky');
     let mousePosition: Vector3 = Input.mousePosition;
     let vector: Vector3 = Camera.main.ScreenToWorldPoint(mousePosition);
     this.Detail_Canvas.gameObject.SetActive(true);
@@ -49,11 +47,10 @@ export class SpellHoverDetails extends MonoBehaviour {
     } else {
       mousePosition.x = vector.x - this.display_x_offset;
     }
-    if (obj.GetComponent(Character).player_camera.transform.position.y < 0) {
-      mousePosition.y = vector.y + this.display_y_offset - 480;
-    } else {
-      mousePosition.y = vector.y + this.display_y_offset;
-    }
+    // Fixed (7.1): the original moved the tooltip down by another 480 when the camera was below
+    // the world (fights, the tent), which put it off the screen. The mouse's world position
+    // already includes the camera's.
+    mousePosition.y = vector.y + this.display_y_offset;
     this.Detail_Canvas.transform.position = mousePosition.clone();
     this.Update_Details();
   }

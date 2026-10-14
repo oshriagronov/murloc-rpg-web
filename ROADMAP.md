@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: seven bugs on the list are fixed (7.1, partly done).
+bugs) has begun: eight bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -898,8 +898,8 @@ reproduced as it is.
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
-      the error when a fight starts beside a shopkeeper). Next are the
-      tooltips during a fight.
+      the error when a fight starts beside a shopkeeper; the tooltips during
+      a fight). Next is the battle Items menu's cut-off names.
 
 ### Additions the original does not have
 
@@ -1038,10 +1038,16 @@ These exist in the original game and are reproduced until fixed under 7.1
   player moved 400 to the right: the old code logged the error, now there is
   none; the chat button is hidden when the icons come back, as before (his
   dialogue trigger hides it too). Not tried with Feronius and Krakho.
-- Skill and spell tooltips do not show during a fight or inside the tent.
+- **Fixed 2026-10-14.** Skill and spell tooltips do not show during a fight or
+  inside the tent.
   `SpellHoverDetails.Display_Spell_Details` moves the tooltip down by 480 when
   the camera is below the world, which puts it off the screen. The Unity build
-  does the same.
+  does the same. Now the tooltip is placed the same way wherever the camera
+  is: the mouse's world position already includes the camera's. Checked in a
+  fight with a wolf cub, the real mouse over Heroic Strike in the Skills menu:
+  the old code put the tooltip at y 759 of the 480-high screen; now it is at
+  279, just above the icon, with "Heroic Strike (Rank 1)", its cost and text
+  (seen in a screenshot). Console clean. The tent was not tried.
 - The battle Items menu shows only the first word of an item's name ("Magic",
   "Spiced"): the label is too narrow for both words and is set to cut off what
   does not fit. (Worked out from the scene data; the Unity build was not
