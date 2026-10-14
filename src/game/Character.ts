@@ -516,6 +516,9 @@ export class Character extends MonoBehaviour {
     this.BASE_STM = gameData.BASE_STM;
     this.BASE_INT = gameData.BASE_INT;
     this.BASE_AGI = gameData.BASE_AGI;
+    // Fixed (7.1): the original did not work the stats out from the base stats and equipment
+    // here, so they stayed 0 until a window was opened or the equipment changed.
+    this.update_stats();
     if (alive(slot)) {
       slot.transform.parent.gameObject.transform.parent.gameObject.transform.parent.gameObject.SetActive(false);
       slot.transform.parent.transform.parent.gameObject.transform.parent.gameObject.transform.parent.gameObject.transform.parent.gameObject.SetActive(false);
@@ -555,6 +558,9 @@ export class Character extends MonoBehaviour {
     this.BASE_STM = data.BASE_STM;
     this.BASE_INT = data.BASE_INT;
     this.BASE_AGI = data.BASE_AGI;
+    // Fixed (7.1): the original did not work the stats out from the base stats and equipment
+    // here, so they stayed 0 until a window was opened or the equipment changed.
+    this.update_stats();
   }
 
   Load_Game_Position_Data(data: GameData): void {

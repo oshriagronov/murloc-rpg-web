@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: two bugs on the list are fixed (7.1, partly done).
+bugs) has begun: three bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,9 +894,9 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 2 of 24 (2026-10-14: the monsters of a save
-      loaded in a monster zone; the shield test in `Buff.take_shield_damage`).
-      Next is the stats of a character loaded from the start menu.
+      Partly done: fixed so far, 3 of 24 (2026-10-14: the monsters of a save
+      loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
+      the stats of a loaded character). Next is the win box's experience.
 
 ### Additions the original does not have
 
@@ -979,14 +979,24 @@ These exist in the original game and are reproduced until fixed under 7.1
   at 0 and dies only at the monster's next hit (or wins, if their attack kills
   first). (Seen here: 3 health, a shield with 2 left, a hit of 6: 0/85 and the
   fight went on.)
-- A character loaded from the start menu has strength, stamina, intellect,
-  agility and armour of 0, and so less health and far weaker attacks, until
-  the player opens the bag, character sheet or talent window, or changes
+- **Fixed 2026-10-14.** A character loaded from the start menu has strength,
+  stamina, intellect, agility and armour of 0, and so less health and far
+  weaker attacks, until the player opens the bag, character sheet or talent window, or changes
   equipment. `Character.Load_Game` does not call `update_stats`. (The health
   number was checked in the Unity build; the weaker attacks follow from the
   same code and were seen here.) The same happens on returning from
   Stranglethorn Vale to the first world: that branch of
   `Character.Resume_Game` does not call `update_stats` either.
+  Now `Load_Game` and `Load_Game_Character_Data` (which the way back from
+  Stranglethorn Vale uses) call `update_stats` as soon as the base stats are
+  read, before the player is healed to full. Seen before the fix: a level 5
+  warrior saved with strength 10, stamina 9, intellect 9, agility 12 and
+  armour 1 loaded with all five at 0 and 100 energy instead of 106, and the
+  same again after Stranglethorn Vale and back. After it: the same numbers
+  as before saving at all three points; with the save's stamina set to 20,
+  350/350 health (85 + 110 + the level bonus) on loading, in Stranglethorn
+  Vale and back. Console clean. The attacks were not measured; they use the
+  same strength.
 - The win box shows the experience gained multiplied by the monster's level
   (a level 8 crab shows 6400 and gives 800).
   `Battle_Control.update_battle_over_info` multiplies by the level a second
