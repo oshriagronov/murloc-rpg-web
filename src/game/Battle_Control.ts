@@ -214,8 +214,11 @@ export class Battle_Control extends MonoBehaviour {
       this.play_damage_display_player(damage);
     }
     if (this.gameObject.GetComponent(Buff_Handler).check_for_player_buff(7)) {
-      if (this.gameObject.GetComponent(Buff_Handler).damage_shield_buff(damage) > 0) {
-        this.gameObject.GetComponent(Battle_Health_Control).Take_Damage(damage);
+      // Fixed (7.1): when the hit broke the shield, the original took the whole hit off the
+      // player, not what the shield let through, and ignored whether it killed.
+      let damage_through: number = this.gameObject.GetComponent(Buff_Handler).damage_shield_buff(damage);
+      if (damage_through > 0) {
+        this.is_player_dead = this.gameObject.GetComponent(Battle_Health_Control).Take_Damage(damage_through);
       }
     } else {
       this.is_player_dead = this.gameObject.GetComponent(Battle_Health_Control).Take_Damage(damage);

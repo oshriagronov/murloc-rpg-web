@@ -34,8 +34,8 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: twenty of the 27 bugs on the list are fixed (7.1, partly
-done); five wait for the owner's answers to questions.
+bugs) has begun: 22 of the 27 bugs on the list are fixed (7.1, partly
+done); the other five wait for the owner's answers to questions.
 
 ## Done
 
@@ -895,7 +895,7 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 20 of 27 (2026-10-14): the monsters of a
+      Partly done: fixed so far, 22 of 27 (2026-10-14): the monsters of a
       save loaded in a monster zone; the shield test in
       `Buff.take_shield_damage`; the stats of a loaded character; the win
       box's experience; the dialogue answer remembered for good; the mine
@@ -906,10 +906,10 @@ reproduced as it is.
       troll brothers' colour; the colour of a full slot; monsters always
       hitting for the top of their range; Beardon's Flash Heal; Mar'li's
       Drain Life; the tiger's and black wolf's unused moves; Murk in the
-      ending's cut scene; the load menu's name for a finished game.
-      Left: the two Power Word: Shield bugs found on the way (next), and
-      five that wait for the owner's answers under "Questions for the
-      owner": Jeklok, the loot left on a corpse, Hakkar's death, the two
+      ending's cut scene; the load menu's name for a finished game; the two
+      Power Word: Shield bugs found on the way.
+      Blocked: the five left wait for the owner's answers under "Questions
+      for the owner": Jeklok, the loot left on a corpse, Hakkar's death, the two
       experience formulas and the level 45 overflow that comes from one of
       them.
 
@@ -983,17 +983,24 @@ These exist in the original game and are reproduced until fixed under 7.1
   wolf cub given a 20-point shield: hits of 6 took it to 14, 8 and 2 with no
   health lost, the fourth broke it and it was gone after that turn, console
   clean. The two bugs below were found on the way and are still there.
-- When a hit breaks Power Word: Shield, the player loses the whole hit, not
-  only what the shield did not absorb: `Battle_Control.play_mob_attack` passes
-  `damage` to `Take_Damage` instead of what `damage_shield_buff` returned.
+- **Fixed 2026-10-14.** When a hit breaks Power Word: Shield, the player loses
+  the whole hit, not only what the shield did not absorb:
+  `Battle_Control.play_mob_attack` passes `damage` to `Take_Damage` instead
+  of what `damage_shield_buff` returned. (Fixed with the next one.)
   (Seen here: a shield with 2 left and a hit of 6, 4 reported through, 6
   health lost.)
-- A hit that breaks Power Word: Shield cannot kill. The same branch of
-  `play_mob_attack` ignores what `Take_Damage` returns and never sets
+- **Fixed 2026-10-14.** A hit that breaks Power Word: Shield cannot kill. The
+  same branch of `play_mob_attack` ignores what `Take_Damage` returns and never sets
   `is_player_dead`, so a player brought to 0 health that way gets another turn
   at 0 and dies only at the monster's next hit (or wins, if their attack kills
   first). (Seen here: 3 health, a shield with 2 left, a hit of 6: 0/85 and the
-  fight went on.)
+  fight went on.) Both are one line of `play_mob_attack`, fixed together:
+  the player now loses what `damage_shield_buff` lets through, and that hit
+  can kill. Checked against a wolf cub hitting a fixed 6 (9 on a critical):
+  before, a 9 against a 5-point shield cost 9 health and 3 health with a
+  2-point shield left the player at 0/85 for another turn; after, a 6
+  against a 2-point shield cost 4, and the second case ended the fight at
+  once with the player dead. Console clean.
 - **Fixed 2026-10-14.** A character loaded from the start menu has strength,
   stamina, intellect, agility and armour of 0, and so less health and far
   weaker attacks, until the player opens the bag, character sheet or talent window, or changes
