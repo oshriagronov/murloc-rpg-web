@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: twelve bugs on the list are fixed (7.1, partly done).
+bugs) has begun: thirteen bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,15 +894,16 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 12 of 25 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 13 of 26 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
       the stats of a loaded character; the win box's experience; the
       dialogue answer remembered for good; the mine chest with a full bag;
       the error when a fight starts beside a shopkeeper; the tooltips during
       a fight; the battle Items menu's cut-off names; the Skills menu's
       "Adrenaline Rush"; the camera after dying in Stranglethorn Vale; saves
-      made outside the first world). Next is Jeklok staying after he is
-      gone.
+      made outside the first world; the troll brothers' colour). Jeklok is
+      skipped until the owner decides (see "Questions for the owner"). Next
+      is the colour of a full slot in the bag and other windows.
 
 ### Additions the original does not have
 
@@ -1104,8 +1105,21 @@ These exist in the original game and are reproduced until fixed under 7.1
   how a second attempt is possible), and afterwards he goes back to telling
   his rumour. `W2_NPC1_Chat_Script` hides his sprite and nothing else. (The
   escape and second fight were seen in the Unity build.)
-- The troll brothers' sprites are given the colour (255, 255, 255, 255) where
-  1 is already full. Unity draws them normally, and so does this version.
+  Waiting for the owner (2026-10-14): the right behaviour is a design choice,
+  asked under "Questions for the owner".
+- **Fixed 2026-10-14.** The troll brothers' sprites are given the colour
+  (255, 255, 255, 255) where 1 is already full. Unity draws them normally,
+  and so does this version. Now `World_Two_Zone_Builder` gives (1, 1, 1, 1)
+  and (1, 1, 1, 0). Seen in Stranglethorn Vale with the trolls rescued: the
+  sprites' colour reads 255s before and 1s after, and the two screenshots
+  show the brothers alike. Console clean.
+- The bag, equipment, shop and loot windows make the same mistake: a full
+  slot's colour is (255, 255, 255, 255) (`full_color` in `Inventory`,
+  `Equipment`, `Merchant` and `CorpseInventory`). Unlike a sprite's, an
+  image's colour is multiplied by its button's hover or press tint, and 255
+  times any tint is still full, so a full slot can never show one. Fixing
+  it would make those tints appear, if the slots have them; look at the
+  slots' buttons first.
 - Monsters always hit for the top of their damage range. Every attack picks
   between its low and high number with `Random.Range(0, 1) != 1`, and the
   integer `Random.Range(0, 1)` can only give 0.
@@ -1146,6 +1160,13 @@ These exist in the original game and are reproduced until fixed under 7.1
   game's author.
 - ~~Should bugs in the original game be fixed, or kept as they are?~~
   Answered 2026-10-13: fix them all, over time (Phase 7).
+- Jeklok (7.1, asked 2026-10-14): in a fight he can only escape, so the one
+  way to beat him is to kill him with the opening Ambush. In the original a
+  second try works only through his bug: invisible, he still answers Space
+  (or leave Stranglethorn Vale and come back). Once dead he is back on the
+  next visit, telling his rumour again. What should happen? A suggestion:
+  after he escapes he is back where he stood, visible, so he can be tried
+  again at once; after he dies he is gone for good.
 - ~~How much does phone support matter?~~ Answered 2026-10-13: not for now,
   maybe later. 4.3 is closed on that basis and 4.7 waits.
 - Safari (4.4): open `http://localhost:5173` in Safari, press Play and say

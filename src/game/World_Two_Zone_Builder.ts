@@ -30,8 +30,9 @@ export class World_Two_Zone_Builder extends MonoBehaviour {
         {
           this.zone4.gameObject.SetActive(true);
           let troll_rescue: number = GameObject.Find('Murky').gameObject.GetComponent(Character_Quests).troll_rescue;
-          let color: Color = new Color(255, 255, 255, 0);
-          let color2: Color = new Color(255, 255, 255, 255);
+          // Fixed (7.1): the original gave (255, 255, 255, ...) where 1 is full; drawn the same.
+          let color: Color = new Color(1, 1, 1, 0);
+          let color2: Color = new Color(1, 1, 1, 1);
           if (troll_rescue === 2) {
             GameObject.Find('Troll_Shop').gameObject.GetComponent(BoxCollider2D).enabled = true;
             GameObject.Find('Troll_Shop').gameObject.GetComponent(SpriteRenderer).color = color2.clone();
