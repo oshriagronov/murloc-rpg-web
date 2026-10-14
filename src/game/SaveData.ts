@@ -76,6 +76,9 @@ export class SaveData {
     text('Level').enabled = true;
     text('Level').text = 'Level: ' + gameData.player_level;
     text('Location').enabled = true;
+    // Fixed (7.1): a finished game saved in the first world always loads at Darkmoon Faire
+    // (Character.Load_Game), but the slot named the place it was saved, often Camp Brakil.
+    if (gameData.game_complete && gameData.world_number === 0) location = 'Darkmoon Faire';
     text('Location').text = location;
     text('Fury_Count').enabled = true;
     text('Fury_Count').text = String(SaveData.get_fury_talent_count(gameData));

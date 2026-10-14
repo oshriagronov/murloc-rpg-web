@@ -34,7 +34,8 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: nineteen bugs on the list are fixed (7.1, partly done).
+bugs) has begun: twenty of the 27 bugs on the list are fixed (7.1, partly
+done); five wait for the owner's answers to questions.
 
 ## Done
 
@@ -894,21 +895,23 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 19 of 27 (2026-10-14: the monsters of a save
-      loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
-      the stats of a loaded character; the win box's experience; the
-      dialogue answer remembered for good; the mine chest with a full bag;
-      the error when a fight starts beside a shopkeeper; the tooltips during
-      a fight; the battle Items menu's cut-off names; the Skills menu's
-      "Adrenaline Rush"; the camera after dying in Stranglethorn Vale; saves
-      made outside the first world; the troll brothers' colour; the colour
-      of a full slot; monsters always hitting for the top of their range;
-      Beardon's Flash Heal; Mar'li's Drain Life). Jeklok and the loot left
-      on a corpse are skipped until the owner decides (see "Questions for
-      the owner"); the tiger's and black wolf's unused moves; Murk in the
-      ending's cut scene). Hakkar's death and the two experience formulas
-      (with the level 45 overflow that follows from one of them) wait for
-      the owner too. Next is the load menu's name for a completed save.
+      Partly done: fixed so far, 20 of 27 (2026-10-14): the monsters of a
+      save loaded in a monster zone; the shield test in
+      `Buff.take_shield_damage`; the stats of a loaded character; the win
+      box's experience; the dialogue answer remembered for good; the mine
+      chest with a full bag; the error when a fight starts beside a
+      shopkeeper; the tooltips during a fight; the battle Items menu's
+      cut-off names; the Skills menu's "Adrenaline Rush"; the camera after
+      dying in Stranglethorn Vale; saves made outside the first world; the
+      troll brothers' colour; the colour of a full slot; monsters always
+      hitting for the top of their range; Beardon's Flash Heal; Mar'li's
+      Drain Life; the tiger's and black wolf's unused moves; Murk in the
+      ending's cut scene; the load menu's name for a finished game.
+      Left: the two Power Word: Shield bugs found on the way (next), and
+      five that wait for the owner's answers under "Questions for the
+      owner": Jeklok, the loot left on a corpse, Hakkar's death, the two
+      experience formulas and the level 45 overflow that comes from one of
+      them.
 
 ### Additions the original does not have
 
@@ -1197,8 +1200,15 @@ These exist in the original game and are reproduced until fixed under 7.1
   0 throughout before; after, 0 at 3 s, 1 from the fade-in at about 7.5 s
   to 12 s, 0 again at 14 s, and at 9 s the screenshot shows him walking by
   the portal. Console clean.
-- The load menu describes a completed save by where the portal was ("Camp
-  Brakil"), though loading it starts at Darkmoon Faire.
+- **Fixed 2026-10-14.** The load menu describes a completed save by where the
+  portal was ("Camp Brakil"), though loading it starts at Darkmoon Faire.
+  Now `SaveData.show_slot`, which every save and load menu uses, names
+  Darkmoon Faire for a finished game saved in the first world (a finished
+  game saved elsewhere loads in its own area and keeps that area's name).
+  Checked with two saves at Camp Brakil, one marked finished: the load menu
+  said "Camp Brakil" for both before; after, "Darkmoon Faire" for the
+  finished one, which loaded at x 10000, Darkmoon Faire, and "Camp Brakil"
+  for the other. Console clean.
 - From level 45 the second formula no longer fits in an int and C# turns it
   into the lowest int there is. The next experience gained then counts as
   hundreds of level-ups at once: a level 45 character that enters Zul'Gurub
@@ -1224,8 +1234,8 @@ These exist in the original game and are reproduced until fixed under 7.1
 - The experience formula (7.1, asked 2026-10-14): after levelling up, the
   next level needs 100 x level x (level + 1); after loading a save or going
   through a door, 200 x 1.45^(level - 1). Which is the real one? At level 5
-  they give 3000 and 884; at level 10, 11000 and 5667; at level 20, 42000
-  and 232 821. The first is the one used while playing, and it does not
+  they give 3000 and 884; at level 10, 11000 and 5666; at level 20, 42000
+  and 232 820. The first is the one used while playing, and it does not
   overflow at level 45.
 - Loot left on a corpse (7.1, asked 2026-10-14): Continue throws away
   whatever is still on the corpse, so with a full bag an arena fighter's
