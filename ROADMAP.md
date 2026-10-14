@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`). A GitHub workflow that runs both on every push is written
 but has not run yet: it needs a push (6.3). Phase 7 (fixing the original's
-bugs) has begun: four bugs on the list are fixed (7.1, partly done).
+bugs) has begun: five bugs on the list are fixed (7.1, partly done).
 
 ## Done
 
@@ -894,10 +894,11 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 4 of 24 (2026-10-14: the monsters of a save
+      Partly done: fixed so far, 5 of 24 (2026-10-14: the monsters of a save
       loaded in a monster zone; the shield test in `Buff.take_shield_damage`;
-      the stats of a loaded character; the win box's experience). Next is
-      the dialogue answer that is remembered for good.
+      the stats of a loaded character; the win box's experience; the
+      dialogue answer remembered for good). Next is the mine chest with a
+      full bag.
 
 ### Additions the original does not have
 
@@ -1004,11 +1005,20 @@ These exist in the original game and are reproduced until fixed under 7.1
   time. Now it shows what `mob_dead` gives. Checked with a level 1 character
   and a level 2 wolf cub: experience 0 to 100 and the box says 100 (the old
   code would have said 200), console clean.
-- An answer picked in a dialogue is remembered for that character and never
-  cleared (`Npc_Dialouge.SELECTED_OPTION`). At a later question from the same
-  character, pressing Space repeats the earlier answer instead of waiting for
-  a click: Gottum's reward question takes the coins, Ringmaster Shin's next
-  challenge starts.
+- **Fixed 2026-10-14.** An answer picked in a dialogue is remembered for that
+  character and never cleared (`Npc_Dialouge.SELECTED_OPTION`). At a later
+  question from the same character, pressing Space repeats the earlier answer
+  instead of waiting for a click: Gottum's reward question takes the coins,
+  Ringmaster Shin's next challenge starts. Now
+  `TextOptionController.set_mob_using_option`, which every one of the 22
+  questions calls when it is put, clears the answer. It is not cleared after
+  the click, because Gottum reads the ring answer again on the line after it.
+  Space at a question now does nothing, as it did the first time in the
+  original. Checked with Guzbo at the goblin camp: "Not thanks", talk again,
+  wait out the dialogue's 30-frame delay, Space at the question: the old code
+  closed the dialogue as if "Not thanks" had been clicked; now the question
+  stays up, and clicking "Not thanks" still closes it. Console clean. Gottum
+  and Shin were not played after the change.
 - Opening the mine chest with a full bag loses the Large Candlestick:
   `NPC16_Chat_Script` gives the item before it removes the dynamite, and the
   chest counts as opened either way.
