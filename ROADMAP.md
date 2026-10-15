@@ -33,8 +33,8 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (5.6). Phase 6 (keeping it healthy) has begun: the engine has unit tests
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`), and a GitHub workflow runs them on every push (6.3). Phase 7 (fixing the original's
-bugs) has begun: 22 of the 27 bugs on the list are fixed (7.1, partly
-done); the other five wait for the owner's answers to questions.
+bugs) has begun: 23 of the 27 bugs on the list are fixed (7.1, partly
+done); the other four wait for the owner's answers to questions.
 
 ## Done
 
@@ -897,7 +897,7 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 22 of 27 (2026-10-14): the monsters of a
+      Partly done: fixed so far, 23 of 27 (2026-10-15): the monsters of a
       save loaded in a monster zone; the shield test in
       `Buff.take_shield_damage`; the stats of a loaded character; the win
       box's experience; the dialogue answer remembered for good; the mine
@@ -909,9 +909,9 @@ reproduced as it is.
       hitting for the top of their range; Beardon's Flash Heal; Mar'li's
       Drain Life; the tiger's and black wolf's unused moves; Murk in the
       ending's cut scene; the load menu's name for a finished game; the two
-      Power Word: Shield bugs found on the way.
-      Blocked: the five left wait for the owner's answers under "Questions
-      for the owner": Jeklok, the loot left on a corpse, Hakkar's death, the two
+      Power Word: Shield bugs found on the way; Jeklok, as the owner chose.
+      Blocked: the four left wait for the owner's answers under "Questions
+      for the owner": the loot left on a corpse, Hakkar's death, the two
       experience formulas and the level 45 overflow that comes from one of
       them.
 
@@ -1117,13 +1117,20 @@ These exist in the original game and are reproduced until fixed under 7.1
   at the saved position with the saved camera, and the screenshots look
   right. Console clean. The camera's depth becomes -10 there instead of the
   scene's -100, as on any load (`move_camera`); nothing looks different.
-- After Jeklok escapes or dies he is invisible but still there: Space at his
-  spot starts the fight again while Felva's quest is at that step (which is
-  how a second attempt is possible), and afterwards he goes back to telling
-  his rumour. `W2_NPC1_Chat_Script` hides his sprite and nothing else. (The
+- **Fixed 2026-10-15.** After Jeklok escapes or dies he is invisible but still
+  there: Space at his spot starts the fight again while Felva's quest is at
+  that step (which is how a second attempt is possible), and afterwards he
+  goes back to telling his rumour. `W2_NPC1_Chat_Script` hides his sprite and nothing else. (The
   escape and second fight were seen in the Unity build.)
-  Waiting for the owner (2026-10-14): the right behaviour is a design choice,
-  asked under "Questions for the owner".
+  The owner chose (2026-10-15): after he escapes he is back where he stood,
+  in sight, and can be fought again at once; after he dies he is gone for
+  good. `W2_NPC1_Chat_Script` waits for the fight to end and shows him again
+  or hides him and closes his dialogue; `World_Two_Zone_Builder` hides him
+  when his screen is shown and `felva_quest` is 4 or more. Checked at level
+  10 with Felva's quest at his step: he escaped, stood in sight and started
+  the fight again at Space; the second time he died (`felva_quest` 4) and
+  was hidden with Space doing nothing, and after the arena and back he was
+  still gone. Console clean.
 - **Fixed 2026-10-14.** The troll brothers' sprites are given the colour
   (255, 255, 255, 255) where 1 is already full. Unity draws them normally,
   and so does this version. Now `World_Two_Zone_Builder` gives (1, 1, 1, 1)
@@ -1253,7 +1260,8 @@ These exist in the original game and are reproduced until fixed under 7.1
   so the player can make room first; or what is left goes to the bag when
   room is made later; or the arena fight can be fought again until its item
   is taken.
-- Jeklok (7.1, asked 2026-10-14): in a fight he can only escape, so the one
+- ~~Jeklok (7.1, asked 2026-10-14)~~ Answered 2026-10-15: as suggested.
+  The question was: in a fight he can only escape, so the one
   way to beat him is to kill him with the opening Ambush. In the original a
   second try works only through his bug: invisible, he still answers Space
   (or leave Stranglethorn Vale and come back). Once dead he is back on the
