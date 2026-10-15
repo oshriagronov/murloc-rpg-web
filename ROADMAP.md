@@ -1247,6 +1247,16 @@ These exist in the original game and are reproduced until fixed under 7.1
   game's ending is the portal in the first world. Should anything happen
   when he dies (a message, the portal opening, the credits), or is it fine
   as it is?
+  Looked into 2026-10-15, from the original's data in `public/game` (the
+  Unity project and build were not in that session, so the Unity build was
+  not played): `End_Game_Cut_Scene` is attached to nothing in any scene or
+  prefab, so it never runs; its only content is two fields for a flavour
+  text and its background, which suggests an ending text that was never
+  written. `zg_boss` 6 is read only by `MobLoaderZG`, to stop Hakkar coming
+  back. Zul'Gurub is side content: the portal and the credits come from
+  Lekon's quests in the first world (`kobold_rune` 3), whatever happened in
+  Stranglethorn Vale. So in the original Hakkar's death ends with his loot,
+  and nothing marks it.
 - The experience formula (7.1, asked 2026-10-14): after levelling up, the
   next level needs 100 x level x (level + 1); after loading a save or going
   through a door, 200 x 1.45^(level - 1). Which is the real one? At level 5
