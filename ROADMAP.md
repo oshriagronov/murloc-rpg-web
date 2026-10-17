@@ -1028,6 +1028,30 @@ original.
       the icon bar. Seen in the first world beside the music note; a click
       on it opens Game Settings as before. Smoke test (every scene) clean.)
 
+- [x] **A.8 Save and Load inside the settings window.** Asked for by the
+      owner (2026-10-17), from a design they approved (a canvas of the
+      settings window with the slots in it). (2026-10-17: Load Game and Save
+      Game no longer open the grey LoadSlots and SaveSlots boxes beside the
+      window; the window's title changes to "Load Game" or "Save Game", a
+      line under it says what to do, the three slots fill the window's dark
+      panel and a red Back button returns to the settings buttons. Each
+      slot shows the class picture from the class select screen (Warrior's
+      short sword, Rogue, Priest, Mage), "Level N <class>", the place and
+      the talent counts; the class is worked out from the save's base
+      stats, which are set when the class is picked and never change, so
+      older saves show it too. Empty slots read "Empty slot" and cannot be
+      loaded. Saving over a slot asks "Overwrite this save?" with Yes and
+      No; saving says "Game saved to slot N." Loading and saving still go
+      through `Character.Load_Game` and `Save_Game` with the original slot
+      objects. `SaveLoadMenu` builds the pieces from copies of the window's
+      Load Game button (its holder has the canvas that draws above the
+      window's art). Tried with mouse clicks: save to an empty slot, the
+      overwrite question with No then Yes (slot replaced), Back, an empty
+      load slot ignored, loading slot 2 closed the window and loaded it;
+      Rogue, Mage and Warrior pictures seen; the Controls tab and closing
+      the window return to the settings buttons. Console clean. The start
+      menu's own load list is unchanged.)
+
 ## Original bugs kept on purpose
 
 These exist in the original game and are reproduced until fixed under 7.1

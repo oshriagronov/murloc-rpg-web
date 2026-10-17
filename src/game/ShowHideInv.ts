@@ -3,7 +3,7 @@ import { Character } from './Character';
 import { Equipment } from './Equipment';
 import { Inventory } from './Inventory';
 import { Merchant } from './Merchant';
-import { SaveData } from './SaveData';
+import { SaveLoadMenu } from './SaveLoadMenu';
 import { SoundManager } from './SoundManager';
 import { Talent_Manager } from './Talent_Manager';
 
@@ -167,6 +167,7 @@ export class ShowHideInv extends MonoBehaviour {
     this.close_canvas(this.talent_canvas);
     this.toggle_canvas(this.settings_canvas);
     if (this.settings_canvas.gameObject.activeSelf) {
+      SaveLoadMenu.of(this.settings_canvas.gameObject).show('settings');
       this.PLAYER.GetComponent(SoundManager).PlayCharacterWindow();
     }
   }
@@ -196,20 +197,18 @@ export class ShowHideInv extends MonoBehaviour {
     }
   }
 
+  // Changed from the original at the owner's request: the slots open inside the settings window
+  // (SaveLoadMenu) instead of the grey LoadSlots and SaveSlots boxes beside it.
   toggle_save_game_canvas(): void {
-    this.toggle_canvas(this.save_game_canvas);
-    if (this.save_game_canvas.isActiveAndEnabled) {
-      this.load_game_canvas.gameObject.SetActive(false);
-      this.fill_save_data_ui(this.save_game_canvas.gameObject);
-    }
+    this.load_game_canvas.gameObject.SetActive(false);
+    this.save_game_canvas.gameObject.SetActive(false);
+    SaveLoadMenu.of(this.settings_canvas.gameObject).show('save');
   }
 
   toggle_load_game_canvas(): void {
-    this.toggle_canvas(this.load_game_canvas);
-    if (this.load_game_canvas.isActiveAndEnabled) {
-      this.save_game_canvas.gameObject.SetActive(false);
-      this.fill_load_data_ui(this.load_game_canvas.gameObject);
-    }
+    this.load_game_canvas.gameObject.SetActive(false);
+    this.save_game_canvas.gameObject.SetActive(false);
+    SaveLoadMenu.of(this.settings_canvas.gameObject).show('load');
   }
 
   toggle_skill_canvas(): void {
@@ -267,6 +266,7 @@ export class ShowHideInv extends MonoBehaviour {
   }
 
   open_control_canvas(): void {
+    SaveLoadMenu.of(this.settings_canvas.gameObject).show('settings');
     this.controll_display.gameObject.SetActive(true);
     this.settings_buttons.gameObject.SetActive(false);
   }
@@ -339,23 +339,5 @@ export class ShowHideInv extends MonoBehaviour {
         gameObject.gameObject.SetActive(false);
       }
     }
-  }
-
-  private fill_load_data_ui(canavas: GameObject): void {
-    let slot: GameObject = canavas.gameObject.transform.Find('Canvas').gameObject.transform.Find('MainLoadBackground_one').transform.Find('Save_Data_One').gameObject;
-    let slot2: GameObject = canavas.gameObject.transform.Find('Canvas').gameObject.transform.Find('MainLoadBackground_two').transform.Find('Save_Data_Two').gameObject;
-    let slot3: GameObject = canavas.gameObject.transform.Find('Canvas').gameObject.transform.Find('MainLoadBackground_three').transform.Find('Save_Data_Three').gameObject;
-    SaveData.load_save_data(slot);
-    SaveData.load_save_data(slot2);
-    SaveData.load_save_data(slot3);
-  }
-
-  private fill_save_data_ui(canavas: GameObject): void {
-    let slot: GameObject = canavas.gameObject.transform.Find('Canvas').gameObject.transform.Find('MainSaveBackground_one').transform.Find('Save_Data_One').gameObject;
-    let slot2: GameObject = canavas.gameObject.transform.Find('Canvas').gameObject.transform.Find('MainSaveBackground_two').transform.Find('Save_Data_Two').gameObject;
-    let slot3: GameObject = canavas.gameObject.transform.Find('Canvas').gameObject.transform.Find('MainSaveBackground_three').transform.Find('Save_Data_Three').gameObject;
-    SaveData.load_save_data(slot);
-    SaveData.load_save_data(slot2);
-    SaveData.load_save_data(slot3);
   }
 }

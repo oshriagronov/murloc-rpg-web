@@ -89,6 +89,12 @@ export class SaveData {
     text('Magic_Lable').enabled = true;
   }
 
+  /** Where a save puts the player, as the save and load menus name it. */
+  static slot_location(gameData: GameData): string {
+    if (gameData.game_complete && gameData.world_number === 0) return 'Darkmoon Faire';
+    return SaveData.get_location(gameData.x_pos, gameData.y_pos, gameData.world_number);
+  }
+
   static get_location(x: number, y: number, world_number: number): string {
     switch (world_number) {
       case 0: return SaveData.get_world_one_locations(x, y);
