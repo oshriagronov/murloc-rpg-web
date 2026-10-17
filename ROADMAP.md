@@ -1070,6 +1070,10 @@ original.
       delete slot 3. Console clean. In the start menu the window's two tab
       shapes at the bottom are blank: they are part of the picture and the
       menu has no Controls page.)
+      (2026-10-17, the owner: in the start menu the window has no Back
+      button, only its close X, and no tabs: it is drawn from the top 470
+      of the picture's 512 rows, which end at the window's bottom edge.
+      Seen at 1704x960; the X closes it. Console clean.)
 
 ## Original bugs kept on purpose
 

@@ -201,8 +201,14 @@ export class SaveLoadMenu extends MonoBehaviour {
     };
     this.host = host;
     // Drawn first, so the rest sits on it; it also keeps clicks from reaching the menu behind.
-    let window: Image = this.plain_rect('Window', 243.73, 57.73, 364.55, 364.55, WHITE);
-    window.sprite = AssetDb.sprites.get(WINDOW_SPRITE);
+    // The window's picture without the General and Controls tabs under it (the menu has no pages
+    // for them): its top 470 of 512 rows, which end at the window's bottom edge. Drawn at the size
+    // the settings window has, 364.55 pixels for the full 512.
+    const full: Sprite = AssetDb.sprites.get(WINDOW_SPRITE);
+    const rows = 470, scale = 364.55 / full.height;
+    let window: Image = this.plain_rect('Window', 243.73, 57.73, full.width * scale, rows * scale, WHITE);
+    window.sprite = new Sprite('window-without-tabs', full.name, full.texture, full.frameX, full.frameY, full.frameWidth, rows - full.offsetY,
+      full.width, rows, full.offsetX, full.offsetY, new Vector2(0.5, 0.5), full.pixelsPerUnit, full.border);
     window.raycastTarget = true;
     host.title = this.text('Title', 'Load Game', 257.5, 61, 315, 18, 13, WHITE, true, TextAnchor.MiddleCenter);
     let close: Button = this.button('Close', '', 570, 54, 32, 33, 1, () => this.back());
@@ -230,7 +236,10 @@ export class SaveLoadMenu extends MonoBehaviour {
     for (let i: number = 0; i < 3; i++) {
       this.rows.push(this.make_row(i, 268, 131.5 + i * 69));
     }
-    this.button('Back_Button', 'Back', 376, 350.5, 100, 31, 12, () => this.back());
+    // The start menu's window closes with its X alone (asked for by the owner).
+    if (!this.start_menu) {
+      this.button('Back_Button', 'Back', 376, 350.5, 100, 31, 12, () => this.back());
+    }
   }
 
   private make_row(slot: number, x: number, y: number): SlotRow {
