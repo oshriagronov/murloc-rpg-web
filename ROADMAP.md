@@ -916,6 +916,14 @@ reproduced as it is.
       the loot left on a corpse, as the owner chose; the experience bar's
       "0/200" after a door.
 
+- [ ] **7.2 Button sprite swap.** A button whose transition is a sprite swap
+      (Unity's transition 2, as the win box's Continue button has) shows no
+      change when it is disabled, hovered or pressed: `Selectable` only
+      handles colour tints. Found 2026-10-17 with the bag's Drop button
+      (A.5), which fades itself instead. Check which of the original's
+      buttons use a sprite swap and draw their highlighted, pressed and
+      disabled sprites.
+
 ### Additions the original does not have
 
 Asked for by the owner; each is marked in the code as not being in the
@@ -972,6 +980,23 @@ original.
       closed; console clean. The page before the game lists "Del drop item"
       under Controls (seen at 711 and 480 wide; at 480 the row wraps to two
       lines). Mouse-only and touch players have no way to drop yet.)
+      (2026-10-17, asked for by the owner: a Drop button, so dropping is
+      clear without knowing the key. It sits in the bag's empty title bar,
+      between the bag icon and the close button, and is a copy of the win
+      box's red Continue button made by `Inventory.make_drop_button`. Faded
+      while no item is selected; with one selected, the first click turns
+      it to "Sure?" and says "Click again to drop <item>", the second drops
+      it. Changing the selection takes it back to "Drop". The copy's label
+      has a canvas of its own on the default sorting layer, which the bag
+      covers, so it is moved to the bag's layer; and the copy swaps sprites
+      for its states, which the engine does not draw (a new item below),
+      hence the fading by hand. Tried with the mouse (real pointer events):
+      a click with nothing selected did nothing; Old Rag selected, Drop,
+      "Sure?", Drop, gone and unselected; The 1 Ring refused at both
+      clicks. In a win box with a full bag: Short Sword dropped with the
+      button, then the corpse's Brawler's Harness went into the freed slot.
+      Pictures at 1704x960 of the three states and the win box. Console
+      clean. Touch was not tried.)
 
 ## Original bugs kept on purpose
 

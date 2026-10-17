@@ -1,4 +1,5 @@
-import { Canvas, Color, Debug, GameObject, Image, Input, KeyCode, MonoBehaviour, RectTransform, Resources, Routine, Sprite, SpriteRenderer, Text, Vector2, WaitForSecondsRealtime, alive } from '../engine';
+import { Button, Canvas, Color, Debug, GameObject, Image, Input, Instantiate, KeyCode, MonoBehaviour, RectTransform, Resources, Routine, Sprite, SpriteRenderer, Text, UnityEvent, Vector2, WaitForSecondsRealtime, alive, lazyClass } from '../engine';
+import type { Battle_Control } from './Battle_Control';
 import { Equipment } from './Equipment';
 import { Item } from './Item';
 import { ItemHoverDetails } from './ItemHoverDetails';
@@ -26,10 +27,13 @@ export class Inventory extends MonoBehaviour {
   player_money: number = 0;
   private TOUCH_CONTROLS: boolean = true;
   // Not in the original game: dropping items from the bag, added at the owner's request (7.1) so
-  // that a full bag can always make room. With a slot selected, Delete or Backspace asks once and
-  // then drops the item, one at a time from a stack. Items a quest needs and cannot give again
-  // are kept.
+  // that a full bag can always make room. With a slot selected, the Drop button in the bag's title
+  // bar (or Delete or Backspace) asks once and then drops the item, one at a time from a stack.
+  // Items a quest needs and cannot give again are kept. The button is a copy of the win box's
+  // Continue button.
   private drop_asked_slot: number = -1;
+  private drop_button: Button = null;
+  private drop_label: Text = null;
   private static readonly QUEST_ITEMS: string[] = [
     'Wolf Meat', 'Mild Spices', 'Bushy Tail', 'Goblin Dynamite', 'Rune of Teleportation', 'The 1 Ring', 'Felvas Necklace',
   ];
@@ -37,24 +41,71 @@ export class Inventory extends MonoBehaviour {
   Start(): void {
     this.item_db = this.gameObject.GetComponent(Item_Database);
     this.update_money_ui();
+    this.make_drop_button();
   }
 
   Update(): void {
     if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) {
-      this.drop_selected_item();
+      this.drop_selected_item(false);
+    }
+    if (alive(this.drop_button)) {
+      let slot: number = this.selected_slot();
+      if (slot !== this.drop_asked_slot) {
+        this.drop_asked_slot = -1;
+      }
+      if (this.drop_button.interactable !== (slot !== -1)) {
+        this.drop_button.interactable = slot !== -1;
+        // The copied button changes sprites for its states, which the engine does not draw, so
+        // fade it while there is nothing to drop.
+        let alpha: number = slot !== -1 ? 1 : 0.45;
+        this.drop_button.GetComponent(Image).color = new Color(1, 1, 1, alpha);
+        this.drop_label.color = new Color(1, 1, 1, alpha);
+      }
+      this.drop_label.text = this.drop_asked_slot !== -1 ? 'Sure?' : 'Drop';
     }
   }
 
-  private drop_selected_item(): void {
+  private make_drop_button(): void {
+    let battle = this.gameObject.GetComponent(lazyClass<typeof Battle_Control>('Battle_Control'));
+    let template = battle?.BattleOverCanvas?.transform.Find('BattleOverInfo/Battle_Over_Button/Battle_Done_Button');
+    if (!alive(template)) {
+      return;
+    }
+    let obj: GameObject = Instantiate(template.gameObject, this.inventory_canvas.transform);
+    obj.name = 'Drop_Button';
+    let rect: RectTransform = obj.GetComponent(RectTransform);
+    rect.anchoredPosition = new Vector2(805, 249);
+    rect.sizeDelta = new Vector2(190, 52);
+    this.drop_label = obj.transform.Find('Button_Text').GetComponent(Text);
+    this.drop_label.GetComponent(RectTransform).sizeDelta = new Vector2(150, 44);
+    this.drop_label.text = 'Drop';
+    // The label has a canvas of its own, which in the win box sits on the default sorting layer;
+    // the bag is drawn on a higher one, so move it there, above the slots' stack numbers.
+    let bag: Canvas = this.inventory_canvas.GetComponent(Canvas);
+    let label_canvas: Canvas = this.drop_label.GetComponent(Canvas);
+    label_canvas.sortingLayerID = bag.sortingLayerID;
+    label_canvas.sortingOrder = bag.sortingOrder + 4;
+    this.drop_button = obj.GetComponent(Button);
+    this.drop_button.onClick = new UnityEvent();
+    this.drop_button.onClick.AddListener(() => this.drop_selected_item(true));
+    this.drop_button.interactable = true;
+    obj.SetActive(true);
+  }
+
+  private selected_slot(): number {
+    for (let i: number = 0; i < 16; i++) {
+      if (this.item_slots[i] != null && this.is_slot_highlighted(i)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private drop_selected_item(clicked: boolean): void {
     if (!this.inventory_canvas.gameObject.activeInHierarchy) {
       return;
     }
-    let slot: number = -1;
-    for (let i: number = 0; i < 16; i++) {
-      if (this.item_slots[i] != null && this.is_slot_highlighted(i)) {
-        slot = i;
-      }
-    }
+    let slot: number = this.selected_slot();
     if (slot === -1) {
       this.drop_asked_slot = -1;
       return;
@@ -64,7 +115,7 @@ export class Inventory extends MonoBehaviour {
       this.show_message(item.name + ' is needed for a quest');
     } else if (this.drop_asked_slot !== slot) {
       this.drop_asked_slot = slot;
-      this.show_message('Press again to drop ' + item.name);
+      this.show_message((clicked ? 'Click again to drop ' : 'Press again to drop ') + item.name);
     } else {
       this.remove_slot(slot);
       this.show_message('Dropped ' + item.name);
