@@ -1367,6 +1367,22 @@ These exist in the original game and are reproduced until fixed under 7.1
   great deal of grinding. Gone with the second formula (fixed above): the
   first is 207 000 at level 45 and stays far inside an int.
 
+- **Fixed 2026-10-17.** The music's mute did not last: muting it kept
+  `SaveData.music_enabled` off (sound effects stayed quiet), but every area
+  started with `SoundManager.MusicOn` set, its music playing and the mute
+  mark hidden, so going through a door brought the music back; and
+  `PlayBackgroundMusic` after a fight and `PlayDeathMusic` never checked
+  the setting either. Reported by the owner. Now the mute lasts the whole
+  run, and only a new game or loading a save turns the music back on, as
+  the owner asked: `SoundManager.Start` takes the setting, its `Update`
+  keeps the area music paused while muted, `ShowHideInv.Update` keeps the
+  mute mark in step, and `Character.Load_Game` and
+  `on_click_newGame.new_new` switch it back on. Tried: muted in the first
+  world, through the door to Stranglethorn Vale and back, still muted with
+  the mark shown; battle and after-fight music stayed quiet; unmuting
+  played the area's music; loading slot 1 from the settings window turned
+  it back on. Console clean.
+
 ## Questions for the owner
 
 - ~~Where should the game be hosted?~~ Answered 2026-10-13: Cloudflare.

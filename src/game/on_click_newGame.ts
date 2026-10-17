@@ -35,6 +35,8 @@ export class on_click_newGame extends MonoBehaviour {
   }
 
   new_new(): void {
+    // Not in the original (7.1): a new game starts with the music on, whatever the last run chose.
+    SaveData.music_enabled = true;
     SaveData.load_game_slot = -1;
     this.LoadScene('Scenes/Test');
   }

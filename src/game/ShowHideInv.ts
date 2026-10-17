@@ -3,6 +3,7 @@ import { Character } from './Character';
 import { Equipment } from './Equipment';
 import { Inventory } from './Inventory';
 import { Merchant } from './Merchant';
+import { SaveData } from './SaveData';
 import { SaveLoadMenu } from './SaveLoadMenu';
 import { SoundManager } from './SoundManager';
 import { Talent_Manager } from './Talent_Manager';
@@ -60,6 +61,11 @@ export class ShowHideInv extends MonoBehaviour {
   Update(): void {
     if (this.gameObject.name !== 'UI_ICONS') {
       return;
+    }
+    // Fixed (7.1): each area's icon bar started with the mute mark hidden, even while the music
+    // was muted. It now follows the mute, which lasts the whole run (SoundManager).
+    if (alive(this.music_off_image) && this.music_off_image.activeSelf === SaveData.music_enabled) {
+      this.music_off_image.SetActive(!SaveData.music_enabled);
     }
     // Leave Ctrl+C and the like to the browser.
     if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) {

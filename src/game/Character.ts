@@ -479,6 +479,8 @@ export class Character extends MonoBehaviour {
   }
 
   Load_Game(slot: GameObject): void {
+    // Not in the original (7.1): loading a save starts a new run, so a mute ends here.
+    this.gameObject.GetComponent(SoundManager).music_on_for_new_run();
     let gameData: GameData = SaveData.LoadData(slot, SaveData.load_game_slot);
     this.game_complete = gameData.game_complete;
     SaveData.loading_saved_position = gameData.world_number !== SaveData.loaded_game_zone;

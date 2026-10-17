@@ -1,4 +1,4 @@
-import { AudioClip, AudioSource, GameObject, MonoBehaviour, Random, UObject } from '../engine';
+import { AudioClip, AudioSource, GameObject, MonoBehaviour, Random, UObject, alive } from '../engine';
 import { Character } from './Character';
 import { SaveData } from './SaveData';
 
@@ -29,10 +29,29 @@ export class SoundManager extends MonoBehaviour {
   CaveMusic: AudioClip = null;
   private MusicOn: boolean = true;
 
+  // Fixed (7.1): the original kept the mute in SaveData.music_enabled but started every area with
+  // MusicOn set and its music playing, and PlayBackgroundMusic (after a fight) and PlayDeathMusic
+  // never asked, so the music came back on through a door or after a fight. The mute now lasts
+  // the whole run; a new game or loading a save turns the music back on (music_on_for_new_run).
   Start(): void {
+    this.MusicOn = SaveData.music_enabled;
   }
 
   Update(): void {
+    if (!SaveData.music_enabled && alive(this.Camera)) {
+      let music: AudioSource = this.Camera.GetComponent(AudioSource);
+      if (alive(music) && music.isPlaying) {
+        music.Pause();
+      }
+    }
+  }
+
+  music_on_for_new_run(): void {
+    if (!SaveData.music_enabled) {
+      SaveData.music_enabled = true;
+      this.MusicOn = true;
+      this.turn_music_on();
+    }
   }
 
   private PlaySound(soundEffect: AudioClip): void {
