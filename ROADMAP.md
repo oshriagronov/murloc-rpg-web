@@ -1006,6 +1006,18 @@ original.
       refused; Stingy clicked twice was equipped, not dropped; Worn Dagger
       selected and Delete, dropped. Console clean.)
 
+- [x] **A.6 Take All in the loot window.** Asked for by the owner
+      (2026-10-17). (2026-10-17: a Take All button in the loot window's
+      empty title bar, between its icon and the close button, a copy of the
+      win box's Continue button made by `CorpseInventory.make_take_all_button`
+      the way the bag's Drop button is. It takes every item and the money the
+      bag has room for, as clicking each slot would; what does not fit stays
+      on the corpse and Continue warns about it as before. Faded once the
+      corpse is empty. Tried with real pointer events after beating a Wolf
+      Cub: Small Dagger and 3 copper taken in one click, button faded; with a
+      full bag, "Inventory Full" and Brawler's Harness stayed on the corpse.
+      Console clean. Touch was not tried.)
+
 ## Original bugs kept on purpose
 
 These exist in the original game and are reproduced until fixed under 7.1

@@ -1,7 +1,10 @@
-import { Canvas, Color, GameObject, Image, MonoBehaviour, Resources, Sprite, alive } from '../engine';
+import { Button, Canvas, Color, GameObject, Image, Instantiate, MonoBehaviour, RectTransform, Resources, Sprite, Text, UnityEvent, Vector2, Vector3, alive, lazyClass } from '../engine';
+import type { Battle_Control } from './Battle_Control';
 import { Inventory } from './Inventory';
 import { Item } from './Item';
 import { Item_Database } from './Item_Database';
+
+const TAKE_ALL_X = 10, TAKE_ALL_Y = -230, TAKE_ALL_W = 190, TAKE_ALL_H = 52, TAKE_ALL_SCALE = 1;
 
 export class CorpseInventory extends MonoBehaviour {
   static readonly fieldTypes = { item_slots: Item };
@@ -14,13 +17,62 @@ export class CorpseInventory extends MonoBehaviour {
   private full_color: Color = new Color(1, 1, 1, 1);
   private slot_0_GO: GameObject = null;
   private xp_to_drop: number = 100;
+  // Not in the original game, added at the owner's request: a Take All button in the loot
+  // window's empty title bar, a copy of the win box's Continue button like the bag's Drop button.
+  private take_all_button: Button = null;
+  private take_all_label: Text = null;
 
   Start(): void {
     this.item_db = this.gameObject.GetComponent(Item_Database);
     this.clear_inv();
+    this.make_take_all_button();
   }
 
   Update(): void {
+    if (alive(this.take_all_button)) {
+      let any: boolean = this.item_slots.some((item) => item != null);
+      if (this.take_all_button.interactable !== any) {
+        this.take_all_button.interactable = any;
+        // The engine does not draw the copied button's state sprites, so fade it by hand.
+        let alpha: number = any ? 1 : 0.45;
+        this.take_all_button.GetComponent(Image).color = new Color(1, 1, 1, alpha);
+        this.take_all_label.color = new Color(1, 1, 1, alpha);
+      }
+    }
+  }
+
+  private make_take_all_button(): void {
+    let battle = this.gameObject.GetComponent(lazyClass<typeof Battle_Control>('Battle_Control'));
+    let template = battle?.BattleOverCanvas?.transform.Find('BattleOverInfo/Battle_Over_Button/Battle_Done_Button');
+    if (!alive(template)) {
+      return;
+    }
+    let obj: GameObject = Instantiate(template.gameObject, this.inventory_canvas.transform);
+    obj.name = 'Take_All_Button';
+    let rect: RectTransform = obj.GetComponent(RectTransform);
+    rect.anchoredPosition = new Vector2(TAKE_ALL_X, TAKE_ALL_Y);
+    rect.sizeDelta = new Vector2(TAKE_ALL_W, TAKE_ALL_H);
+    obj.transform.localScale = new Vector3(TAKE_ALL_SCALE, TAKE_ALL_SCALE, 1);
+    this.take_all_label = obj.transform.Find('Button_Text').GetComponent(Text);
+    this.take_all_label.GetComponent(RectTransform).sizeDelta = new Vector2(TAKE_ALL_W - 40, TAKE_ALL_H - 8);
+    this.take_all_label.text = 'Take All';
+    // The label's own canvas sits on the default sorting layer, under the loot window; move it up.
+    let window: Canvas = this.inventory_canvas.GetComponentInParent(Canvas);
+    let label_canvas: Canvas = this.take_all_label.GetComponent(Canvas);
+    label_canvas.sortingLayerID = window.sortingLayerID;
+    label_canvas.sortingOrder = window.sortingOrder + 4;
+    this.take_all_button = obj.GetComponent(Button);
+    this.take_all_button.onClick = new UnityEvent();
+    this.take_all_button.onClick.AddListener(() => this.take_all());
+    this.take_all_button.interactable = true;
+    obj.SetActive(true);
+  }
+
+  // Takes every item the bag has room for; what is left stays on the corpse, and Continue warns.
+  take_all(): void {
+    for (let i: number = 0; i < 4; i++) {
+      this.use_item(i);
+    }
   }
 
   give_corpse_item(item_name: string): void {
