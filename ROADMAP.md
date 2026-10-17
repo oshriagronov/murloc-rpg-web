@@ -1018,6 +1018,16 @@ original.
       full bag, "Inventory Full" and Brawler's Harness stayed on the corpse.
       Console clean. Touch was not tried.)
 
+- [x] **A.7 A gear for the settings icon.** Asked for by the owner
+      (2026-10-17), so the top-right icon reads as settings rather than
+      help. (2026-10-17: the original's orange question mark is replaced by
+      an orange gear with the same glow, drawn by `tools/draw-gear.py` into
+      `public/game/tex/Added/gear.webp` (outside what `tools/convert.mjs`
+      writes) at the button's own 106x140 proportions so it is not
+      stretched; `ShowHideInv.Start` puts it on the `Settings` button of
+      the icon bar. Seen in the first world beside the music note; a click
+      on it opens Game Settings as before. Smoke test (every scene) clean.)
+
 ## Original bugs kept on purpose
 
 These exist in the original game and are reproduced until fixed under 7.1

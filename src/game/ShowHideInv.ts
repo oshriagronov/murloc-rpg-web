@@ -1,4 +1,4 @@
-import { Button, Canvas, Cursor, CursorMode, GameObject, Image, Input, KeyCode, MonoBehaviour, Texture2D, Vector2, alive } from '../engine';
+import { Button, Canvas, Cursor, CursorMode, GameObject, Image, Input, KeyCode, MonoBehaviour, Sprite, Texture2D, Vector2, Vector4, alive } from '../engine';
 import { Character } from './Character';
 import { Equipment } from './Equipment';
 import { Inventory } from './Inventory';
@@ -39,6 +39,23 @@ export class ShowHideInv extends MonoBehaviour {
     [KeyCode.C, 'Character_Button'],
     [KeyCode.O, 'Settings'],
   ];
+
+  // Not in the original game: the settings icon is a gear instead of a question mark, at the
+  // owner's request, so it reads as settings. The picture is drawn by tools/draw-gear.py at the
+  // button's own proportions (106 x 140), so it is not stretched.
+  private static gear: Sprite = null;
+
+  Start(): void {
+    if (this.gameObject.name !== 'UI_ICONS') {
+      return;
+    }
+    const image = this.transform.Find('Settings')?.GetComponent(Image);
+    if (alive(image)) {
+      ShowHideInv.gear ??= new Sprite('added-gear', 'gear', new Texture2D('added-gear', 'tex/Added/gear.webp', 212, 280),
+        0, 0, 212, 280, 212, 280, 0, 0, new Vector2(0.5, 0.5), 100, new Vector4(0, 0, 0, 0));
+      image.sprite = ShowHideInv.gear;
+    }
+  }
 
   Update(): void {
     if (this.gameObject.name !== 'UI_ICONS') {
