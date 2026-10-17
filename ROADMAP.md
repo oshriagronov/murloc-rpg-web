@@ -1089,6 +1089,35 @@ original.
       first world: Controls opened the page, Back returned. Pictures at
       1704x960. Console clean.)
 
+- [x] **A.11 A quest tracker, NPC names and a guide.** Asked for by the
+      owner (2026-10-17). (2026-10-17: a panel on the right of the screen,
+      under the top-right icons, lists the quests in progress in the area's
+      world with what each needs: items with a have/need counter and where
+      they drop ("Wolf Meat 4/10, dropped by Wolf Cubs and Young Forest
+      Wolves in Elwynn Forest"), kills with counters (crabs, crocolisks,
+      arena fights, Zul'Gurub bosses) and who to talk to. The steps are
+      worked out from the quest numbers in `Character_Quests` in
+      `Quest_Log.ts`, which changes nothing in the game. Every NPC's name is
+      shown above its head, over its "!" or "?" mark. Clicking a quest
+      guides to its next step: an arrow at the screen's edge with the
+      NPC's name, then one over the NPC, whose name turns green; the way
+      goes through the Chief's tent, the mine's boulder, Kagle's canoe,
+      Guzbo's machine, Waxen, the portals and the exits when it has to. A
+      finished quest hands the guide to the next one; a second click stops
+      it. Clicking "Quests" folds the panel. `Quest_Tracker.ts`, added to the
+      player by `Character_Quests.Start`; the panel is the first child of the
+      UI canvas, so every window draws over it, and it hides with the icon
+      bar (conversations, fights). Tried in headless Chrome on the dev
+      server: a new game from Ketchin through the guard and the Chief, the
+      guide following each step into the tent; wolf meat counted 4/10;
+      states set from the console for the rune (dynamite, boulder), Gottum's
+      ring, the Darkmoon challenge, and in Stranglethorn, the arena and
+      Zul'Gurub for the arena, Zul'Gurub, Falthir and Felva; the bag open
+      over the panel; folding. Console clean, smoke test passed. Not yet
+      tried: touch, and playing the later steps for real rather than from
+      set quest numbers. The panel shows quests of the world the player is
+      in only; Onyxia is not listed.)
+
 ## Original bugs kept on purpose
 
 These exist in the original game and are reproduced until fixed under 7.1

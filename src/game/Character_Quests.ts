@@ -5,6 +5,7 @@ import { Item_Database } from './Item_Database';
 import { Npc_Dialouge } from './Npc_Dialouge';
 import { Open_Merchant_UI } from './Open_Merchant_UI';
 import { Quest_Based_Objects } from './Quest_Based_Objects';
+import { Quest_Tracker } from './Quest_Tracker';
 import { SaveData } from './SaveData';
 import type { Item } from './Item';
 
@@ -37,6 +38,11 @@ export class Character_Quests extends MonoBehaviour {
   interpolationPeriod: number = 100;
 
   Start(): void {
+    // Not in the original: the quest tracker, NPC names and guide (Quest_Tracker), asked for by
+    // the owner.
+    if (!this.GetComponent(Quest_Tracker)) {
+      this.gameObject.AddComponent(Quest_Tracker);
+    }
   }
 
   Update(): void {
