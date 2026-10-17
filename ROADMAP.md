@@ -34,8 +34,9 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`), and GitHub runs both on every push (6.3). Phase 6 is
 finished. Phase 7 (fixing the original's
-bugs) has begun: 26 of the 28 bugs on the list are fixed (7.1, partly
-done); the owner has answered the questions about the other two.
+bugs): the list is worked through (7.1): 27 bugs fixed, and Hakkar's
+quiet death left as it is by the owner's choice. New bugs found later go
+on the list and are fixed the same way.
 
 ## Done
 
@@ -889,14 +890,15 @@ The owner decided on 2026-10-13 that the bugs of the original game are to be
 fixed in this version, all of them, over time. Until one is fixed it stays
 reproduced as it is.
 
-- [ ] **7.1 Work down the list under "Original bugs kept on purpose".** One
+- [x] **7.1 Work down the list under "Original bugs kept on purpose".** One
       bug per commit. Say in the commit and next to the bug what the fixed
       behaviour is, and mark the bug "Fixed" with the date instead of removing
       it. Where the right behaviour is a matter of taste (what should happen
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 26 of 28 (2026-10-17): the monsters of a
+      (Done 2026-10-17: every bug on the list is fixed, or, for Hakkar,
+      left as it is by the owner's choice.) Fixed, 27 of 28: the monsters of a
       save loaded in a monster zone; the shield test in
       `Buff.take_shield_damage`; the stats of a loaded character; the win
       box's experience; the dialogue answer remembered for good; the mine
@@ -910,9 +912,8 @@ reproduced as it is.
       ending's cut scene; the load menu's name for a finished game; the two
       Power Word: Shield bugs found on the way; Jeklok, as the owner chose;
       the two experience formulas and the level 45 overflow, as the owner
-      chose; the corpse's slots keeping their items after the win box closes.
-      Left: the loot left on a corpse and Hakkar's death, both answered by
-      the owner on 2026-10-17.
+      chose; the corpse's slots keeping their items after the win box closes;
+      the loot left on a corpse, as the owner chose.
 
 ### Additions the original does not have
 
@@ -955,6 +956,21 @@ original.
       system's own rounded or default font, so as not to load a font from a
       third party. Seen at 1280x720 and 480x270, nothing cut off; the button
       still starts the game, console clean.)
+
+- [x] **A.5 Dropping items from the bag.** Asked for by the owner
+      (2026-10-17) with the corpse-loot fix, so a full bag can always make
+      room. (2026-10-17: with the bag open and a slot selected, Delete or
+      Backspace says "Press again to drop <item>", and a second press drops
+      it, "Dropped <item>"; from a stack, one at a time. Items a quest takes
+      and cannot give again are kept, "<item> is needed for a quest": Wolf
+      Meat, Mild Spices, Bushy Tail, Goblin Dynamite, Rune of Teleportation,
+      The 1 Ring, Felvas Necklace. The item data's `DROPABLE` flag is not
+      used for this: it decides what monsters can drop. `Inventory.Update`,
+      marked as not in the original. Tried: Old Rag asked then dropped, its
+      slot emptied and unselected; The 1 Ring refused; nothing with the bag
+      closed; console clean. The page before the game lists "Del drop item"
+      under Controls (seen at 711 and 480 wide; at 480 the row wraps to two
+      lines). Mouse-only and touch players have no way to drop yet.)
 
 ## Original bugs kept on purpose
 
@@ -1178,11 +1194,20 @@ These exist in the original game and are reproduced until fixed under 7.1
   After it, all four slots are empty once the box closes (seen after a real
   win against a wolf cub). Console clean. The Unity build was not checked
   for this one; the C# is the same.
-- Loot left on a corpse is lost when Continue is pressed, so with a full bag
+- **Fixed 2026-10-17.** Loot left on a corpse is lost when Continue is pressed, so with a full bag
   an arena fighter's unique item cannot be picked up, and the fight cannot be
-  repeated.
-  Waiting for the owner (2026-10-14): what should happen is a design choice,
-  asked under "Questions for the owner".
+  repeated. The owner chose (2026-10-17): Continue refuses while an item is
+  left that the bag has no room for, and since a bag cannot be emptied
+  outside a shop, a second press leaves it behind; and the bag gets a way to
+  drop items (A.5). Now `Battle_Control.unload_character`, in the win box,
+  asks `CorpseInventory.item_without_room` and the first time shows
+  "Inventory Full. Continue again to leave <item>" where "You receive"
+  shows, and stays. Coins are not counted (they always fit). Checked after a
+  win against a wolf cub with 16 items in the bag and a Worn Wooden Shield on
+  the corpse: the first Continue kept the win box up with that line (seen in
+  a screenshot; the longest name, Ashkandi, the Greatsword, fits on one
+  line), the second closed it and the walk went on. Console clean. Not tried
+  in the arena itself.
 - **Fixed 2026-10-14.** Mar'li never drains life and Hakkar's fourth move does
   not exist: the move table in `Mob_battle_actions.calculate_move_total` has
   no entry for Mar'li (so she only scratches) and rolls one to three for
@@ -1203,10 +1228,9 @@ These exist in the original game and are reproduced until fixed under 7.1
   often. The tiger used both moves after (10 and 14); the run on the old
   code did not reach a tiger, but its case is the same as Mar'li's, which
   was measured. Console clean.
-- Nothing happens when Hakkar dies beyond the loot and `zg_boss` = 6.
+- **Not a bug, 2026-10-17.** Nothing happens when Hakkar dies beyond the loot and `zg_boss` = 6.
   `End_Game_Cut_Scene` is an empty script. The game's ending is the portal in
-  the first world. Waiting for the owner (2026-10-14): what should happen is
-  a design choice, asked under "Questions for the owner".
+  the first world. The owner chose (2026-10-17) to leave it as it is.
 - **Fixed 2026-10-17.** The experience needed for the next level is worked out two ways: 100 x
   level x (level + 1) after levelling up, but 200 x 1.45^(level - 1) after a
   save is loaded or an area is entered. So the number changes whenever the
@@ -1263,7 +1287,8 @@ These exist in the original game and are reproduced until fixed under 7.1
   game's author.
 - ~~Should bugs in the original game be fixed, or kept as they are?~~
   Answered 2026-10-13: fix them all, over time (Phase 7).
-- Hakkar (7.1, asked 2026-10-14): killing him, the last boss of Zul'Gurub,
+- ~~Hakkar (7.1, asked 2026-10-14)~~ Answered 2026-10-17: leave it as it
+  is. The question was: killing him, the last boss of Zul'Gurub,
   gives his loot and sets `zg_boss` to 6, and nothing else happens; the
   script meant for it, `End_Game_Cut_Scene`, is empty in the original. The
   game's ending is the portal in the first world. Should anything happen
@@ -1286,7 +1311,9 @@ These exist in the original game and are reproduced until fixed under 7.1
   they give 3000 and 884; at level 10, 11000 and 5666; at level 20, 42000
   and 232 820. The first is the one used while playing, and it does not
   overflow at level 45.
-- Loot left on a corpse (7.1, asked 2026-10-14): Continue throws away
+- ~~Loot left on a corpse (7.1, asked 2026-10-14)~~ Answered 2026-10-17:
+  Continue warns once and leaves on a second press, and items can be
+  dropped from the bag (A.5). The question was: Continue throws away
   whatever is still on the corpse, so with a full bag an arena fighter's
   unique item is lost for good. What should happen? Possibilities: Continue
   refuses while something is left and the bag is full ("Inventory Full"),

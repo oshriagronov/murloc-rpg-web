@@ -744,7 +744,20 @@ export class Battle_Control extends MonoBehaviour {
     GameObject.Find('Talent_Points_Info_Text').gameObject.GetComponent(Text).text = String(this.gameObject.GetComponent(Talent_Manager).talent_points);
   }
 
+  // Not in the original (7.1, the owner's choice): Continue with an item left on the corpse and no
+  // room for it in the bag says so and stays, once; pressing it again leaves the item behind.
+  private loot_left_warned: boolean = false;
+
   unload_character(): void {
+    if (this.BattleOverCanvas.gameObject.activeSelf) {
+      let item: Item = this.gameObject.GetComponent(CorpseInventory).item_without_room();
+      if (item != null && !this.loot_left_warned) {
+        this.loot_left_warned = true;
+        this.gameObject.GetComponent(Inventory).show_message('Inventory Full. Continue again to leave ' + item.name);
+        return;
+      }
+    }
+    this.loot_left_warned = false;
     UObject.Destroy(this.mob_being_battled);
     this.BattleOverCanvas.gameObject.SetActive(false);
     this.gameObject.GetComponent(Inventory).inventory_canvas.transform.parent.gameObject.SetActive(false);

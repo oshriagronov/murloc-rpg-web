@@ -11,7 +11,7 @@ import { Device, Screen } from './render';
 /** Key names, with the browser's `KeyboardEvent.code` as the value. */
 export enum KeyCode {
   None = '',
-  Space = 'Space', Return = 'Enter', Escape = 'Escape', Tab = 'Tab', Backspace = 'Backspace',
+  Space = 'Space', Return = 'Enter', Escape = 'Escape', Tab = 'Tab', Backspace = 'Backspace', Delete = 'Delete',
   LeftArrow = 'ArrowLeft', RightArrow = 'ArrowRight', UpArrow = 'ArrowUp', DownArrow = 'ArrowDown',
   LeftShift = 'ShiftLeft', RightShift = 'ShiftRight', LeftControl = 'ControlLeft', RightControl = 'ControlRight',
   LeftAlt = 'AltLeft', RightAlt = 'AltRight',

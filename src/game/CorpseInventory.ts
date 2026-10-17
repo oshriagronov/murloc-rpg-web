@@ -86,6 +86,17 @@ export class CorpseInventory extends MonoBehaviour {
     return this.item_slots;
   }
 
+  // Not in the original (7.1): the first item left on the corpse that the bag has no room for.
+  item_without_room(): Item {
+    const inventory: Inventory = this.gameObject.GetComponent(Inventory);
+    for (const item of this.item_slots) {
+      if (item != null && !item.IS_MONEY && inventory.get_empty_slot(item) === -1) {
+        return item;
+      }
+    }
+    return null;
+  }
+
   give_corpse_money(item_name: string, value: number): void {
     let item: Item = this.item_db.Find_Item(item_name);
     item.VALUE = value;

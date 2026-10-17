@@ -1,4 +1,4 @@
-import { Canvas, Color, Debug, GameObject, Image, Input, MonoBehaviour, RectTransform, Resources, Routine, Sprite, SpriteRenderer, Text, Vector2, WaitForSecondsRealtime, alive } from '../engine';
+import { Canvas, Color, Debug, GameObject, Image, Input, KeyCode, MonoBehaviour, RectTransform, Resources, Routine, Sprite, SpriteRenderer, Text, Vector2, WaitForSecondsRealtime, alive } from '../engine';
 import { Equipment } from './Equipment';
 import { Item } from './Item';
 import { ItemHoverDetails } from './ItemHoverDetails';
@@ -25,6 +25,14 @@ export class Inventory extends MonoBehaviour {
   private slot_0_GO: GameObject = null;
   player_money: number = 0;
   private TOUCH_CONTROLS: boolean = true;
+  // Not in the original game: dropping items from the bag, added at the owner's request (7.1) so
+  // that a full bag can always make room. With a slot selected, Delete or Backspace asks once and
+  // then drops the item, one at a time from a stack. Items a quest needs and cannot give again
+  // are kept.
+  private drop_asked_slot: number = -1;
+  private static readonly QUEST_ITEMS: string[] = [
+    'Wolf Meat', 'Mild Spices', 'Bushy Tail', 'Goblin Dynamite', 'Rune of Teleportation', 'The 1 Ring', 'Felvas Necklace',
+  ];
 
   Start(): void {
     this.item_db = this.gameObject.GetComponent(Item_Database);
@@ -32,6 +40,47 @@ export class Inventory extends MonoBehaviour {
   }
 
   Update(): void {
+    if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) {
+      this.drop_selected_item();
+    }
+  }
+
+  private drop_selected_item(): void {
+    if (!this.inventory_canvas.gameObject.activeInHierarchy) {
+      return;
+    }
+    let slot: number = -1;
+    for (let i: number = 0; i < 16; i++) {
+      if (this.item_slots[i] != null && this.is_slot_highlighted(i)) {
+        slot = i;
+      }
+    }
+    if (slot === -1) {
+      this.drop_asked_slot = -1;
+      return;
+    }
+    let item: Item = this.item_slots[slot];
+    if (Inventory.QUEST_ITEMS.includes(item.name)) {
+      this.show_message(item.name + ' is needed for a quest');
+    } else if (this.drop_asked_slot !== slot) {
+      this.drop_asked_slot = slot;
+      this.show_message('Press again to drop ' + item.name);
+    } else {
+      this.remove_slot(slot);
+      this.show_message('Dropped ' + item.name);
+      if (this.item_slots[slot] == null) {
+        this.dehighlight_slot(slot);
+        this.drop_asked_slot = -1;
+        this.inventory_canvas.transform.Find('Slot_' + slot).GetComponent(ItemHoverDetails).Hide_Item_Details();
+      }
+    }
+  }
+
+  // Not in the original (7.1): a line in the place where "You receive ..." shows.
+  show_message(text: string): void {
+    this.equip_text.GetComponent(Text).text = text;
+    this.equip_text.SetActive(true);
+    this.StartCoroutine(this.hide_equip_text());
   }
 
   give_player_item(item_name: string, ignore_display: boolean = false): boolean {
