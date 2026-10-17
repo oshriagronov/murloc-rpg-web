@@ -1,6 +1,9 @@
 # Murloc RPG: Stranglethorn Fever — web version
 
-The game rebuilt in TypeScript on [PixiJS](https://pixijs.com), with no game
+*Murloc RPG: Stranglethorn Fever* is a turn-based role-playing game about Murk
+the murloc, originally made by **un-mediocre** and remade in Unity by
+**TKON Studios (Une)**, known as Tkon games. This repository is that game
+rebuilt in TypeScript on [PixiJS](https://pixijs.com), with no game
 engine underneath. It loads the original scenes, sprites and animations as plain
 JSON and runs the game's logic against a small runtime that mirrors the parts of
 Unity the game was written for.
@@ -9,8 +12,13 @@ Unity the game was written for.
 
 **Status: playable from a new game to the credits.** Every area has been
 played through and compared with the original: the first world, Stranglethorn
-Vale, the Gurubashi Arena, Zul'Gurub and the ending. `ROADMAP.md` has the full
-list of what is done and what is left; `AGENTS.md` explains how to work on it.
+Vale, the Gurubashi Arena, Zul'Gurub and the ending. The original's bugs have
+been fixed, and a few things it did not have were added: keyboard shortcuts
+for the icon bar (I, K, C, O), dropping items from the bag, Take All in the
+loot window, deleting saves, and a quest tracker with NPC names and an arrow
+that points the way. Each addition is marked in the code as not being in the
+original. `ROADMAP.md` has the full list of what is done and what is left;
+`AGENTS.md` explains how to work on it.
 
 ## Running it
 
@@ -104,14 +112,41 @@ Chrome, visits every scene and fails on any console error.
   Unity's particle system.
 - Checked in Chrome and Safari on a computer. Firefox, the intro video in
   Safari, and real phones have not been tried.
-- The original game's own bugs are reproduced for now. They are listed in
-  `ROADMAP.md` and are being fixed one at a time (Phase 7).
+- The original game's own bugs are fixed (`ROADMAP.md`, Phase 7), so this
+  version plays slightly differently from the original in those places. Each
+  bug and its fix are listed under "Original bugs kept on purpose". Hakkar's
+  quiet death was left as it is on purpose.
 
-## Credits and licence
+## Credits
 
-*Murloc RPG: Stranglethorn Fever* was made by **Tkon games**. This web version
-was written by Oshri Agronov, from the original game.
+*Murloc RPG: Stranglethorn Fever* belongs to the people who made it. These
+credits are the ones the game itself shows at the end:
 
-The code is under the MIT licence (`LICENSE`). The game's art, sound, music,
-video, fonts and text in `public/` are not: they belong to their owners and are
-included here with permission.
+| | |
+|---|---|
+| Original developer | un-mediocre |
+| Director | un-mediocre |
+| Remake developer | TKON Studios (Une) |
+| Models | WoW Model Viewer |
+| Sounds | Wowhead |
+| Made in | Unity |
+| TKON guild | Sirath, Shazz (EU) |
+| Murloc Reddit | [r/MurlocRPG](https://www.reddit.com/r/MurlocRPG/) |
+| Assets and other sound effects | Blizzard Entertainment |
+
+The cast: Murk (the main player), Ketchin, Lekon, Fisherman Kaggle, Chief
+Brakil, Gottum, the Murloc Guards, Krakho and the bad guy.
+
+Murlocs, Stranglethorn Vale, Zul'Gurub and the rest of the world are from
+Blizzard Entertainment's *World of Warcraft*. This is a fan game, not made or
+endorsed by Blizzard.
+
+This web version was written by Oshri Agronov, from the Unity game's own
+scenes and scripts, so that it can be played in a browser without
+installing anything.
+
+## Licence
+
+The code in this repository is under the MIT licence (`LICENSE`). The game's
+art, sound, music, video, fonts and text in `public/` are not: they belong to
+their owners (see "Credits") and are included here with permission.
