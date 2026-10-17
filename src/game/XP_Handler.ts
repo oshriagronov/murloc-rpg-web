@@ -79,6 +79,9 @@ export class XP_Handler extends MonoBehaviour {
     // Fixed (7.1): the original used 200 * 1.45^(level - 1) here, not Add_xp's formula, so the
     // number changed at every door and overflowed an int from level 45. The owner chose Add_xp's.
     this.xp_to_level = level * ((level + 1) * 100);
+    // Fixed (7.1): the original left the bar's text as the scene has it ("0/200") until experience
+    // moved the bar, so a character loaded with none showed level 1's number.
+    this.xp_text.GetComponent(Text).text = '0/' + floatString(this.xp_to_level);
   }
 
   get_xp_to_level(): number {

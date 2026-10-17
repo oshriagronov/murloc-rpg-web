@@ -34,7 +34,7 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`), and GitHub runs both on every push (6.3). Phase 6 is
 finished. Phase 7 (fixing the original's
-bugs): the list is worked through (7.1): 27 bugs fixed, and Hakkar's
+bugs): the list is worked through (7.1): 28 bugs fixed, and Hakkar's
 quiet death left as it is by the owner's choice. New bugs found later go
 on the list and are fixed the same way.
 
@@ -898,7 +898,7 @@ reproduced as it is.
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
       (Done 2026-10-17: every bug on the list is fixed, or, for Hakkar,
-      left as it is by the owner's choice.) Fixed, 27 of 28: the monsters of a
+      left as it is by the owner's choice.) Fixed, 28 of 29: the monsters of a
       save loaded in a monster zone; the shield test in
       `Buff.take_shield_damage`; the stats of a loaded character; the win
       box's experience; the dialogue answer remembered for good; the mine
@@ -913,7 +913,8 @@ reproduced as it is.
       Power Word: Shield bugs found on the way; Jeklok, as the owner chose;
       the two experience formulas and the level 45 overflow, as the owner
       chose; the corpse's slots keeping their items after the win box closes;
-      the loot left on a corpse, as the owner chose.
+      the loot left on a corpse, as the owner chose; the experience bar's
+      "0/200" after a door.
 
 ### Additions the original does not have
 
@@ -1182,6 +1183,14 @@ These exist in the original game and are reproduced until fixed under 7.1
   returned 704 and a level 10 player went from 480 to 0 in one cast; after,
   it returned 0 three times, the player stayed at 480 and Beardon healed
   back to full each time. Console clean.
+- **Fixed 2026-10-17.** Found 2026-10-17: after a save is loaded or a door
+  is gone through with no experience towards the next level, the
+  experience bar's text says "0/200", the scene's own text, whatever the
+  level: `XP_Handler` writes it only while the bar moves. Now
+  `set_player_level` writes "0/<needed>" as the bar starts again from
+  empty. Seen before the fix with a level 5 character at 0 in Stranglethorn
+  Vale ("0/200"); after it, "0/3000" there and back in the first world.
+  Console clean. The Unity build was not checked; the C# is the same.
 - **Fixed 2026-10-17.** Found 2026-10-17: closing a win box clears the
   pictures of the corpse's slots but not the items behind them
   (`CorpseInventory.clear_inv`). When the next corpse has fewer items, a
