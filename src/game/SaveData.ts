@@ -9,6 +9,7 @@ const SaveFiles = {
     try { return construct<GameData>(GameData, JSON.parse(text)); } catch { return null; }
   },
   Write(path: string, data: GameData) { localStorage.setItem(path, JSON.stringify(data)); },
+  Delete(path: string) { localStorage.removeItem(path); },
 };
 
 /** State that survives scene changes, and the three save slots. */
@@ -55,6 +56,11 @@ export class SaveData {
       SaveData.load_game_slot = 3;
     }
     return result;
+  }
+
+  /** Not in the original: empties a slot (the save and load menus' Delete). */
+  static DeleteSlot(slot: number): void {
+    SaveFiles.Delete(SaveData.slot_number_to_savename(slot));
   }
 
   /** Reads a slot without marking it as the loaded game (the start menu lists all three). */

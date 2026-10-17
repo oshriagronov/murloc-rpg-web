@@ -1,6 +1,8 @@
-import { Application, AudioSource, Debug, GameObject, MonoBehaviour, Routine, Time, VideoPlayer, VideoSource } from '../engine';
+import { Application, AudioSource, Debug, GameObject, MonoBehaviour, Routine, Time, VideoPlayer, VideoSource, lazyClass } from '../engine';
+import type { on_click_newGame } from './on_click_newGame';
 import { GameData } from './GameData';
 import { SaveData } from './SaveData';
+import { SaveLoadMenu } from './SaveLoadMenu';
 import { SoundManager } from './SoundManager';
 
 /** Runs the start menu: plays the intro video once, then shows the menu and the save slots. */
@@ -88,13 +90,26 @@ export class IntroVideoPlayer extends MonoBehaviour {
     if (flag) {
       this.load_game_button_empty.SetActive(false);
       this.load_game_button_full.SetActive(true);
+    } else {
+      // Not in the original: after the last save is deleted, Load goes back to its empty look.
+      this.load_game_button_empty.SetActive(true);
+      this.load_game_button_full.SetActive(false);
     }
   }
 
+  // Changed from the original at the owner's request: the slots open in a copy of the settings
+  // window (SaveLoadMenu), with class pictures, Delete and Back, instead of the grey boxes.
   open_load_games() {
     this.load_game_slots.SetActive(true);
     this.check_save_files();
     this.gameObject.GetComponent(SoundManager).PlayClickNoise();
+    SaveLoadMenu.for_start_menu(
+      this.gameObject,
+      this.load_game_slots,
+      // As the original slot buttons did: load_game on this same object, the one with the loading screen.
+      (slot) => this.gameObject.GetComponent(lazyClass<typeof on_click_newGame>('on_click_newGame')).load_game(slot + 1),
+      () => this.check_save_files(),
+    ).show('load');
   }
 
   get_slot_save_data(slot: number): GameData | null {

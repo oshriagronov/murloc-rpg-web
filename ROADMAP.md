@@ -1052,6 +1052,25 @@ original.
       the window return to the settings buttons. Console clean. The start
       menu's own load list is unchanged.)
 
+- [x] **A.9 Deleting saves, and the start menu's Load in the new window.**
+      Asked for by the owner (2026-10-17). (2026-10-17: every filled slot
+      in the Load and Save lists has a red Delete under its Load or Save
+      button; it asks "Delete this save?" with what will be lost, Yes and
+      No, and says "Slot N deleted." (`SaveData.DeleteSlot`). The start
+      menu's Load now opens the same list in a copy of the settings
+      window, drawn from its pictures (`Infopage_tabs`, the close button,
+      the red buttons) over the menu on the topmost sorting layer, with
+      Back and the close button returning to the menu; loading goes
+      through `on_click_newGame.load_game` on the IntroVideo object as the
+      original slot buttons did. After the last save is deleted the menu's
+      Load goes back to its empty look. `SaveLoadMenu` now serves both
+      places. Tried with mouse clicks: in the start menu, delete slot 3
+      with No (kept) then Yes (gone), close, reopen, Back, reopen, load
+      slot 2, which opened in Stranglethorn Vale; in a game, Save Game,
+      delete slot 3. Console clean. In the start menu the window's two tab
+      shapes at the bottom are blank: they are part of the picture and the
+      menu has no Controls page.)
+
 ## Original bugs kept on purpose
 
 These exist in the original game and are reproduced until fixed under 7.1
