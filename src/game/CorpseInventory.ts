@@ -52,6 +52,9 @@ export class CorpseInventory extends MonoBehaviour {
 
   clear_inv(): void {
     for (let i: number = 0; i < 4; i++) {
+      // Fixed (7.1): the original cleared only the pictures, so a slot that looked empty still held
+      // the last corpse's item, and clicking it gave that item again.
+      this.item_slots[i] = null;
       let n: string = 'Slot_' + i;
       let obj: GameObject = this.inventory_canvas.transform.Find(n).gameObject;
       obj.GetComponent(Image).sprite = null;
