@@ -6,7 +6,7 @@ the date and how you verified it, and add anything new you find.
 
 ## Status
 
-*Last updated 2026-10-14.*
+*Last updated 2026-10-17.*
 
 Phase 1 is finished: the first world has been played from a new game to its
 ending portal, side content included, and the goblin teleporter to
@@ -34,9 +34,10 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`), and GitHub runs both on every push (6.3). Phase 6 is
 finished. Phase 7 (fixing the original's
-bugs): the list is worked through (7.1): 28 bugs fixed, and Hakkar's
-quiet death left as it is by the owner's choice. New bugs found later go
-on the list and are fixed the same way.
+bugs) is finished: the list is worked through (7.1): 28 bugs fixed, and
+Hakkar's quiet death left as it is by the owner's choice; buttons now swap
+sprites for their states (7.2). New bugs found later go on the list and are
+fixed the same way.
 
 ## Done
 
@@ -916,13 +917,29 @@ reproduced as it is.
       the loot left on a corpse, as the owner chose; the experience bar's
       "0/200" after a door.
 
-- [ ] **7.2 Button sprite swap.** A button whose transition is a sprite swap
+- [x] **7.2 Button sprite swap.** A button whose transition is a sprite swap
       (Unity's transition 2, as the win box's Continue button has) shows no
       change when it is disabled, hovered or pressed: `Selectable` only
       handles colour tints. Found 2026-10-17 with the bag's Drop button
       (A.5), which fades itself instead. Check which of the original's
       buttons use a sprite swap and draw their highlighted, pressed and
       disabled sprites.
+      (2026-10-17: in the scene data only the win box's Continue button uses
+      a sprite swap, once per world scene: `button_pressed` when pressed,
+      `grey_button` when disabled, nothing for highlighted. `Image` now has
+      Unity's separate `overrideSprite`, drawn instead of `sprite` while set,
+      and `Selectable` reads `m_SpriteState` and swaps it per state; a
+      swapped-in sprite still loading leaves the normal one showing. Two
+      tests in `tests/selectable.test.ts`. In the browser after a Wolf Cub
+      win: holding the mouse on Continue showed the darker pressed sprite,
+      and letting go elsewhere put the red one back without a click. The
+      bag's Drop (A.5) and the loot window's Take All (A.6) are copies of
+      that button, so their fade-by-hand was removed: Drop shows the grey
+      sprite until an item is selected and Take All turns grey once the
+      corpse is empty, labels at full strength. Console clean, smoke test
+      passed. Not compared with the Unity build, which never disables
+      Continue and cannot easily be driven to a win box; the sprites are the
+      original's own.)
 
 ### Additions the original does not have
 

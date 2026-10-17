@@ -50,12 +50,8 @@ export class Inventory extends MonoBehaviour {
     if (alive(this.drop_button)) {
       let slot: number = this.selected_slot();
       if (this.drop_button.interactable !== (slot !== -1)) {
+        // The copied button swaps to its grey sprite while there is nothing to drop.
         this.drop_button.interactable = slot !== -1;
-        // The copied button changes sprites for its states, which the engine does not draw, so
-        // fade it while there is nothing to drop.
-        let alpha: number = slot !== -1 ? 1 : 0.45;
-        this.drop_button.GetComponent(Image).color = new Color(1, 1, 1, alpha);
-        this.drop_label.color = new Color(1, 1, 1, alpha);
       }
     }
   }

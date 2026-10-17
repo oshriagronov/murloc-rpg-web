@@ -32,11 +32,8 @@ export class CorpseInventory extends MonoBehaviour {
     if (alive(this.take_all_button)) {
       let any: boolean = this.item_slots.some((item) => item != null);
       if (this.take_all_button.interactable !== any) {
+        // The copied button swaps to its grey sprite while the corpse is empty.
         this.take_all_button.interactable = any;
-        // The engine does not draw the copied button's state sprites, so fade it by hand.
-        let alpha: number = any ? 1 : 0.45;
-        this.take_all_button.GetComponent(Image).color = new Color(1, 1, 1, alpha);
-        this.take_all_label.color = new Color(1, 1, 1, alpha);
       }
     }
   }

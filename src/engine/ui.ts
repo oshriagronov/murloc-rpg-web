@@ -325,6 +325,7 @@ export enum ImageType { Simple, Sliced, Tiled, Filled }
 
 export class Image extends Graphic {
   private _sprite: Sprite | null = null;
+  private _overrideSprite: Sprite | null = null;
   private builtinSprite = false;
   type = ImageType.Simple;
   preserveAspect = false;
@@ -337,8 +338,10 @@ export class Image extends Graphic {
 
   get sprite() { return this._sprite; }
   set sprite(s: Sprite | null) { this._sprite = s && s instanceof Sprite ? s : null; if (s) this.builtinSprite = false; }
-  get overrideSprite() { return this._sprite; }
-  set overrideSprite(s: Sprite | null) { this.sprite = s; }
+  /** Drawn instead of `sprite` while set, as a button's sprite swap does; null falls back to `sprite`. */
+  get overrideSprite() { return this.activeSprite; }
+  set overrideSprite(s: Sprite | null) { this._overrideSprite = s && s instanceof Sprite ? s : null; }
+  private get activeSprite() { return this._overrideSprite ?? this._sprite; }
   get fillAmount() { return this._fillAmount; }
   set fillAmount(v: number) { this._fillAmount = Math.min(1, Math.max(0, Number(v) || 0)); }
 
@@ -357,10 +360,11 @@ export class Image extends Graphic {
 
   /** Resizes the rect to the sprite's own size, as Unity's "Set Native Size" does. */
   SetNativeSize() {
-    if (!this._sprite) return;
+    const s = this.activeSprite;
+    if (!s) return;
     const rt = this.rectTransform;
     rt.anchorMax = rt.anchorMin;
-    rt.sizeDelta = new Vector2(this._sprite.width / (this._sprite.pixelsPerUnit / 100), this._sprite.height / (this._sprite.pixelsPerUnit / 100));
+    rt.sizeDelta = new Vector2(s.width / (s.pixelsPerUnit / 100), s.height / (s.pixelsPerUnit / 100));
   }
 
   private ensureView(kind: string, make: () => Container, layer: Container) {
@@ -380,9 +384,12 @@ export class Image extends Graphic {
     const c = this.finalColor(ctx);
     let x = r.x, y = r.y, w = r.width, h = r.height;
 
+    // A swapped-in sprite whose image is still loading leaves the image's own sprite showing meanwhile.
+    let s = this.activeSprite;
+    if (s && s !== this._sprite && !s.pixi) s = this._sprite;
     let tex: Texture;
-    if (this._sprite) {
-      const t = this._sprite.pixi;
+    if (s) {
+      const t = s.pixi;
       if (!t) { if (this.view) this.view.visible = false; return false; }
       tex = t;
     } else {
@@ -390,7 +397,6 @@ export class Image extends Graphic {
       tex = Texture.WHITE;
     }
 
-    const s = this._sprite;
     const hasBorder = !!s && (s.border.x > 0 || s.border.y > 0 || s.border.z > 0 || s.border.w > 0);
     if (s && this.type === ImageType.Sliced && hasBorder) {
       const v = this.ensureView('slice', () => new NineSliceSprite({ texture: tex, leftWidth: s.border.x, bottomHeight: s.border.y, rightWidth: s.border.z, topHeight: s.border.w }), ctx.layer) as NineSliceSprite;
@@ -747,6 +753,7 @@ export class Selectable extends Behaviour {
   targetGraphic: Graphic | null = null;
   transition = 1;
   colors = { normalColor: Color.white, highlightedColor: Color.white, pressedColor: Color.white, disabledColor: new Color(0.78, 0.78, 0.78, 0.5) };
+  spriteState: { highlightedSprite: Sprite | null; pressedSprite: Sprite | null; disabledSprite: Sprite | null } = { highlightedSprite: null, pressedSprite: null, disabledSprite: null };
   protected hovered = false;
   protected pressed = false;
 
@@ -760,6 +767,8 @@ export class Selectable extends Behaviour {
     this.transition = Number(data.m_Transition ?? 1);
     const c = data.m_Colors;
     if (c) this.colors = { normalColor: color(c.m_NormalColor), highlightedColor: color(c.m_HighlightedColor), pressedColor: color(c.m_PressedColor), disabledColor: color(c.m_DisabledColor) };
+    const ss = data.m_SpriteState, sprite = (r: any) => { const v = r ? resolve(r) : null; return v instanceof Sprite ? v : null; };
+    if (ss) this.spriteState = { highlightedSprite: sprite(ss.m_HighlightedSprite), pressedSprite: sprite(ss.m_PressedSprite), disabledSprite: sprite(ss.m_DisabledSprite) };
   }
   IsInteractable() {
     if (!this._interactable) return false;
@@ -769,10 +778,17 @@ export class Selectable extends Behaviour {
     }
     return true;
   }
+  /** Unity's transitions: 1 tints the target graphic, 2 swaps its sprite (a null sprite shows the image's own). */
   protected updateTint() {
-    if (this.transition !== 1 || !this.targetGraphic) return;
-    const c = this.colors;
-    this.targetGraphic._tint = !this.IsInteractable() ? c.disabledColor : this.pressed ? c.pressedColor : this.hovered ? c.highlightedColor : c.normalColor;
+    if (!this.targetGraphic) return;
+    const state = !this.IsInteractable() ? 'disabled' : this.pressed ? 'pressed' : this.hovered ? 'highlighted' : 'normal';
+    if (this.transition === 1) {
+      const c = this.colors;
+      this.targetGraphic._tint = state === 'disabled' ? c.disabledColor : state === 'pressed' ? c.pressedColor : state === 'highlighted' ? c.highlightedColor : c.normalColor;
+    } else if (this.transition === 2 && this.targetGraphic instanceof Image) {
+      const ss = this.spriteState;
+      this.targetGraphic.overrideSprite = state === 'disabled' ? ss.disabledSprite : state === 'pressed' ? ss.pressedSprite : state === 'highlighted' ? ss.highlightedSprite : null;
+    }
   }
   Start() { this.updateTint(); }
   OnPointerEnter(_e: PointerEventData) { this.hovered = true; this.updateTint(); }
