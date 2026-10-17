@@ -338,7 +338,7 @@ export class Quest_Tracker extends MonoBehaviour {
   }
 
   private to_nearest(name: string, where: (p: Vector3) => boolean, label: string): Way {
-    return this.to_nearest_of([...Engine.objects].filter((o) => o.name === name && where(o.transform.position)), label);
+    return this.to_nearest_of([...Engine.objects].filter((o) => o.name === name && o.activeSelf && where(o.transform.position)), label);
   }
 
   private to_nearest_of(list: GameObject[], label: string): Way {
@@ -368,7 +368,7 @@ export class Quest_Tracker extends MonoBehaviour {
   private find_object(name: string): GameObject {
     let found: GameObject = null;
     for (const o of Engine.objects) {
-      if (o.name !== name || o.destroyed) continue;
+      if (o.name !== name || o.destroyed || !o.activeSelf) continue;
       if (!found || (o.GetComponent(Npc_Dialouge) && !found.GetComponent(Npc_Dialouge)) || (o.activeInHierarchy && !found.activeInHierarchy)) {
         found = o;
       }
@@ -378,7 +378,9 @@ export class Quest_Tracker extends MonoBehaviour {
 
   private objects_with(script: string): GameObject[] {
     let cls = lazyClass<any>(script);
-    return [...Engine.objects].filter((o) => !o.destroyed && o.GetComponent(cls));
+    // Only objects switched on themselves (their zone may be hidden): Stranglethorn's first
+    // Zul'Gurub portal is switched off in the scene; the way in is the one at the far end.
+    return [...Engine.objects].filter((o) => !o.destroyed && o.activeSelf && o.GetComponent(cls));
   }
 
   // ---- names over NPCs
@@ -487,6 +489,7 @@ export class Quest_Tracker extends MonoBehaviour {
       this.arrow.text = '▼';
       this.place(this.arrow.rectTransform, p.x - 15, y + bob, 30, 20);
       this.arrow_name.text = way.name;
+      this.arrow_name.alignment = TextAnchor.MiddleCenter;
       this.place(this.arrow_name.rectTransform, p.x - 70, y - 13 + bob, 140, 13);
       return;
     }

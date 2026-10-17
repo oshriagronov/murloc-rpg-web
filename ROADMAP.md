@@ -1126,6 +1126,13 @@ original.
       height, below the panel. Tried in headless Chrome: the arrow stands
       over the portal from the start of Stranglethorn and points left from
       zone 3. Console clean.)
+      (2026-10-17, reported by the owner: the arrow then stood where there
+      is no portal. Stranglethorn's first Zul'Gurub portal, at the start of
+      the Vale, is switched off in the scene; the way in is the gate at the
+      far end (zone 7). The guide now only uses objects that are switched
+      on themselves. Tried in headless Chrome: from the start of the Vale it
+      points right, at the gate the arrow stands in its doorway, and Space
+      there loads Zul'Gurub. Console clean.)
 
 ## Original bugs kept on purpose
 
