@@ -1075,6 +1075,20 @@ original.
       of the picture's 512 rows, which end at the window's bottom edge.
       Seen at 1704x960; the X closes it. Console clean.)
 
+- [x] **A.10 Controls as a button, no tabs.** Asked for by the owner
+      (2026-10-17). (2026-10-17: in the settings window a red Controls
+      button sits under Save Game (a copy of it, 115 units below as Load
+      and Save are) and Quit Game moved down to keep a gap. The Controls
+      page has the title "Controls" and a Back button in the bottom band.
+      The General and Controls tabs are hidden, and the window's picture
+      (`Char`, Infopage_tabs) is the top 470 of its 512 rows, cut at the
+      window's bottom edge, with the pivot moved so it stays in place;
+      the start menu's window uses the same cut picture. `SaveLoadMenu`
+      has a "controls" mode; `ShowHideInv.open_control_canvas` and
+      `open_save_canvas` go through it. Tried with mouse clicks in the
+      first world: Controls opened the page, Back returned. Pictures at
+      1704x960. Console clean.)
+
 ## Original bugs kept on purpose
 
 These exist in the original game and are reproduced until fixed under 7.1

@@ -1,4 +1,4 @@
-import { AssetDb, Button, Canvas, Color, Font, GameObject, Image, Instantiate, MonoBehaviour, RectTransform, Sprite, Text, TextAnchor, Transform, UObject, Vector2, Vector3, alive } from '../engine';
+import { AssetDb, Button, Canvas, Color, Font, GameObject, Image, Instantiate, MonoBehaviour, RectTransform, Sprite, SpriteRenderer, Text, TextAnchor, Transform, UObject, UnityEvent, Vector2, Vector3, alive } from '../engine';
 import { Character } from './Character';
 import { GameData } from './GameData';
 import { SaveData } from './SaveData';
@@ -15,7 +15,7 @@ import { SoundManager } from './SoundManager';
 // The pieces are copies of an image and a text already in the scene, re-dressed. Everything is
 // placed in screen pixels of the 852 x 480 game: the panel is scaled so one unit is one pixel.
 
-type Mode = 'settings' | 'load' | 'save';
+type Mode = 'settings' | 'load' | 'save' | 'controls';
 
 const GOLD = new Color(1, 0.82, 0, 1);
 const WHITE = new Color(1, 1, 1, 1);
@@ -131,6 +131,39 @@ export class SaveLoadMenu extends MonoBehaviour {
     }
     // A copy of the Load Game button's holder, whose canvas draws above the window's art.
     let panel: Transform = this.make_panel(general.Find('Load_Button').gameObject, general);
+    // Asked for by the owner: no General and Controls tabs under the window. Controls is a button
+    // under Save Game instead, and its page has a Back button; the window's picture is cut off
+    // above the tabs' shapes.
+    let controls: Transform = this.transform.Find('Controls');
+    this.transform.Find('General_Button/Button')?.gameObject.SetActive(false);
+    this.transform.Find('Controls_Button/Button')?.gameObject.SetActive(false);
+    let art: SpriteRenderer = this.transform.Find('Char')?.GetComponent(SpriteRenderer);
+    if (alive(art) && art.sprite?.guid === WINDOW_SPRITE) {
+      art.sprite = SaveLoadMenu.window_without_tabs();
+    }
+    // The buttons are copies of Save Game (holder, button and label), 115 units apart as Load and
+    // Save are; Quit moves down to keep a gap under Controls.
+    const copy_button = (parent: Transform, name: string, label: string, y: number, on_click: () => void): void => {
+      let holder: GameObject = Instantiate(general.Find('Save_Button').gameObject, parent);
+      holder.name = name;
+      let inner: Transform = holder.transform.Find('Button');
+      let rect: RectTransform = inner.GetComponent(RectTransform);
+      rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, y);
+      inner.GetChild(0).GetComponent(Text).text = label;
+      let button: Button = inner.GetComponent(Button);
+      button.onClick = new UnityEvent();
+      button.onClick.AddListener(() => { this.click_noise(); on_click(); });
+      holder.SetActive(true);
+    };
+    copy_button(general, 'Controls_Menu_Button', 'Controls', -50, () => this.show('controls'));
+    let quit: RectTransform = general.Find('Quit_Button/Button')?.GetComponent(RectTransform);
+    if (alive(quit)) {
+      quit.anchoredPosition = new Vector2(quit.anchoredPosition.x, -185);
+    }
+    if (alive(controls)) {
+      // In the window's bottom band, where the slot lists' Back is.
+      copy_button(controls, 'Controls_Back_Button', 'Back', -318.5, () => this.show('settings'));
+    }
     const original_slot = (slot: number, load: boolean): GameObject => {
       const word = ['One', 'Two', 'Three'][slot];
       return this.transform.Find(load
@@ -144,10 +177,12 @@ export class SaveLoadMenu extends MonoBehaviour {
       title_font: title.font,
       title,
       set_mode: (mode) => {
-        for (const n of ['Load_Button', 'Save_Button', 'Quit_Button']) {
+        for (const n of ['Load_Button', 'Save_Button', 'Quit_Button', 'Controls_Menu_Button']) {
           general.Find(n)?.gameObject.SetActive(mode === 'settings');
         }
-        title.text = mode === 'load' ? 'Load Game' : mode === 'save' ? 'Save Game' : 'Game Settings';
+        general.gameObject.SetActive(mode !== 'controls');
+        controls?.gameObject.SetActive(mode === 'controls');
+        title.text = mode === 'load' ? 'Load Game' : mode === 'save' ? 'Save Game' : mode === 'controls' ? 'Controls' : 'Game Settings';
       },
       load: (slot) => {
         let original: GameObject = original_slot(slot, true);
@@ -204,11 +239,10 @@ export class SaveLoadMenu extends MonoBehaviour {
     // The window's picture without the General and Controls tabs under it (the menu has no pages
     // for them): its top 470 of 512 rows, which end at the window's bottom edge. Drawn at the size
     // the settings window has, 364.55 pixels for the full 512.
-    const full: Sprite = AssetDb.sprites.get(WINDOW_SPRITE);
-    const rows = 470, scale = 364.55 / full.height;
-    let window: Image = this.plain_rect('Window', 243.73, 57.73, full.width * scale, rows * scale, WHITE);
-    window.sprite = new Sprite('window-without-tabs', full.name, full.texture, full.frameX, full.frameY, full.frameWidth, rows - full.offsetY,
-      full.width, rows, full.offsetX, full.offsetY, new Vector2(0.5, 0.5), full.pixelsPerUnit, full.border);
+    let window_sprite: Sprite = SaveLoadMenu.window_without_tabs();
+    const scale = 364.55 / 512;
+    let window: Image = this.plain_rect('Window', 243.73, 57.73, window_sprite.width * scale, window_sprite.height * scale, WHITE);
+    window.sprite = window_sprite;
     window.raycastTarget = true;
     host.title = this.text('Title', 'Load Game', 257.5, 61, 315, 18, 13, WHITE, true, TextAnchor.MiddleCenter);
     let close: Button = this.button('Close', '', 570, 54, 32, 33, 1, () => this.back());
@@ -287,7 +321,7 @@ export class SaveLoadMenu extends MonoBehaviour {
 
   private refresh(): void {
     this.host.set_mode(this.mode);
-    let in_slots: boolean = this.mode !== 'settings';
+    let in_slots: boolean = this.mode === 'load' || this.mode === 'save';
     this.host.panel.gameObject.SetActive(in_slots);
     if (!in_slots) {
       return;
@@ -334,6 +368,19 @@ export class SaveLoadMenu extends MonoBehaviour {
       if (v > top) { top = v; best = c; }
     }
     return best;
+  }
+
+  /**
+   * The settings window's picture without the General and Controls tabs under it: its top 470 of
+   * 512 rows, which end at the window's bottom edge. The pivot stays where the full picture's
+   * centre was, so a SpriteRenderer draws the window in the same place.
+   */
+  private static window_without_tabs(): Sprite {
+    const full: Sprite = AssetDb.sprites.get(WINDOW_SPRITE);
+    const rows = 470;
+    const pivot_from_top = full.height * (1 - full.pivotFraction.y);
+    return new Sprite('window-without-tabs', full.name, full.texture, full.frameX, full.frameY, full.frameWidth, rows - full.offsetY,
+      full.width, rows, full.offsetX, full.offsetY, new Vector2(full.pivotFraction.x, (rows - pivot_from_top) / rows), full.pixelsPerUnit, full.border);
   }
 
   private static font(name: string): Font {

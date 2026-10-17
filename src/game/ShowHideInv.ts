@@ -271,15 +271,13 @@ export class ShowHideInv extends MonoBehaviour {
     }
   }
 
+  // The General and Controls tabs are hidden now (SaveLoadMenu); these still switch the pages.
   open_control_canvas(): void {
-    SaveLoadMenu.of(this.settings_canvas.gameObject).show('settings');
-    this.controll_display.gameObject.SetActive(true);
-    this.settings_buttons.gameObject.SetActive(false);
+    SaveLoadMenu.of(this.settings_canvas.gameObject).show('controls');
   }
 
   open_save_canvas(): void {
-    this.controll_display.gameObject.SetActive(false);
-    this.settings_buttons.gameObject.SetActive(true);
+    SaveLoadMenu.of(this.settings_canvas.gameObject).show('settings');
   }
 
   close_merchant_canvas(allow_player_move: boolean = true): void {
