@@ -64,6 +64,9 @@ export class Battle_Control extends MonoBehaviour {
   mob_fleeing: boolean = false;
 
   Start(): void {
+    // Fixed (7.1): this label's best fit could not go below size 35, which cut "Adrenaline
+    // Rush" down to "Adrenaline". It may shrink now, as the Bloodrage and Pyroblast labels do.
+    this.BattleUICanvas.transform.Find('SkillsMenu/AdrenalineRush_Button/Attack_button_text').GetComponent(Text).resizeTextMinSize = 3;
   }
 
   Update(): void {
@@ -211,8 +214,11 @@ export class Battle_Control extends MonoBehaviour {
       this.play_damage_display_player(damage);
     }
     if (this.gameObject.GetComponent(Buff_Handler).check_for_player_buff(7)) {
-      if (this.gameObject.GetComponent(Buff_Handler).damage_shield_buff(damage) > 0) {
-        this.gameObject.GetComponent(Battle_Health_Control).Take_Damage(damage);
+      // Fixed (7.1): when the hit broke the shield, the original took the whole hit off the
+      // player, not what the shield let through, and ignored whether it killed.
+      let damage_through: number = this.gameObject.GetComponent(Buff_Handler).damage_shield_buff(damage);
+      if (damage_through > 0) {
+        this.is_player_dead = this.gameObject.GetComponent(Battle_Health_Control).Take_Damage(damage_through);
       }
     } else {
       this.is_player_dead = this.gameObject.GetComponent(Battle_Health_Control).Take_Damage(damage);
@@ -730,7 +736,9 @@ export class Battle_Control extends MonoBehaviour {
   private update_battle_over_info(): void {
     GameObject.Find('Level_Info_Text').gameObject.GetComponent(Text).text = String(this.gameObject.GetComponent(XP_Handler).get_player_level());
     let mob_level: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_level;
-    let num: number = this.gameObject.GetComponent(CorpseInventory).get_dropped_xp(mob_level) * mob_level;
+    // Fixed (7.1): the original multiplied by mob_level a second time, so the box showed the
+    // experience given times the monster's level. It now shows what mob_dead gave.
+    let num: number = this.gameObject.GetComponent(CorpseInventory).get_dropped_xp(mob_level);
     GameObject.Find('XP_Info_Text').gameObject.GetComponent(Text).text = String(num);
     GameObject.Find('XP_To_Level_Info_Text').gameObject.GetComponent(Text).text = floatString(this.gameObject.GetComponent(XP_Handler).get_xp_to_level());
     GameObject.Find('Talent_Points_Info_Text').gameObject.GetComponent(Text).text = String(this.gameObject.GetComponent(Talent_Manager).talent_points);

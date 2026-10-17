@@ -21,6 +21,9 @@ export class SaveData {
   static intro_done: boolean = false;
   static saved_game_data: GameData = null;
   static loading_dead_player: boolean = false;
+  // Not in the original (fixes its bug, 7.1): set when a save from the start menu is handed
+  // from the first world to the area it was made in, so that the area uses its position.
+  static loading_saved_position: boolean = false;
 
   static SaveGame(player: GameObject, slot: GameObject): void {
     let text: string = SaveData.get_save_name(slot);
@@ -73,6 +76,9 @@ export class SaveData {
     text('Level').enabled = true;
     text('Level').text = 'Level: ' + gameData.player_level;
     text('Location').enabled = true;
+    // Fixed (7.1): a finished game saved in the first world always loads at Darkmoon Faire
+    // (Character.Load_Game), but the slot named the place it was saved, often Camp Brakil.
+    if (gameData.game_complete && gameData.world_number === 0) location = 'Darkmoon Faire';
     text('Location').text = location;
     text('Fury_Count').enabled = true;
     text('Fury_Count').text = String(SaveData.get_fury_talent_count(gameData));

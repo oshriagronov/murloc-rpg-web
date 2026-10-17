@@ -13,6 +13,9 @@ export class TextOptionController extends MonoBehaviour {
 
   set_mob_using_option(mob: GameObject): void {
     this.mob_using_options = mob;
+    // Fixed (7.1): every question is put through here, so a new question forgets the last
+    // answer. The original never cleared it, and Space at a later question repeated it.
+    mob.GetComponent(Npc_Dialouge).SELECTED_OPTION = -1;
   }
 
   option_selected(SELECTED_OPTION: number): void {

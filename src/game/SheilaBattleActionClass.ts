@@ -17,7 +17,8 @@ export class SheilaBattleActionClass extends MobBattleActionBaseClass {
     let num: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_base_attack_low * mob_level;
     let num2: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_base_attack_high * mob_level;
     let num3: number = 0;
-    num3 = ((Random.RangeInt(0, 1) !== 1) ? num2 : num);
+    // Fixed (7.1): (0, 2); the original's (0, 1) only ever gives 0, so always the high number.
+    num3 = ((Random.RangeInt(0, 2) !== 1) ? num2 : num);
     this.mob_being_battled.GetComponent(Animator).Play('druid_attack_animation', -1, 0);
     let obj: GameObject = Instantiate(Resources.Load('smoke', GameObject));
     let position: Vector3 = this.mob_being_battled.transform.GetChild(0).transform.position;
@@ -34,7 +35,8 @@ export class SheilaBattleActionClass extends MobBattleActionBaseClass {
     let num2: number = this.mob_being_battled.GetComponent(Mob_Meta_Data).mob_base_attack_high * mob_level;
     let num3: number = 0;
     let num4: number = 3 * mob_level;
-    num3 = ((Random.RangeInt(0, 1) !== 1) ? (num2 + num4) : (num + num4));
+    // Fixed (7.1): (0, 2); the original's (0, 1) only ever gives 0, so always the high number.
+    num3 = ((Random.RangeInt(0, 2) !== 1) ? (num2 + num4) : (num + num4));
     this.mob_being_battled.GetComponent(Animator).Play('druid_sweep_animation', -1, 0);
     let obj: GameObject = Instantiate(Resources.Load('smoke', GameObject));
     let position: Vector3 = this.mob_being_battled.transform.GetChild(0).transform.position;

@@ -1,4 +1,4 @@
-import { BoxCollider2D, Canvas, Color, GameObject, MonoBehaviour, SpriteRenderer } from '../engine';
+import { BoxCollider2D, Canvas, Color, GameObject, MonoBehaviour, SpriteRenderer, alive } from '../engine';
 import { Character_Quests } from './Character_Quests';
 
 export class World_Two_Zone_Builder extends MonoBehaviour {
@@ -19,6 +19,19 @@ export class World_Two_Zone_Builder extends MonoBehaviour {
         break;
       case 1:
         this.zone1.gameObject.SetActive(true);
+        // Not in the original (fixes its bug, 7.1): once Jeklok is dead he stays gone.
+        if (GameObject.Find('Murky').gameObject.GetComponent(Character_Quests).felva_quest >= 4) {
+          let jeklok: GameObject = GameObject.Find('W2_NPC_1');
+          if (alive(jeklok)) {
+            jeklok.GetComponent(BoxCollider2D).enabled = false;
+            jeklok.GetComponent(SpriteRenderer).enabled = false;
+            for (const item of jeklok.transform) {
+              if (alive(item.GetComponent(SpriteRenderer))) {
+                item.GetComponent(SpriteRenderer).enabled = false;
+              }
+            }
+          }
+        }
         break;
       case 2:
         this.zone2.gameObject.SetActive(true);
@@ -30,8 +43,9 @@ export class World_Two_Zone_Builder extends MonoBehaviour {
         {
           this.zone4.gameObject.SetActive(true);
           let troll_rescue: number = GameObject.Find('Murky').gameObject.GetComponent(Character_Quests).troll_rescue;
-          let color: Color = new Color(255, 255, 255, 0);
-          let color2: Color = new Color(255, 255, 255, 255);
+          // Fixed (7.1): the original gave (255, 255, 255, ...) where 1 is full; drawn the same.
+          let color: Color = new Color(1, 1, 1, 0);
+          let color2: Color = new Color(1, 1, 1, 1);
           if (troll_rescue === 2) {
             GameObject.Find('Troll_Shop').gameObject.GetComponent(BoxCollider2D).enabled = true;
             GameObject.Find('Troll_Shop').gameObject.GetComponent(SpriteRenderer).color = color2.clone();

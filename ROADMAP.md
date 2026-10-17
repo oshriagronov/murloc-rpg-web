@@ -6,7 +6,7 @@ the date and how you verified it, and add anything new you find.
 
 ## Status
 
-*Last updated 2026-10-13.*
+*Last updated 2026-10-14.*
 
 Phase 1 is finished: the first world has been played from a new game to its
 ending portal, side content included, and the goblin teleporter to
@@ -33,7 +33,9 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (5.6). Phase 6 (keeping it healthy) has begun: the engine has unit tests
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`), and GitHub runs both on every push (6.3). Phase 6 is
-finished.
+finished. Phase 7 (fixing the original's
+bugs) has begun: 23 of the 27 bugs on the list are fixed (7.1, partly
+done); the other four wait for the owner's answers to questions.
 
 ## Done
 
@@ -855,7 +857,10 @@ Compare each with the Unity version side by side.
       (Actions run 38453185603, commit 41eab0f) was green in 75 s, every step
       a success, the smoke test taking 57 s of it. So the runner's own
       Chrome and WebGL without a graphics card do work there. The run's log
-      was not read line by line: the step's exit code is what was checked.)
+      was not read line by line: the step's exit code is what was checked.
+      2026-10-14: the run on the push of branch `claude/eager-hopper-jxh0lw`
+      also passed, in about 70 s:
+      https://github.com/oshriagronov/murloc-rpg-web/actions/runs/38607151746.)
 - [x] **6.4 Stable converter output.** Running the converter twice numbers the
       image pages in a different order (they are numbered as they finish), so
       `assets.json` changes in over a thousand places although nothing really
@@ -863,6 +868,20 @@ Compare each with the Unity version side by side.
       needed the converter run: pages are numbered by file name and sprites
       listed by id. Two runs in a row gave byte-identical JSON, and no image
       file changed.)
+- [x] **6.5 The smoke test's frame check is too tight for slow machines.**
+      "Runs" means more than 20 frames in two seconds. In a cloud container
+      with four cores and software WebGL the game draws 21 to 27 frames
+      there, so about one run in two fails on a random scene, with or without
+      changes (2026-10-14, seen with the code before and after 7.1's first
+      fix). A GitHub runner with SwiftShader (6.3) may be as slow. Check for
+      frames still coming in a way that does not depend on the machine's
+      speed, for example at least a few frames, or a longer wait.
+      (2026-10-14, done ahead of its turn because every Phase 7 item needs a
+      green smoke run and three runs in a row had failed here: a scene now
+      has to draw 20 frames in at least two and at most ten seconds, so a
+      slow machine waits a little longer and a frozen scene still fails. Two
+      full runs in a row passed in this container; a copy asking for an
+      impossible number of frames failed at the first scene after 10.3 s.)
 
 ### Phase 7 — Fix the original's bugs
 
@@ -877,6 +896,23 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
+      Partly done: fixed so far, 23 of 27 (2026-10-15): the monsters of a
+      save loaded in a monster zone; the shield test in
+      `Buff.take_shield_damage`; the stats of a loaded character; the win
+      box's experience; the dialogue answer remembered for good; the mine
+      chest with a full bag; the error when a fight starts beside a
+      shopkeeper; the tooltips during a fight; the battle Items menu's
+      cut-off names; the Skills menu's "Adrenaline Rush"; the camera after
+      dying in Stranglethorn Vale; saves made outside the first world; the
+      troll brothers' colour; the colour of a full slot; monsters always
+      hitting for the top of their range; Beardon's Flash Heal; Mar'li's
+      Drain Life; the tiger's and black wolf's unused moves; Murk in the
+      ending's cut scene; the load menu's name for a finished game; the two
+      Power Word: Shield bugs found on the way; Jeklok, as the owner chose.
+      Blocked: the four left wait for the owner's answers under "Questions
+      for the owner": the loot left on a corpse, Hakkar's death, the two
+      experience formulas and the level 45 overflow that comes from one of
+      them.
 
 ### Additions the original does not have
 
@@ -925,93 +961,276 @@ original.
 These exist in the original game and are reproduced until fixed under 7.1
 (they were kept on purpose until the owner's decision of 2026-10-13).
 
-- Loading a save made inside a monster zone logs an error at start-up: monsters
-  are spawned before their prefab has finished loading
-  (`MobLoader.load_zones`).
-- `Buff.take_shield_damage` tests `sheild_health != -1 || sheild_health != 0`,
-  which is always true.
-- A character loaded from the start menu has strength, stamina, intellect,
-  agility and armour of 0, and so less health and far weaker attacks, until
-  the player opens the bag, character sheet or talent window, or changes
+- **Fixed 2026-10-14.** Loading a save made inside a monster zone logs an
+  error at start-up: monsters are spawned before their prefab has finished
+  loading (`MobLoader.load_zones`). The error also cut `Character.Start`
+  short, and the zone stayed empty. Now `MobLoader` counts the prefab loads
+  it has running and, while any are, waits for them before spawning; a zone
+  change in the meantime cancels the wait. Seen before the fix in two loads of
+  four in the first world's second wolf zone, an error each time the spawn
+  roll came up; after it, six loads with no error, the wolf cub there in four
+  (the roll is one in two) and fought to the end. Walking between zones spawns
+  at once as before, since the prefabs are loaded by then (from the code;
+  not played through here).
+- **Fixed 2026-10-14.** `Buff.take_shield_damage` tests
+  `sheild_health != -1 || sheild_health != 0`, which is always true. In play it
+  made no difference: only Power Word: Shield (buff 7, which always has a
+  value) reaches it, and a shield worn down to 0 is removed at the end of the
+  same turn, before it can be hit again. Now the test says what was meant: a
+  shield that is down (0) or a buff without one (-1) absorbs nothing and the
+  whole hit goes through, which is what the old code gave for 0 as well.
+  Checked against the old code for shields of 0 to 400 and hits of 0 to 500
+  (same result and same shield left in every case), and in a fight with a
+  wolf cub given a 20-point shield: hits of 6 took it to 14, 8 and 2 with no
+  health lost, the fourth broke it and it was gone after that turn, console
+  clean. The two bugs below were found on the way and are still there.
+- **Fixed 2026-10-14.** When a hit breaks Power Word: Shield, the player loses
+  the whole hit, not only what the shield did not absorb:
+  `Battle_Control.play_mob_attack` passes `damage` to `Take_Damage` instead
+  of what `damage_shield_buff` returned. (Fixed with the next one.)
+  (Seen here: a shield with 2 left and a hit of 6, 4 reported through, 6
+  health lost.)
+- **Fixed 2026-10-14.** A hit that breaks Power Word: Shield cannot kill. The
+  same branch of `play_mob_attack` ignores what `Take_Damage` returns and never sets
+  `is_player_dead`, so a player brought to 0 health that way gets another turn
+  at 0 and dies only at the monster's next hit (or wins, if their attack kills
+  first). (Seen here: 3 health, a shield with 2 left, a hit of 6: 0/85 and the
+  fight went on.) Both are one line of `play_mob_attack`, fixed together:
+  the player now loses what `damage_shield_buff` lets through, and that hit
+  can kill. Checked against a wolf cub hitting a fixed 6 (9 on a critical):
+  before, a 9 against a 5-point shield cost 9 health and 3 health with a
+  2-point shield left the player at 0/85 for another turn; after, a 6
+  against a 2-point shield cost 4, and the second case ended the fight at
+  once with the player dead. Console clean.
+- **Fixed 2026-10-14.** A character loaded from the start menu has strength,
+  stamina, intellect, agility and armour of 0, and so less health and far
+  weaker attacks, until the player opens the bag, character sheet or talent window, or changes
   equipment. `Character.Load_Game` does not call `update_stats`. (The health
   number was checked in the Unity build; the weaker attacks follow from the
   same code and were seen here.) The same happens on returning from
   Stranglethorn Vale to the first world: that branch of
   `Character.Resume_Game` does not call `update_stats` either.
-- The win box shows the experience gained multiplied by the monster's level
-  (a level 8 crab shows 6400 and gives 800).
+  Now `Load_Game` and `Load_Game_Character_Data` (which the way back from
+  Stranglethorn Vale uses) call `update_stats` as soon as the base stats are
+  read, before the player is healed to full. Seen before the fix: a level 5
+  warrior saved with strength 10, stamina 9, intellect 9, agility 12 and
+  armour 1 loaded with all five at 0 and 100 energy instead of 106, and the
+  same again after Stranglethorn Vale and back. After it: the same numbers
+  as before saving at all three points; with the save's stamina set to 20,
+  350/350 health (85 + 110 + the level bonus) on loading, in Stranglethorn
+  Vale and back. Console clean. The attacks were not measured; they use the
+  same strength.
+- **Fixed 2026-10-14.** The win box shows the experience gained multiplied by
+  the monster's level (a level 8 crab shows 6400 and gives 800).
   `Battle_Control.update_battle_over_info` multiplies by the level a second
-  time.
-- An answer picked in a dialogue is remembered for that character and never
-  cleared (`Npc_Dialouge.SELECTED_OPTION`). At a later question from the same
-  character, pressing Space repeats the earlier answer instead of waiting for
-  a click: Gottum's reward question takes the coins, Ringmaster Shin's next
-  challenge starts.
-- Opening the mine chest with a full bag loses the Large Candlestick:
-  `NPC16_Chat_Script` gives the item before it removes the dynamite, and the
-  chest counts as opened either way.
-- When a fight starts while the player stands next to a shopkeeper (Feronius
-  beside Krakho), `Open_Merchant_UI.OnTriggerExit2D` logs an error: it looks
-  up the `UI_ICONS` object, which is hidden during fights. Nothing else is
-  affected.
-- Skill and spell tooltips do not show during a fight or inside the tent.
+  time. Now it shows what `mob_dead` gives. Checked with a level 1 character
+  and a level 2 wolf cub: experience 0 to 100 and the box says 100 (the old
+  code would have said 200), console clean.
+- **Fixed 2026-10-14.** An answer picked in a dialogue is remembered for that
+  character and never cleared (`Npc_Dialouge.SELECTED_OPTION`). At a later
+  question from the same character, pressing Space repeats the earlier answer
+  instead of waiting for a click: Gottum's reward question takes the coins,
+  Ringmaster Shin's next challenge starts. Now
+  `TextOptionController.set_mob_using_option`, which every one of the 22
+  questions calls when it is put, clears the answer. It is not cleared after
+  the click, because Gottum reads the ring answer again on the line after it.
+  Space at a question now does nothing, as it did the first time in the
+  original. Checked with Guzbo at the goblin camp: "Not thanks", talk again,
+  wait out the dialogue's 30-frame delay, Space at the question: the old code
+  closed the dialogue as if "Not thanks" had been clicked; now the question
+  stays up, and clicking "Not thanks" still closes it. Console clean. Gottum
+  and Shin were not played after the change.
+- **Fixed 2026-10-14.** Opening the mine chest with a full bag loses the Large
+  Candlestick: `NPC16_Chat_Script` gives the item before it removes the
+  dynamite, and the chest counts as opened either way. Now the dynamite is
+  taken first; it does not stack (its stack size is 0), so its slot is always
+  free for the candlestick. Checked by running the chest's dialogue with a
+  bag of 15 items and one stick of dynamite: the old code said "Inventory
+  Full", left an empty slot and no candlestick; now "You receive Large
+  Candlestick", in the dynamite's slot. Console clean. The dialogue was run
+  from the console with the mine shown, not by walking into the mine.
+- **Fixed 2026-10-14.** When a fight starts while the player stands next to a
+  shopkeeper (Feronius beside Krakho), `Open_Merchant_UI.OnTriggerExit2D` logs
+  an error: it looks up the `UI_ICONS` object, which is hidden during fights.
+  Nothing else is affected. Now `Open_Merchant_UI` keeps the icon bar from
+  when the player came in range and hides the chat button through that.
+  Checked at Ketchin: in range, the icons hidden as a fight hides them, the
+  player moved 400 to the right: the old code logged the error, now there is
+  none; the chat button is hidden when the icons come back, as before (his
+  dialogue trigger hides it too). Not tried with Feronius and Krakho.
+- **Fixed 2026-10-14.** Skill and spell tooltips do not show during a fight or
+  inside the tent.
   `SpellHoverDetails.Display_Spell_Details` moves the tooltip down by 480 when
   the camera is below the world, which puts it off the screen. The Unity build
-  does the same.
-- The battle Items menu shows only the first word of an item's name ("Magic",
-  "Spiced"): the label is too narrow for both words and is set to cut off what
-  does not fit. (Worked out from the scene data; the Unity build was not
-  checked for this one.)
-- Dying in Stranglethorn Vale leaves the camera on the battle spot. After
-  Release Spirit the ghost stands by Waxen's machine as intended, but the
+  does the same. Now the tooltip is placed the same way wherever the camera
+  is: the mouse's world position already includes the camera's. Checked in a
+  fight with a wolf cub, the real mouse over Heroic Strike in the Skills menu:
+  the old code put the tooltip at y 759 of the 480-high screen; now it is at
+  279, just above the icon, with "Heroic Strike (Rank 1)", its cost and text
+  (seen in a screenshot). Console clean. The tent was not tried.
+- **Fixed 2026-10-14.** The battle Items menu shows only the first word of an
+  item's name ("Magic", "Spiced"): the label is too narrow for both words and
+  is set to cut off what does not fit. (Worked out from the scene data; the
+  Unity build was not checked for this one.) Now `Inventory.update_consumes` lets the two labels shrink to fit (minimum size
+  3, as the original's own Bloodrage label has) and ends them where the
+  amount begins, since the amount label covered their last 30 units. Seen in
+  a fight with Magic Dust and Spiced Wolf Meat in the bag, before and after
+  in screenshots: "Magic" and "Spiced" before; "Magic Dust" on two lines and
+  "Spiced Wolf Meat" on two smaller lines after, clear of "x2" and "x1".
+  Console clean. The look is this version's choice; the owner may prefer
+  another (a wider menu, shorter names).
+- **Fixed 2026-10-14.** The battle Skills menu shows "Adrenaline" for
+  Adrenaline Rush, the same way: its label's best fit cannot go below size 35
+  and cuts off the second line. (Seen in a screenshot of the Skills menu,
+  2026-10-14.) It is the only such label in the four scenes with fights; the
+  Bloodrage and Pyroblast labels already shrink (minimum 3). Now
+  `Battle_Control.Start`, empty in the original, gives it the same minimum.
+  Screenshots of the Skills menu in a fight, before and after: "Adrenaline",
+  then "Adrenaline Rush" on two lines; the Spells menu shown too, every name
+  whole. Console clean.
+- **Fixed 2026-10-14.** Dying in Stranglethorn Vale leaves the camera on the
+  battle spot. After Release Spirit the ghost stands by Waxen's machine as intended, but the
   screen shows empty scenery: no player, no spirit healer, no blue death
   screen. The healer can still be reached blind (a few steps right, then Space
   twice), and the camera stays wrong until the next scene change (the arena,
   Zul'Gurub or the teleporter). `Character.warp_character_start` moves the
   camera only in the first world. (Seen in the Unity build.) Dying in the
-  arena or Zul'Gurub reloads the scene, so it does not happen there.
-- A save made in Stranglethorn Vale, the arena or Zul'Gurub always loads at
-  that area's entrance, whatever the saved position says:
-  `Character.Load_World_Start_Zones` has no case for a game loaded from the
-  menu. (Seen in the Unity build for Stranglethorn Vale.)
-- After Jeklok escapes or dies he is invisible but still there: Space at his
-  spot starts the fight again while Felva's quest is at that step (which is
-  how a second attempt is possible), and afterwards he goes back to telling
-  his rumour. `W2_NPC1_Chat_Script` hides his sprite and nothing else. (The
+  arena or Zul'Gurub reloads the scene, so it does not happen there. Now
+  `warp_character_start` puts the camera on the first screen in Stranglethorn
+  Vale too. Seen at level 1, losing to a tiger: before, the ghost at x 441
+  and the camera still at the battle (5538, -240), empty scenery in the
+  screenshot; after, the camera at (426, 240) with the ghost, the spirit
+  healer, Waxen's machine and the blue death screen in view. Talking to the
+  healer revived the player, who then walked on to screen 1. Console clean.
+- **Fixed 2026-10-14.** A save made in Stranglethorn Vale, the arena or
+  Zul'Gurub always loads at that area's entrance, whatever the saved position
+  says: `Character.Load_World_Start_Zones` has no case for a game loaded from
+  the menu. (Seen in the Unity build for Stranglethorn Vale.) Now
+  `Load_Game`, when it hands a save over to the area it was made in, says so in
+  `SaveData.loading_saved_position`, and `Load_World_Start_Zones` then uses
+  the saved position. `Load_Game` sets the flag afresh each time, so it does
+  not outlive the load (the in-game load buttons call `Load_Game` too).
+  Checked in all three areas, saving after a short walk, reloading the page
+  and loading from the start menu: before, Stranglethorn Vale x 1956 loaded
+  at 441, the arena x 449 at 129, Zul'Gurub x 703 at 303; after, each loaded
+  at the saved position with the saved camera, and the screenshots look
+  right. Console clean. The camera's depth becomes -10 there instead of the
+  scene's -100, as on any load (`move_camera`); nothing looks different.
+- **Fixed 2026-10-15.** After Jeklok escapes or dies he is invisible but still
+  there: Space at his spot starts the fight again while Felva's quest is at
+  that step (which is how a second attempt is possible), and afterwards he
+  goes back to telling his rumour. `W2_NPC1_Chat_Script` hides his sprite and nothing else. (The
   escape and second fight were seen in the Unity build.)
-- The troll brothers' sprites are given the colour (255, 255, 255, 255) where
-  1 is already full. Unity draws them normally, and so does this version.
-- Monsters always hit for the top of their damage range. Every attack picks
-  between its low and high number with `Random.Range(0, 1) != 1`, and the
-  integer `Random.Range(0, 1)` can only give 0.
-- Beardon's Flash Heal heals him for a third of his health and also hits the
-  player for 44 times his level: `BeardonBattleActionClass.fourth_attack`
-  returns that number as damage. The other healers return 0.
+  The owner chose (2026-10-15): after he escapes he is back where he stood,
+  in sight, and can be fought again at once; after he dies he is gone for
+  good. `W2_NPC1_Chat_Script` waits for the fight to end and shows him again
+  or hides him and closes his dialogue; `World_Two_Zone_Builder` hides him
+  when his screen is shown and `felva_quest` is 4 or more. Checked at level
+  10 with Felva's quest at his step: he escaped, stood in sight and started
+  the fight again at Space; the second time he died (`felva_quest` 4) and
+  was hidden with Space doing nothing, and after the arena and back he was
+  still gone. Console clean.
+- **Fixed 2026-10-14.** The troll brothers' sprites are given the colour
+  (255, 255, 255, 255) where 1 is already full. Unity draws them normally,
+  and so does this version. Now `World_Two_Zone_Builder` gives (1, 1, 1, 1)
+  and (1, 1, 1, 0). Seen in Stranglethorn Vale with the trolls rescued: the
+  sprites' colour reads 255s before and 1s after, and the two screenshots
+  show the brothers alike. Console clean.
+- **Fixed 2026-10-14.** The bag, equipment, shop and loot windows make the
+  same mistake: a full slot's colour is (255, 255, 255, 255) (`full_color` in `Inventory`,
+  `Equipment`, `Merchant` and `CorpseInventory`). Unlike a sprite's, an
+  image's colour is multiplied by its button's hover or press tint, and 255
+  times any tint is still full, so a full slot can never show one. Fixing
+  it would make those tints appear, if the slots have them; look at the
+  slots' buttons first. They do: Unity's defaults, 0.96 under the mouse and
+  0.78 pressed. Now the four scripts give (1, 1, 1, 1) and (1, 1, 1, 0).
+  Measured on a bag slot holding a Short Sword (the average colour of its
+  middle): at rest the same before and after (138); under the mouse 97
+  before, 93 after; pressed 97 before (no change), 77 after. Console clean.
+  So full slots now darken a little under the mouse and more when pressed,
+  as Unity's buttons do; a small change in look.
+- **Fixed 2026-10-14.** Monsters always hit for the top of their damage range.
+  Every attack picks between its low and high number with
+  `Random.Range(0, 1) != 1`, and the integer `Random.Range(0, 1)` can only
+  give 0. Now the 33 such choices in 29 monster scripts use
+  `Random.RangeInt(0, 2)`, a coin toss between the two numbers, which is
+  what the code was written to do. Monsters hit softer on average, so the
+  game is a little easier. (The Harpy and Jeklok scripts call it without
+  using the result; left alone.) Measured on a wolf cub (4 to 6) over 24
+  attacks: 24 sixes before; 12 fours and 12 sixes after. Console clean.
+- **Fixed 2026-10-14.** Beardon's Flash Heal heals him for a third of his
+  health and also hits the player for 44 times his level:
+  `BeardonBattleActionClass.fourth_attack` returns that number as damage. The
+  other healers return 0. Now it returns 0 too. Checked in the arena against
+  Beardon (level 16) with his fourth move forced each turn: before, it
+  returned 704 and a level 10 player went from 480 to 0 in one cast; after,
+  it returned 0 three times, the player stayed at 480 and Beardon healed
+  back to full each time. Console clean.
 - Loot left on a corpse is lost when Continue is pressed, so with a full bag
   an arena fighter's unique item cannot be picked up, and the fight cannot be
   repeated.
-- Mar'li never drains life and Hakkar's fourth move does not exist: the move
-  table in `Mob_battle_actions.calculate_move_total` has no entry for Mar'li
-  (so she only scratches) and rolls one to three for Hakkar.
+  Waiting for the owner (2026-10-14): what should happen is a design choice,
+  asked under "Questions for the owner".
+- **Fixed 2026-10-14.** Mar'li never drains life and Hakkar's fourth move does
+  not exist: the move table in `Mob_battle_actions.calculate_move_total` has
+  no entry for Mar'li (so she only scratches) and rolls one to three for
+  Hakkar. Now the table has Mar'li at 3, so she rolls her two moves, as the
+  table does for every other monster (it holds one more than the number of
+  moves, since `Random.RangeInt` leaves out its top). Hakkar's script has
+  only three moves, all of which he uses, so there is no fourth to restore.
+  Checked against Mar'li in Zul'Gurub over 16 turns: before, move 1 sixteen
+  times; after, Drain Life five times. Console clean.
+- **Fixed 2026-10-14.** Two more monsters have a move they never use, found by
+  comparing every monster script with the table (2026-10-14): the
+  Stranglethorn tiger has no entry, so its second move (the same claw, with
+  the same animation) never comes; the black wolf (Feronius) has 4, so his fourth move, a second copy
+  of his bite, never comes, which leaves the bite one chance in three
+  instead of two in four. Now the table has the tiger at 3 and the black
+  wolf at 5. Feronius over 24 turns at the goblin camp: moves 1 to 3 only
+  before (13, 13, 12); all four after (4, 11, 7, 12), so he roars less
+  often. The tiger used both moves after (10 and 14); the run on the old
+  code did not reach a tiger, but its case is the same as Mar'li's, which
+  was measured. Console clean.
 - Nothing happens when Hakkar dies beyond the loot and `zg_boss` = 6.
   `End_Game_Cut_Scene` is an empty script. The game's ending is the portal in
-  the first world.
+  the first world. Waiting for the owner (2026-10-14): what should happen is
+  a design choice, asked under "Questions for the owner".
 - The experience needed for the next level is worked out two ways: 100 x
   level x (level + 1) after levelling up, but 200 x 1.45^(level - 1) after a
   save is loaded or an area is entered. So the number changes whenever the
-  character walks through a door.
-- Murk is invisible in the ending's cut scene. The scene fades him in and
-  walks him to the portal, but his own animator (the player's, which animates
+  character walks through a door. Waiting for the owner (2026-10-14): which
+  formula is the real one is asked under "Questions for the owner".
+- **Fixed 2026-10-14.** Murk is invisible in the ending's cut scene. The scene
+  fades him in and walks him to the portal, but his own animator (the player's, which animates
   colour for Ambush) writes his colour back to the scene's starting value,
   which is transparent. Only the portal is seen. (Seen in the Unity build.)
-- The load menu describes a completed save by where the portal was ("Camp
-  Brakil"), though loading it starts at Darkmoon Faire.
+  Now `CreditDelay`, the cut scene's script, which sits beside its animator,
+  writes the cut scene's pose again in `LateUpdate` with
+  `Animator.Update(0)`, so its colour wins. That needed two engine changes,
+  both as Unity has them: `Animator.Update(deltaTime)`, and the frame
+  messages (`Update`, `LateUpdate`, `FixedUpdate`) going to scripts only, so
+  that a built-in component's method of that name is not called as one; no
+  built-in component had one before. Two unit tests cover them, and each
+  fails without its change. Checked in the Credits scene: Murk's colour was
+  0 throughout before; after, 0 at 3 s, 1 from the fade-in at about 7.5 s
+  to 12 s, 0 again at 14 s, and at 9 s the screenshot shows him walking by
+  the portal. Console clean.
+- **Fixed 2026-10-14.** The load menu describes a completed save by where the
+  portal was ("Camp Brakil"), though loading it starts at Darkmoon Faire.
+  Now `SaveData.show_slot`, which every save and load menu uses, names
+  Darkmoon Faire for a finished game saved in the first world (a finished
+  game saved elsewhere loads in its own area and keeps that area's name).
+  Checked with two saves at Camp Brakil, one marked finished: the load menu
+  said "Camp Brakil" for both before; after, "Darkmoon Faire" for the
+  finished one, which loaded at x 10000, Darkmoon Faire, and "Camp Brakil"
+  for the other. Console clean.
 - From level 45 the second formula no longer fits in an int and C# turns it
   into the lowest int there is. The next experience gained then counts as
   hundreds of level-ups at once: a level 45 character that enters Zul'Gurub
   and kills Venoxis is level 401. (Seen in the Unity build; reproduced here by
   `toInt`.) Level 45 is far beyond what the game's monsters give without a
-  great deal of grinding.
+  great deal of grinding. Waiting for the owner (2026-10-14): it goes away
+  with the first formula, so it follows the answer about the two formulas.
 
 ## Questions for the owner
 
@@ -1021,6 +1240,43 @@ These exist in the original game and are reproduced until fixed under 7.1
   game's author.
 - ~~Should bugs in the original game be fixed, or kept as they are?~~
   Answered 2026-10-13: fix them all, over time (Phase 7).
+- Hakkar (7.1, asked 2026-10-14): killing him, the last boss of Zul'Gurub,
+  gives his loot and sets `zg_boss` to 6, and nothing else happens; the
+  script meant for it, `End_Game_Cut_Scene`, is empty in the original. The
+  game's ending is the portal in the first world. Should anything happen
+  when he dies (a message, the portal opening, the credits), or is it fine
+  as it is?
+  Looked into 2026-10-15, from the original's data in `public/game` (the
+  Unity project and build were not in that session, so the Unity build was
+  not played): `End_Game_Cut_Scene` is attached to nothing in any scene or
+  prefab, so it never runs; its only content is two fields for a flavour
+  text and its background, which suggests an ending text that was never
+  written. `zg_boss` 6 is read only by `MobLoaderZG`, to stop Hakkar coming
+  back. Zul'Gurub is side content: the portal and the credits come from
+  Lekon's quests in the first world (`kobold_rune` 3), whatever happened in
+  Stranglethorn Vale. So in the original Hakkar's death ends with his loot,
+  and nothing marks it.
+- The experience formula (7.1, asked 2026-10-14): after levelling up, the
+  next level needs 100 x level x (level + 1); after loading a save or going
+  through a door, 200 x 1.45^(level - 1). Which is the real one? At level 5
+  they give 3000 and 884; at level 10, 11000 and 5666; at level 20, 42000
+  and 232 820. The first is the one used while playing, and it does not
+  overflow at level 45.
+- Loot left on a corpse (7.1, asked 2026-10-14): Continue throws away
+  whatever is still on the corpse, so with a full bag an arena fighter's
+  unique item is lost for good. What should happen? Possibilities: Continue
+  refuses while something is left and the bag is full ("Inventory Full"),
+  so the player can make room first; or what is left goes to the bag when
+  room is made later; or the arena fight can be fought again until its item
+  is taken.
+- ~~Jeklok (7.1, asked 2026-10-14)~~ Answered 2026-10-15: as suggested.
+  The question was: in a fight he can only escape, so the one
+  way to beat him is to kill him with the opening Ambush. In the original a
+  second try works only through his bug: invisible, he still answers Space
+  (or leave Stranglethorn Vale and come back). Once dead he is back on the
+  next visit, telling his rumour again. What should happen? A suggestion:
+  after he escapes he is back where he stood, visible, so he can be tried
+  again at once; after he dies he is gone for good.
 - ~~How much does phone support matter?~~ Answered 2026-10-13: not for now,
   maybe later. 4.3 is closed on that basis and 4.7 waits.
 - Safari (4.4): open `http://localhost:5173` in Safari, press Play and say

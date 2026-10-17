@@ -316,6 +316,9 @@ export class Character extends MonoBehaviour {
 
   warp_character_start(): void {
     if (SaveData.loaded_game_zone === 1) {
+      // Fixed (7.1): the original did not move the camera here, so after dying in
+      // Stranglethorn Vale it stayed on the battle spot and the ghost was off the screen.
+      this.player_camera.transform.position = new Vector3(426, 240, -10);
       this.transform.position = new Vector3(441, 106, 0);
       this.set_camera_movement(0);
     } else if (!this.game_complete) {
@@ -478,6 +481,7 @@ export class Character extends MonoBehaviour {
   Load_Game(slot: GameObject): void {
     let gameData: GameData = SaveData.LoadData(slot, SaveData.load_game_slot);
     this.game_complete = gameData.game_complete;
+    SaveData.loading_saved_position = gameData.world_number !== SaveData.loaded_game_zone;
     if (gameData.world_number !== SaveData.loaded_game_zone) {
       if (gameData.world_number === 0) {
         SaveData.saved_game_data = gameData;
@@ -516,6 +520,9 @@ export class Character extends MonoBehaviour {
     this.BASE_STM = gameData.BASE_STM;
     this.BASE_INT = gameData.BASE_INT;
     this.BASE_AGI = gameData.BASE_AGI;
+    // Fixed (7.1): the original did not work the stats out from the base stats and equipment
+    // here, so they stayed 0 until a window was opened or the equipment changed.
+    this.update_stats();
     if (alive(slot)) {
       slot.transform.parent.gameObject.transform.parent.gameObject.transform.parent.gameObject.SetActive(false);
       slot.transform.parent.transform.parent.gameObject.transform.parent.gameObject.transform.parent.gameObject.transform.parent.gameObject.SetActive(false);
@@ -555,6 +562,9 @@ export class Character extends MonoBehaviour {
     this.BASE_STM = data.BASE_STM;
     this.BASE_INT = data.BASE_INT;
     this.BASE_AGI = data.BASE_AGI;
+    // Fixed (7.1): the original did not work the stats out from the base stats and equipment
+    // here, so they stayed 0 until a window was opened or the equipment changed.
+    this.update_stats();
   }
 
   Load_Game_Position_Data(data: GameData): void {
@@ -566,7 +576,12 @@ export class Character extends MonoBehaviour {
   }
 
   Load_World_Start_Zones(data: GameData): void {
-    if (SaveData.loaded_game_zone === 0 && SaveData.last_loaded_game_zone === 1) {
+    // Fixed (7.1): the original had no case for a save loaded from the start menu, so a game
+    // saved in Stranglethorn Vale, the arena or Zul'Gurub always started at the entrance.
+    if (SaveData.loading_saved_position) {
+      SaveData.loading_saved_position = false;
+      this.Load_Game_Position_Data(data);
+    } else if (SaveData.loaded_game_zone === 0 && SaveData.last_loaded_game_zone === 1) {
       let num: number = 9;
       let num2: number = 852;
       this.gameObject.transform.position = new Vector3(8218, 106.5, 0);

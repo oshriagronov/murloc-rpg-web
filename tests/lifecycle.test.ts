@@ -1,7 +1,7 @@
 // The object lifecycle and the frame loop: which messages a script gets and when.
 
 import { describe, expect, test } from 'vitest';
-import { GameObject, MonoBehaviour, Routine, Time, UObject, WaitForSeconds, WaitForSecondsRealtime, WaitUntil, stepFrame } from '../src/engine/core';
+import { Behaviour, GameObject, MonoBehaviour, Routine, Time, UObject, WaitForSeconds, WaitForSecondsRealtime, WaitUntil, stepFrame } from '../src/engine/core';
 import { run } from './setup';
 
 const log: string[] = [];
@@ -52,6 +52,19 @@ describe('messages', () => {
     expect(kid.activeSelf).toBe(true);
     expect(kid.activeInHierarchy).toBe(false);
     expect(taken()).toEqual(['OnDisable']);
+  });
+
+  test('a built-in component gets no frame messages, even with a method of that name', () => {
+    // Unity sends Update and LateUpdate to scripts only; the Animator's Update is a method.
+    class BuiltIn extends Behaviour {
+      Update() { log.push('BuiltIn.Update'); }
+      LateUpdate() { log.push('BuiltIn.LateUpdate'); }
+    }
+    new GameObject('a').AddComponent(BuiltIn);
+    taken();
+    stepFrame(1 / 60);
+    stepFrame(1 / 60);
+    expect(taken()).toEqual([]);
   });
 
   test('a disabled script gets no updates', () => {
