@@ -1,5 +1,5 @@
 import {
-  AssetDb, Button, Camera, Color, Engine, Font, GameObject, Image, Instantiate, MonoBehaviour, Outline, RectTransform, SceneManager,
+  AssetDb, BoxCollider2D, Button, Camera, Color, Engine, Font, GameObject, Image, Instantiate, MonoBehaviour, Outline, RectTransform, SceneManager,
   SpriteRenderer, Text, TextAnchor, Time, Transform, UObject, Vector2, Vector3, alive, lazyClass,
 } from '../engine';
 import { Battle_Control } from './Battle_Control';
@@ -330,7 +330,7 @@ export class Quest_Tracker extends MonoBehaviour {
 
   private to_object(name: string, label: string): Way {
     let o: GameObject = this.find_object(name);
-    return o ? { position: o.transform.position, name: label, npc: o } : null;
+    return o ? { position: this.spot(o), name: label, npc: o } : null;
   }
 
   private to_script(script: string, label: string): Way {
@@ -346,7 +346,22 @@ export class Quest_Tracker extends MonoBehaviour {
     for (const o of list) {
       if (!best || Math.abs(o.transform.position.x - x) < Math.abs(best.transform.position.x - x)) best = o;
     }
-    return best ? { position: best.transform.position, name: label, npc: best } : null;
+    return best ? { position: this.spot(best), name: label, npc: best } : null;
+  }
+
+  /**
+   * Where an object is met. The portals in Stranglethorn Vale are hidden pictures whose trigger
+   * box hangs far below their position, so an object with no picture drawn is pointed at by the
+   * middle of its box.
+   */
+  private spot(o: GameObject): Vector3 {
+    let sr: SpriteRenderer = o.GetComponent(SpriteRenderer);
+    let box: BoxCollider2D = o.GetComponent(BoxCollider2D);
+    if (alive(box) && !(alive(sr) && sr.enabled && sr.sprite)) {
+      let m = o.transform.worldMatrix, c = box.offset;
+      return new Vector3(m.a * c.x + m.c * c.y + m.tx, m.b * c.x + m.d * c.y + m.ty, 0);
+    }
+    return o.transform.position;
   }
 
   /** An object by name, even in a zone that is not shown; one people talk to first. */
@@ -463,8 +478,12 @@ export class Quest_Tracker extends MonoBehaviour {
       return;
     }
     if (p.x >= 30 && p.x <= 822) {
-      // A place or an object without a name over it, on screen.
-      let y: number = Math.max(40, Math.min(p.y - 60, 380));
+      // A place or an object without a name over it, on screen: at the player's head height,
+      // kept clear of the quest panel.
+      let y: number = Math.max(40, Math.min(this.to_screen(here).y - 110, 380));
+      if (p.x > PANEL_X - 70 && y < PANEL_TOP + this.back.rectTransform.rect.height + 4) {
+        y = PANEL_TOP + this.back.rectTransform.rect.height + 20;
+      }
       this.arrow.text = '▼';
       this.place(this.arrow.rectTransform, p.x - 15, y + bob, 30, 20);
       this.arrow_name.text = way.name;

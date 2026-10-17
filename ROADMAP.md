@@ -1117,6 +1117,15 @@ original.
       tried: touch, and playing the later steps for real rather than from
       set quest numbers. The panel shows quests of the world the player is
       in only; Onyxia is not listed.)
+      (2026-10-17, reported by the owner: guiding to Falthir from
+      Stranglethorn put the arrow into the quest panel. The guide pointed
+      at the Zul'Gurub portal's position, which is far above the ground: the
+      portals are hidden pictures with the trigger box hanging below. An
+      object with no picture drawn is now pointed at by the middle of its
+      box, and an arrow over an unnamed spot sits at the player's head
+      height, below the panel. Tried in headless Chrome: the arrow stands
+      over the portal from the start of Stranglethorn and points left from
+      zone 3. Console clean.)
 
 ## Original bugs kept on purpose
 
