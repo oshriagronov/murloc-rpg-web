@@ -27,11 +27,10 @@ export class Inventory extends MonoBehaviour {
   player_money: number = 0;
   private TOUCH_CONTROLS: boolean = true;
   // Not in the original game: dropping items from the bag, added at the owner's request (7.1) so
-  // that a full bag can always make room. With a slot selected, the Drop button in the bag's title
-  // bar (or Delete or Backspace) asks once and then drops the item, one at a time from a stack.
-  // Items a quest needs and cannot give again are kept. The button is a copy of the win box's
-  // Continue button.
-  private drop_asked_slot: number = -1;
+  // that a full bag can always make room. Select a slot (one click; a second click still equips),
+  // then the Drop button in the bag's title bar, or Delete or Backspace, drops the item, one at a
+  // time from a stack. Items a quest needs and cannot give again are kept. The button is a copy of
+  // the win box's Continue button.
   private drop_button: Button = null;
   private drop_label: Text = null;
   private static readonly QUEST_ITEMS: string[] = [
@@ -46,13 +45,10 @@ export class Inventory extends MonoBehaviour {
 
   Update(): void {
     if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) {
-      this.drop_selected_item(false);
+      this.drop_selected_item();
     }
     if (alive(this.drop_button)) {
       let slot: number = this.selected_slot();
-      if (slot !== this.drop_asked_slot) {
-        this.drop_asked_slot = -1;
-      }
       if (this.drop_button.interactable !== (slot !== -1)) {
         this.drop_button.interactable = slot !== -1;
         // The copied button changes sprites for its states, which the engine does not draw, so
@@ -61,7 +57,6 @@ export class Inventory extends MonoBehaviour {
         this.drop_button.GetComponent(Image).color = new Color(1, 1, 1, alpha);
         this.drop_label.color = new Color(1, 1, 1, alpha);
       }
-      this.drop_label.text = this.drop_asked_slot !== -1 ? 'Sure?' : 'Drop';
     }
   }
 
@@ -87,7 +82,7 @@ export class Inventory extends MonoBehaviour {
     label_canvas.sortingOrder = bag.sortingOrder + 4;
     this.drop_button = obj.GetComponent(Button);
     this.drop_button.onClick = new UnityEvent();
-    this.drop_button.onClick.AddListener(() => this.drop_selected_item(true));
+    this.drop_button.onClick.AddListener(() => this.drop_selected_item());
     this.drop_button.interactable = true;
     obj.SetActive(true);
   }
@@ -101,27 +96,22 @@ export class Inventory extends MonoBehaviour {
     return -1;
   }
 
-  private drop_selected_item(clicked: boolean): void {
+  private drop_selected_item(): void {
     if (!this.inventory_canvas.gameObject.activeInHierarchy) {
       return;
     }
     let slot: number = this.selected_slot();
     if (slot === -1) {
-      this.drop_asked_slot = -1;
       return;
     }
     let item: Item = this.item_slots[slot];
     if (Inventory.QUEST_ITEMS.includes(item.name)) {
       this.show_message(item.name + ' is needed for a quest');
-    } else if (this.drop_asked_slot !== slot) {
-      this.drop_asked_slot = slot;
-      this.show_message((clicked ? 'Click again to drop ' : 'Press again to drop ') + item.name);
     } else {
       this.remove_slot(slot);
       this.show_message('Dropped ' + item.name);
       if (this.item_slots[slot] == null) {
         this.dehighlight_slot(slot);
-        this.drop_asked_slot = -1;
         this.inventory_canvas.transform.Find('Slot_' + slot).GetComponent(ItemHoverDetails).Hide_Item_Details();
       }
     }

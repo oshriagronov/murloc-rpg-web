@@ -997,6 +997,14 @@ original.
       button, then the corpse's Brawler's Harness went into the freed slot.
       Pictures at 1704x960 of the three states and the win box. Console
       clean. Touch was not tried.)
+      (2026-10-17, the owner: no second press, since a second click on an
+      item is how it is equipped. Now one click selects an item and one
+      press of Drop, or of Delete or Backspace, drops it; no "Sure?", no
+      asking line. The earlier notes about asking once describe the old
+      way. Tried with real pointer events: Old Rag selected, one Drop
+      click, "Dropped Old Rag", slot empty and unselected; The 1 Ring
+      refused; Stingy clicked twice was equipped, not dropped; Worn Dagger
+      selected and Delete, dropped. Console clean.)
 
 ## Original bugs kept on purpose
 
