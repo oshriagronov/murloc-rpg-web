@@ -34,8 +34,8 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`), and GitHub runs both on every push (6.3). Phase 6 is
 finished. Phase 7 (fixing the original's
-bugs) has begun: 23 of the 27 bugs on the list are fixed (7.1, partly
-done); the other four wait for the owner's answers to questions.
+bugs) has begun: 25 of the 27 bugs on the list are fixed (7.1, partly
+done); the owner has answered the questions about the other two.
 
 ## Done
 
@@ -896,7 +896,7 @@ reproduced as it is.
       when Hakkar dies, which experience formula is the real one), ask the
       owner first. The Unity project is not changed; from then on the two
       versions differ there on purpose.
-      Partly done: fixed so far, 23 of 27 (2026-10-15): the monsters of a
+      Partly done: fixed so far, 25 of 27 (2026-10-17): the monsters of a
       save loaded in a monster zone; the shield test in
       `Buff.take_shield_damage`; the stats of a loaded character; the win
       box's experience; the dialogue answer remembered for good; the mine
@@ -908,11 +908,10 @@ reproduced as it is.
       hitting for the top of their range; Beardon's Flash Heal; Mar'li's
       Drain Life; the tiger's and black wolf's unused moves; Murk in the
       ending's cut scene; the load menu's name for a finished game; the two
-      Power Word: Shield bugs found on the way; Jeklok, as the owner chose.
-      Blocked: the four left wait for the owner's answers under "Questions
-      for the owner": the loot left on a corpse, Hakkar's death, the two
-      experience formulas and the level 45 overflow that comes from one of
-      them.
+      Power Word: Shield bugs found on the way; Jeklok, as the owner chose;
+      the two experience formulas and the level 45 overflow, as the owner
+      chose. Left: the loot left on a corpse and Hakkar's death, both
+      answered by the owner on 2026-10-17.
 
 ### Additions the original does not have
 
@@ -1195,11 +1194,22 @@ These exist in the original game and are reproduced until fixed under 7.1
   `End_Game_Cut_Scene` is an empty script. The game's ending is the portal in
   the first world. Waiting for the owner (2026-10-14): what should happen is
   a design choice, asked under "Questions for the owner".
-- The experience needed for the next level is worked out two ways: 100 x
+- **Fixed 2026-10-17.** The experience needed for the next level is worked out two ways: 100 x
   level x (level + 1) after levelling up, but 200 x 1.45^(level - 1) after a
   save is loaded or an area is entered. So the number changes whenever the
-  character walks through a door. Waiting for the owner (2026-10-14): which
-  formula is the real one is asked under "Questions for the owner".
+  character walks through a door. Worse, where the second number is the
+  smaller one (levels 2 to 13) and the experience already held is more than
+  it, the bar fills, plays the level-up sound, empties and fills again
+  forever, and no level is gained (seen here: level 5 with 1500, target set
+  to 884, the bar refilled with `ding_count` going to -1). The owner chose
+  the first formula (2026-10-17). Now `XP_Handler.set_player_level` uses it
+  too, and `set_current_xp` levels up at once if a save from before the fix
+  holds more than a level's worth (possible from level 14, where the old
+  number was the larger one). Checked: level 5 with 1500 shows 1500/3000 in
+  the first world, through the door to Stranglethorn Vale and back; level 20
+  with 100 000 entered Stranglethorn Vale as level 22 with 11 800/50 600 and
+  2 talent points (42 000 + 46 200 used), the bar settling there. Console
+  clean.
 - **Fixed 2026-10-14.** Murk is invisible in the ending's cut scene. The scene
   fades him in and walks him to the portal, but his own animator (the player's, which animates
   colour for Ambush) writes his colour back to the scene's starting value,
@@ -1224,13 +1234,13 @@ These exist in the original game and are reproduced until fixed under 7.1
   said "Camp Brakil" for both before; after, "Darkmoon Faire" for the
   finished one, which loaded at x 10000, Darkmoon Faire, and "Camp Brakil"
   for the other. Console clean.
-- From level 45 the second formula no longer fits in an int and C# turns it
+- **Fixed 2026-10-17.** From level 45 the second formula no longer fits in an int and C# turns it
   into the lowest int there is. The next experience gained then counts as
   hundreds of level-ups at once: a level 45 character that enters Zul'Gurub
   and kills Venoxis is level 401. (Seen in the Unity build; reproduced here by
   `toInt`.) Level 45 is far beyond what the game's monsters give without a
-  great deal of grinding. Waiting for the owner (2026-10-14): it goes away
-  with the first formula, so it follows the answer about the two formulas.
+  great deal of grinding. Gone with the second formula (fixed above): the
+  first is 207 000 at level 45 and stays far inside an int.
 
 ## Questions for the owner
 
@@ -1256,7 +1266,8 @@ These exist in the original game and are reproduced until fixed under 7.1
   Lekon's quests in the first world (`kobold_rune` 3), whatever happened in
   Stranglethorn Vale. So in the original Hakkar's death ends with his loot,
   and nothing marks it.
-- The experience formula (7.1, asked 2026-10-14): after levelling up, the
+- ~~The experience formula (7.1, asked 2026-10-14)~~ Answered 2026-10-17:
+  100 x level x (level + 1). The question was: after levelling up, the
   next level needs 100 x level x (level + 1); after loading a save or going
   through a door, 200 x 1.45^(level - 1). Which is the real one? At level 5
   they give 3000 and 884; at level 10, 11000 and 5666; at level 20, 42000

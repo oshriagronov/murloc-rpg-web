@@ -1,4 +1,4 @@
-import { GameObject, Image, Mathf, MonoBehaviour, Text, floatString, roundDigits, toInt } from '../engine';
+import { GameObject, Image, MonoBehaviour, Text, floatString, roundDigits } from '../engine';
 import { Battle_Health_Control } from './Battle_Health_Control';
 import { Murloc_Sounds } from './Murloc_Sounds';
 import { Talent_Manager } from './Talent_Manager';
@@ -68,16 +68,17 @@ export class XP_Handler extends MonoBehaviour {
 
   set_current_xp(xp: number): void {
     this.current_xp = xp;
+    // Not in the original (7.1): a save from before the formula fix can hold more than a level's
+    // worth; level up now, or the bar would refill forever without a level being gained.
+    if (this.current_xp >= this.xp_to_level) this.Add_xp(0);
   }
 
   set_player_level(level: number): void {
     this.player_level = level;
     this.ui_level_text.GetComponent(Text).text = String(this.player_level);
-    if (level !== 1) {
-      this.xp_to_level = toInt(200 * Mathf.Pow(1.45, level - 1));
-    } else {
-      this.xp_to_level = 200;
-    }
+    // Fixed (7.1): the original used 200 * 1.45^(level - 1) here, not Add_xp's formula, so the
+    // number changed at every door and overflowed an int from level 45. The owner chose Add_xp's.
+    this.xp_to_level = level * ((level + 1) * 100);
   }
 
   get_xp_to_level(): number {
