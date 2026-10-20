@@ -3,7 +3,8 @@
 //
 // It serves the project itself (Vite, on a port of its own, so a dev server may be running)
 // and drives the installed Google Chrome without a window. To use another Chromium-based
-// browser, give its path in SMOKE_BROWSER. `npm run smoke -- --show` opens a window to watch.
+// browser, give its path in SMOKE_BROWSER. `npm run smoke -- --show` opens a window to watch;
+// `-- --half` decodes the large images at half size, as on a phone.
 
 import { createServer } from 'vite';
 import { chromium } from 'playwright-core';
@@ -15,7 +16,7 @@ const steps = [];
 
 const server = await createServer({ server: { port: 5183, strictPort: false, hmr: false }, logLevel: 'error' });
 await server.listen();
-const url = server.resolvedUrls.local[0];
+const url = server.resolvedUrls.local[0] + (process.argv.includes('--half') ? '?images=half' : '');
 
 const browser = await chromium.launch({
   ...(process.env.SMOKE_BROWSER ? { executablePath: process.env.SMOKE_BROWSER } : { channel: 'chrome' }),

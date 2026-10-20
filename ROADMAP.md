@@ -775,6 +775,20 @@ Compare each with the Unity version side by side.
       not allow a page to go fullscreen; the refusal is caught silently),
       and a real phone, which is still 4.7.)
 
+- [x] **4.9 Half-size images on phones** (found 2026-10-20: on the owner's
+      Android phone in Chrome, the game did not go on after New Game; the
+      first world decodes 657 MB of images, around where a phone's browser
+      gives up; see 4.3).
+      (2026-10-20; on a touch screen, images of 512x512 pixels or more are
+      decoded at half size (`createImageBitmap` with a resize) and given to
+      PixiJS as full size (`resolution: 0.5`), so no sprite frame or script
+      changes; smaller images stay as they are. `?images=full` or
+      `?images=half` overrides it, and `npm run smoke -- --half` runs the
+      smoke test that way. Measured with `dev.memory()` under phone
+      emulation: the start menu 238 → 62 MB, the first world 657 → 179 MB.
+      Class selection comes up after New Game, no console errors; the smoke
+      test passes both ways. Not yet checked on the owner's phone.)
+
 ### Phase 5 — Release
 
 - [x] **5.1 Decisions from the owner** (see "Questions for the owner").

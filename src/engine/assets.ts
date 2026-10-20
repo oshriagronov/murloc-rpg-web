@@ -2,7 +2,7 @@
 // Sprites, clips and prefabs are known up front (they are just data); the
 // images behind them are fetched when first needed.
 
-import { Assets as PixiAssets, Rectangle, Texture } from 'pixi.js';
+import { Assets as PixiAssets, ImageSource, Rectangle, Texture } from 'pixi.js';
 import { Color, Rect, Vector2, Vector4 } from './math';
 import { UObject } from './core';
 
@@ -35,8 +35,28 @@ export async function fetchGameFile(rel: string): Promise<Response> {
   }
 }
 
+// A phone's browser closes the tab, or loses WebGL, at around 1 GB, and the first world alone
+// decodes 657 MB of images at full size. On a touch screen the large images are decoded at half
+// size, a quarter of the memory; a game 852x480 on a phone does not need more. `?images=full` or
+// `?images=half` overrides the choice.
+const imagesParam = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('images');
+const HALF_SIZE = imagesParam ? imagesParam === 'half'
+  : typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
+/** Images smaller than this (in pixels) are kept at full size: little memory, and small icons would blur. */
+const HALF_SIZE_MIN_PIXELS = 512 * 512;
+
+/** Fetches an image and decodes it at half size. The texture says it is full size, so sprite frames are unchanged. */
+async function loadHalfSize(rel: string, width: number, height: number): Promise<Texture> {
+  const blob = await (await fetchGameFile(rel)).blob();
+  const resource = await createImageBitmap(blob, { resizeWidth: Math.max(1, Math.round(width / 2)), resizeHeight: Math.max(1, Math.round(height / 2)), resizeQuality: 'high' });
+  // As PixiJS's own loader does: premultiplied when uploaded.
+  return new Texture({ source: new ImageSource({ resource, alphaMode: 'premultiply-alpha-on-upload', resolution: 0.5 }) });
+}
+
 export class Texture2D extends UObject {
   pixi: Texture | null = null;
+  /** Decoded at half size, outside PixiJS's asset cache (see HALF_SIZE). */
+  private half = false;
   private loading: Promise<void> | null = null;
   private unloading: Promise<void> | null = null;
   /** When the image was last asked for or drawn, on `AssetDb.clock`. */
@@ -52,9 +72,10 @@ export class Texture2D extends UObject {
     this.lastUsed = AssetDb.clock;
     if (!this.loading) {
       AssetDb.pending++;
+      this.half = HALF_SIZE && this.width * this.height >= HALF_SIZE_MIN_PIXELS && typeof createImageBitmap !== 'undefined';
       // An image being released is fetched again only once that has finished.
       this.loading = (this.unloading ?? Promise.resolve())
-        .then(() => PixiAssets.load<Texture>(assetUrl(this.file)))
+        .then(() => this.half ? loadHalfSize(this.file, this.width, this.height) : PixiAssets.load<Texture>(assetUrl(this.file)))
         .then((t) => { this.pixi = t; setFailing(this.file, false); })
         .catch((e) => {
           // Whoever waits for the image goes on without it; it appears when a later try succeeds.
@@ -67,7 +88,7 @@ export class Texture2D extends UObject {
     return this.loading;
   }
   /** Memory the decoded image takes, in bytes. */
-  get bytes() { return this.width * this.height * 4; }
+  get bytes() { return this.half ? Math.round(this.width / 2) * Math.round(this.height / 2) * 4 : this.width * this.height * 4; }
   /** Gives the image's memory back. It is fetched again if something asks for it. */
   _unload() {
     const t = this.pixi;
@@ -78,7 +99,8 @@ export class Texture2D extends UObject {
     this.loading = null;
     // PixiJS forgets the image but leaves the decoded picture to the garbage collector; close it now.
     const picture: unknown = t.source.resource;
-    this.unloading = PixiAssets.unload(assetUrl(this.file))
+    const release = this.half ? Promise.resolve().then(() => t.destroy(true)) : PixiAssets.unload(assetUrl(this.file));
+    this.unloading = release
       .then(() => { if (typeof ImageBitmap !== 'undefined' && picture instanceof ImageBitmap) picture.close(); })
       .catch((e) => console.warn(`Could not unload texture ${this.file}`, e))
       .finally(() => { this.unloading = null; });
