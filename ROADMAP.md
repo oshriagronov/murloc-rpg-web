@@ -6,7 +6,7 @@ the date and how you verified it, and add anything new you find.
 
 ## Status
 
-*Last updated 2026-10-17.*
+*Last updated 2026-10-20.*
 
 Phase 1 is finished: the first world has been played from a new game to its
 ending portal, side content included, and the goblin teleporter to
@@ -34,7 +34,8 @@ a preview picture for links (5.5) and, if wanted, the owner's own address
 (6.1, `npm test`) and a scripted smoke test of every scene (6.2,
 `npm run smoke`), and GitHub runs both on every push (6.3). Phase 6 is
 finished. Phase 7 (fixing the original's
-bugs) is finished: the list is worked through (7.1): 28 bugs fixed, and
+bugs) is finished: the list is worked through (7.1): 29 bugs fixed (Cruelty's
+critical-hit chance added 2026-10-20), and
 Hakkar's quiet death left as it is by the owner's choice; buttons now swap
 sprites for their states (7.2). New bugs found later go on the list and are
 fixed the same way.
@@ -1481,6 +1482,18 @@ These exist in the original game and are reproduced until fixed under 7.1
   the mark shown; battle and after-fight music stayed quiet; unmuting
   played the area's music; loading slot 1 from the settings window turned
   it back on. Console clean.
+
+- **Fixed 2026-10-20.** Cruelty (the Rogue's starting talent) says it
+  raises the chance of a critical hit by 5%, but it lowered it:
+  `Battle_Control.critical_damage_modifiers` crits when a roll is at or
+  below AGI, and Cruelty changed the roll from 0-94 to 0-99. A Rogue
+  (AGI 12) went from 13.7% to 13%. Found by the owner asking how the
+  classes differ. Now the roll is always 0-94 and Cruelty adds 5 to the
+  threshold (+5.3 points, the closest the 95-value roll allows without
+  changing anyone's chance without Cruelty). Measured over 200 000 rolls on
+  a new Rogue: 18.93% with Cruelty (18.95% expected), 13.68% without
+  (13.68%). A new Rogue then played the opening and beat a Wolf Cub,
+  console clean. Not compared with the Unity build, which keeps the bug.
 
 ## Questions for the owner
 

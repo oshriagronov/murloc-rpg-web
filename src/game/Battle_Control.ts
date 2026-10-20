@@ -949,8 +949,14 @@ export class Battle_Control extends MonoBehaviour {
     let num: number = damage;
     let flag: boolean = this.gameObject.GetComponent(Buff_Handler).check_for_player_buff(1);
     let num2: number = 0;
-    num2 = ((!this.gameObject.GetComponent(Talent_Manager).talents[1][0]) ? Random.RangeInt(0, 95) : Random.RangeInt(0, 100));
-    if (flag || num2 <= this.gameObject.GetComponent(Character).AGI) {
+    // Fixed (7.1): Cruelty adds 5 to the crit threshold. The original rolled 0-99 instead of
+    // 0-94 with Cruelty, which lowered the chance it was meant to raise.
+    num2 = Random.RangeInt(0, 95);
+    let crit_threshold: number = this.gameObject.GetComponent(Character).AGI;
+    if (this.gameObject.GetComponent(Talent_Manager).talents[1][0]) {
+      crit_threshold += 5;
+    }
+    if (flag || num2 <= crit_threshold) {
       this.is_crit = true;
       num *= 2;
       if (flag) {
