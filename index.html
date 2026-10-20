@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>Murloc RPG: Stranglethorn Fever</title>
     <meta name="description" content="Murloc RPG: Stranglethorn Fever, the turn-based role-playing game by Tkon games, playable in the browser. Pick a class, quest through Elwynn Forest and Stranglethorn Vale, and fight your way to Zul'Gurub." />
     <meta name="theme-color" content="#1b1a17" />
@@ -10,7 +10,13 @@
     <meta property="og:title" content="Murloc RPG: Stranglethorn Fever" />
     <meta property="og:description" content="The turn-based role-playing game by Tkon games, playable in the browser." />
     <link rel="icon" type="image/png" href="/icon.png" />
-    <link rel="apple-touch-icon" href="/icon.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <!-- Added to a phone's home screen, the game opens fullscreen and sideways: the only fullscreen an iPhone allows. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Murloc RPG" />
     <style>
       html, body { margin: 0; height: 100%; background: #141310; overflow: hidden; font-family: ui-rounded, system-ui, sans-serif; color: #e9e4d8; }
       /* On a touch screen: no page zoom, pull-to-refresh, text selection or long-press menu over the game. */
@@ -45,14 +51,35 @@
       #bar { height: 6px; margin-bottom: 12px; border-radius: 999px; overflow: hidden; background: #2e2c27; }
       #fill { width: 0; height: 100%; border-radius: 999px; background: #d9bb6e; transition: width 0.15s linear; }
       #notice { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 3; max-width: 90%; padding: 8px 14px; border: 1px solid #a33; border-radius: 6px; background: rgba(40, 14, 14, 0.92); color: #f2d9d9; font-size: 14px; text-align: center; }
-      #fullscreen { position: fixed; right: 8px; bottom: 8px; width: 34px; height: 34px; border: 1px solid #444; border-radius: 6px; background: rgba(20, 22, 26, 0.7); color: #bbb; font-size: 18px; cursor: pointer; }
+      #fullscreen { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); z-index: 3; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border: 1px solid #444; border-radius: 6px; background: rgba(20, 22, 26, 0.7); color: #bbb; cursor: pointer; }
+      #fullscreen[hidden] { display: none; }
+      #fullscreen svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      #fullscreen .exit, #fullscreen.on .enter { display: none; }
+      #fullscreen.on .exit { display: block; }
       #fullscreen:hover { color: #fff; border-color: #888; }
       /* With no margin around the game the button would cover the bag icons; it waits, faint, at the top edge instead. */
       #fullscreen.over { right: auto; bottom: auto; left: 50%; top: 4px; transform: translateX(-50%); opacity: 0.3; }
       #fullscreen.over:hover, #fullscreen.over:focus-visible { opacity: 1; }
+      /* A finger needs a bigger target, and cannot hover to bring a faint button up. */
+      @media (pointer: coarse) {
+        #fullscreen { right: max(3px, env(safe-area-inset-right)); bottom: max(3px, env(safe-area-inset-bottom)); width: 44px; height: 44px; border-radius: 10px; }
+        #fullscreen svg { width: 22px; height: 22px; }
+        #fullscreen.over { top: max(4px, env(safe-area-inset-top)); opacity: 0.55; }
+      }
+      /* The controls shown are those of the device: keys on a computer, the screen on a phone. */
+      #controls .touch { display: none; }
+      @media (pointer: coarse) { #controls .keys { display: none; } #controls .touch { display: flex; } }
+      #iphone { position: fixed; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(10, 10, 8, 0.8); }
+      #iphone[hidden] { display: none; }
+      #iphone div { max-width: 360px; padding: 20px 22px; border-radius: 14px; background: #1b1a17; border: 1px solid #3a3832; font-size: 15px; line-height: 1.45; color: #d6d0c2; text-align: center; }
+      #iphone strong { display: block; margin-bottom: 8px; font-size: 17px; color: #f1ecdf; }
+      #iphone p { margin: 0 0 8px; }
+      #iphone small { display: block; margin-bottom: 14px; color: #9a9384; }
       /* The game is 16:9; a phone held upright shows it a third of the size. */
       #rotate { position: fixed; inset: 0; z-index: 4; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; background: #1b1a17; text-align: center; font-size: 18px; }
       #rotate span { font-size: 48px; color: #d9bb6e; }
+      #rotate button, #iphone button { font: inherit; font-size: 16px; font-weight: 600; padding: 0.7em 1.8em; border: none; border-radius: 999px; background: #d9bb6e; color: #1b1a17; cursor: pointer; }
+      #rotate button[hidden] { display: none; }
       @media (orientation: portrait) and (pointer: coarse) { #rotate { display: flex; } }
     </style>
   </head>
@@ -72,7 +99,12 @@
         <div id="bottom">
           <div id="controls">
             <h2>Controls</h2>
-            <dl>
+            <dl class="touch">
+              <div><dt>Hold left or right</dt><dd>move</dd></div>
+              <div><dt>Speech bubble</dt><dd>talk</dd></div>
+              <div><dt>Tap</dt><dd>everything else</dd></div>
+            </dl>
+            <dl class="keys">
               <div><dt>A D</dt><dd>move</dd></div>
               <div><dt>Ctrl</dt><dd>walk</dd></div>
               <div><dt>Space</dt><dd>talk</dd></div>
@@ -94,8 +126,19 @@
       </div>
     </div>
     <div id="notice" role="status" hidden>Part of the game could not be loaded. Check your connection; trying again…</div>
-    <div id="rotate"><span>&#x27F3;</span>Turn your phone sideways to play.</div>
-    <button id="fullscreen" title="Fullscreen" aria-label="Fullscreen">&#x26F6;</button>
+    <div id="rotate"><span>&#x27F3;</span>Turn your phone sideways to play.<button id="rotate-fullscreen" hidden>Play fullscreen</button></div>
+    <div id="iphone" hidden>
+      <div>
+        <strong>Fullscreen on iPhone</strong>
+        <p>Safari cannot make a page fullscreen. Tap the Share button, then <b>Add to Home Screen</b>, and open the game from its icon: it starts fullscreen.</p>
+        <small>Games saved in Safari stay in Safari; the home-screen game keeps its own saves.</small>
+        <button>OK</button>
+      </div>
+    </div>
+    <button id="fullscreen" title="Fullscreen" aria-label="Fullscreen">
+      <svg class="enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+      <svg class="exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
+    </button>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

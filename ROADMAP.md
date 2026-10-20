@@ -20,7 +20,8 @@ match the Unity build exactly and were accepted as they are by the owner;
 what differs is written under them. Phase 4 (memory, speed, devices) has
 begun: images are now unloaded when nothing uses them (4.1) and load time,
 memory and frame rate are written down (4.2), and the game can be played
-by touch on an emulated phone screen (4.5). Start-up shows its progress
+by touch on an emulated phone screen (4.5), with a fullscreen button and
+home-screen install made for phones (4.8). Start-up shows its progress
 and a lost connection is waited out instead of breaking the game (4.6).
 Open in Phase 4: Firefox and Safari's intro video (4.4; Chrome and the rest
 of Safari are done) and, put off by
@@ -747,6 +748,32 @@ Compare each with the Unity version side by side.
       does it load at all (see 4.3 on memory), do the taps land, does sound
       start, does the browser's own bar get in the way. Needs the game on an
       address a phone can reach (5.3, or the dev server on the local network).
+
+- [x] **4.8 Phones in the browser, and fullscreen there.** Asked by the
+      owner on 2026-10-20: make the game playable on a phone's browser, with
+      a fullscreen button.
+      (2026-10-20; the fullscreen button is now 44px on a touch screen, drawn
+      as an icon instead of the ⛶ character many Android fonts lack, shows
+      whether fullscreen is on, and stays in the margin whenever it fits
+      there (measured against the game, not a fixed width); with no margin
+      it sits at the top edge, half visible, since a finger cannot hover.
+      Going fullscreen also locks a phone sideways where the browser allows
+      it (Android). On a touch screen "Continue to the game" goes fullscreen
+      in the same tap, and the "turn your phone sideways" screen has a "Play
+      fullscreen" button. An iPhone's Safari cannot make a page fullscreen:
+      there the button explains Add to Home Screen, and a web app manifest
+      (`display: fullscreen`, landscape, 192/512px icons scaled up from the
+      64px one) plus Apple's meta tags make the home-screen game open
+      fullscreen; the hint says its saves are kept apart from Safari's. The
+      button is hidden when the game is opened from the home screen. The
+      start page lists touch controls instead of keys on a touch screen.
+      `viewport-fit=cover` with safe-area insets keeps the button clear of a
+      notch. Checked in the browser pane with phone emulation at 740x360,
+      640x360 and 375x740: button placement, the upright screen, the iPhone
+      hint opening and closing, starting the game by tap; console clean.
+      Not checked: real fullscreen and the orientation lock (the pane does
+      not allow a page to go fullscreen; the refusal is caught silently),
+      and a real phone, which is still 4.7.)
 
 ### Phase 5 — Release
 
