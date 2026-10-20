@@ -109,7 +109,10 @@ export const Input = {
     // A touch the browser takes over (a system gesture) never sends its release.
     window.addEventListener('pointercancel', (e) => { if (!e.isPrimary) return; for (const c of held) if (c.startsWith('Mouse')) queue.push({ type: 'up', code: c }); });
     window.addEventListener('pointermove', (e) => { if (e.isPrimary) setPointer(e); });
-    canvas.addEventListener('pointerleave', () => { pointer.inside = false; });
+    // A lifted finger also "leaves", straight after its pointerup and before the frame that sees
+    // the release; only a mouse really moves away. The touch stays where it was, as in Unity,
+    // whose simulated mouse keeps the last touch's position.
+    canvas.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') pointer.inside = false; });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     canvas.addEventListener('wheel', (e) => { queuedScroll += -Math.sign(e.deltaY) * 0.1; e.preventDefault(); }, { passive: false });
     window.addEventListener('keydown', (e) => {
@@ -127,13 +130,21 @@ export const Input = {
     up.clear();
     const events = queue;
     queue = [];
+    // Codes whose events wait for the next frame. A frame sees at most a press, or a release:
+    // a second tap in the same frame (a slow frame on a phone) is neither swallowed by the first
+    // one's late release nor seen in the same frame as it.
+    const later = new Set<string>();
     for (const e of events) {
-      if (e.type === 'down') {
+      if (later.has(e.code)) {
+        queue.push(e);
+      } else if (e.type === 'down') {
         if (!held.has(e.code)) { held.add(e.code); down.add(e.code); }
       } else if (down.has(e.code)) {
         queue.push(e); // pressed and released within one frame: release it next frame instead
+        later.add(e.code);
       } else if (held.delete(e.code)) {
         up.add(e.code);
+        later.add(e.code);
       }
     }
     scroll = queuedScroll;

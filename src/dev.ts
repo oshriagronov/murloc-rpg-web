@@ -369,3 +369,32 @@ Object.assign(window, { murloc: engine, dev });
 
 const selftest = new URLSearchParams(location.search).get('selftest');
 if (selftest !== null) void dev.selftest(selftest || 'run');
+
+// `?portrait`: for a phone or simulator that cannot be turned, the "turn sideways" cover goes and a
+// line under the game shows the scene, images and errors as they happen.
+if (new URLSearchParams(location.search).has('portrait')) {
+  document.getElementById('rotate')?.remove();
+  const line = document.createElement('pre');
+  line.style.cssText = 'position:fixed;left:0;right:0;bottom:90px;z-index:9;margin:0;padding:6px;background:rgba(0,0,0,.85);color:#dfd;font:11px/14px monospace;white-space:pre-wrap';
+  document.body.append(line);
+  const seen: string[] = [];
+  let last = '';
+  const count: Record<string, number> = {};
+  for (const t of ['pointerdown', 'pointerup', 'pointercancel']) window.addEventListener(t, () => { count[t] = (count[t] ?? 0) + 1; }, true);
+  const begin = engine.Input.beginFrame;
+  engine.Input.beginFrame = () => {
+    begin();
+    if (engine.Input.GetMouseButtonDown(0)) count.engineDown = (count.engineDown ?? 0) + 1;
+    if (engine.Input.GetMouseButtonUp(0)) count.engineUp = (count.engineUp ?? 0) + 1;
+    count.held = engine.Input.GetMouseButton(0) ? 1 : 0;
+  };
+  for (const t of ['pointerdown', 'pointerup', 'pointercancel', 'pointerleave']) window.addEventListener(t, (e) => { last = `${(e as PointerEvent).pointerType} ${t}`; }, true);
+  window.addEventListener('error', (e) => seen.push(`error: ${e.message}`));
+  window.addEventListener('unhandledrejection', (e) => seen.push(`rejected: ${String((e.reason as Error)?.message ?? e.reason)}`));
+  setInterval(() => {
+    let scene = '';
+    try { scene = SceneManager.GetActiveScene().name; } catch { /* not started */ }
+    const m = engine.Input.mousePosition;
+    line.textContent = [`scene ${scene || '-'}, ${dev.memory()}, frame ${engine.Time.frameCount}`, `pointer ${Math.round(m.x)},${Math.round(m.y)} ${engine.Input.pointerInside ? 'inside' : 'outside'}${last ? `, last ${last}` : ''}`, JSON.stringify(count), ...dev.errorSummary(), ...seen].join('\n');
+  }, 500);
+}

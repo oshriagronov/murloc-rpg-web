@@ -789,6 +789,31 @@ Compare each with the Unity version side by side.
       Class selection comes up after New Game, no console errors; the smoke
       test passes both ways. Not yet checked on the owner's phone.)
 
+- [x] **4.10 Taps on a real touch screen** (found 2026-10-20: still stuck after
+      New Game on the owner's Android phone after 4.9; reproduced in the iOS
+      Simulator's Safari with real taps. 4.5 missed it: its emulated touches
+      sent no `pointerleave`.)
+      (2026-10-20; two engine bugs in `src/engine/input.ts`:
+      - A browser sends `pointerleave` straight after a finger lifts. The
+        engine took it as the pointer leaving the game, so when the next
+        frame handled the release nothing was under the pointer: buttons
+        that act on release (New Game, every UI button) never clicked. Now
+        only a mouse can leave; a finger stays where it lifted, as Unity's
+        touch-simulated mouse does.
+      - Two taps reaching one frame (a slow frame) counted as one: the
+        second press came while the first was still held. Now a frame sees
+        at most one press or one release, and the rest waits.
+      `tests/input.test.ts` covers both; both tests fail on the old code.
+      Checked in the iOS Simulator (iPhone 18 Pro, Safari) with real taps,
+      upright, using the new dev-only `?portrait` (removes the "turn
+      sideways" cover and shows the scene, memory, pointer and tap counts
+      under the game): Continue, New Game, Warrior shown on the first tap
+      and chosen on the second, holding the right half walks to Ketchin
+      and lifting stops; no errors. `dev.selftest` also played the opening
+      there. The Simulator delivers taps late, which at first looked like
+      every other tap being lost; the counts showed every tap arrived.
+      Not yet checked on the owner's Android phone.)
+
 ### Phase 5 — Release
 
 - [x] **5.1 Decisions from the owner** (see "Questions for the owner").
